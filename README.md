@@ -302,6 +302,34 @@ If you have private files, also update them:
 PRIVATE_REPO_URL=https://github.com/yourusername/dotfiles-private.git ./install private
 ```
 
+## 🧪 Testing
+
+The repository includes a comprehensive testing framework to ensure code quality and compatibility across different macOS versions.
+
+### Running Tests Locally
+
+```bash
+# Run all tests
+./tests/run_all_tests.sh
+
+# Run specific test suites
+./tests/test_shell_scripts.sh      # Shell script tests
+./tests/test_dotbot_config.sh      # Dotbot configuration tests
+./tests/test_private_files.sh      # Private file handling tests
+zsh tests/run_tests.zsh            # Shell function tests
+./scripts/test.sh                  # Repository validation
+```
+
+### CI/CD
+
+Tests run automatically on pull requests across multiple macOS versions (11, 12, and 13) using GitHub Actions. The workflow includes:
+- Shell script linting with shellcheck
+- Dotbot configuration validation
+- Private file handling tests
+- Shell function tests
+
+For more details, see the [Testing Documentation](docs/testing.md).
+
 ## 🤝 Contributing
 
 Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.

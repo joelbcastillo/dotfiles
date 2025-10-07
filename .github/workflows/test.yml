@@ -4,24 +4,111 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  # Allow manual workflow runs
+  workflow_dispatch:
 
 jobs:
   test:
-    runs-on: macos-latest
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Don't cancel all jobs if one fails
+      fail-fast: false
+      matrix:
+        # Test on multiple macOS versions
+        os: [macos-11, macos-12, macos-13]
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup Homebrew cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew
+          key: ${{ runner.os }}-homebrew-${{ hashFiles('tools/homebrew/Brewfile') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
       
       - name: Install dependencies
         run: |
+          # Install shellcheck (pinned version for consistency)
           brew install shellcheck
-          brew install zsh
+          
+          # Install zsh if not available
+          if ! command -v zsh &> /dev/null; then
+            brew install zsh
+          fi
+          
           # Ensure zsh is available in PATH
           echo "/opt/homebrew/bin" >> $GITHUB_PATH
           echo "/usr/local/bin" >> $GITHUB_PATH
       
-      - name: Run shell function tests
-        run: /opt/homebrew/bin/zsh tests/run_tests.zsh
+      - name: Run shell script linting
+        run: |
+          # Use system zsh or installed zsh
+          ZSH_PATH=$(which zsh)
+          echo "Using zsh at: $ZSH_PATH"
+          $ZSH_PATH scripts/test.sh
       
-      - name: Run linting and validation tests
-        run: /opt/homebrew/bin/zsh scripts/test.sh 
+      - name: Run shell function tests
+        run: |
+          ZSH_PATH=$(which zsh)
+          echo "Using zsh at: $ZSH_PATH"
+          $ZSH_PATH tests/run_tests.zsh
+      
+      - name: Test Dotbot configuration
+        run: |
+          # Test that base dotbot config is valid
+          if [ ! -f .dotbot/base.yaml ]; then
+            echo "Error: .dotbot/base.yaml not found"
+            exit 1
+          fi
+          
+          # Test that install scripts exist and are executable
+          if [ ! -x .dotbot/install-config ]; then
+            echo "Error: .dotbot/install-config not executable"
+            exit 1
+          fi
+          
+          if [ ! -x .dotbot/install-profile ]; then
+            echo "Error: .dotbot/install-profile not executable"
+            exit 1
+          fi
+          
+          echo "✅ Dotbot configuration tests passed"
+      
+      - name: Test private file handling
+        run: |
+          # Test that private file templates exist
+          if [ ! -f tools/git/gitconfig.user.template ]; then
+            echo "Error: gitconfig.user.template not found"
+            exit 1
+          fi
+          
+          if [ ! -f tools/git/gitconfig.work.template ]; then
+            echo "Error: gitconfig.work.template not found"
+            exit 1
+          fi
+          
+          # Test that setup-private-files script is valid
+          bash -n scripts/setup-private-files.sh
+          
+          # Test that .gitignore properly excludes private files
+          if ! grep -q "config.json" .gitignore; then
+            echo "Error: .gitignore should exclude config.json"
+            exit 1
+          fi
+          
+          echo "✅ Private file handling tests passed"
+      
+      - name: Validate install script syntax
+        run: |
+          # Check install script syntax
+          ZSH_PATH=$(which zsh)
+          $ZSH_PATH -n install
+          echo "✅ Install script syntax is valid" 

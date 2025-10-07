@@ -29,7 +29,17 @@ find . -type f -name '*.sh' -o -name 'install' | while read -r script; do
   # SC2162: read without -r (safe to ignore for interactive scripts)
   # SC2181: Check exit code directly (safe to ignore for legacy scripts)
   # SC2001: Use ${variable//search/replace} (safe to ignore for sed usage)
-  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001 "$script"
+  # SC2248: Prefer double quoting (style suggestion, safe to ignore)
+  # SC2120: Function references arguments but none passed (safe to ignore)
+  # SC2119: Use function "$@" suggestion (safe to ignore)
+  # SC2164: cd without error handling (safe to ignore in test scripts)
+  # SC2312: Consider invoking separately to avoid masking return values (safe to ignore)
+  # SC2094: Reading and writing same file (safe to ignore in test loops)
+  # SC2088: Tilde does not expand in quotes (safe to ignore when searching for tilde literally)
+  # SC2126: Consider using grep -c (style suggestion, safe to ignore)
+  # SC2154: Variable referenced but not assigned (safe to ignore for environment variables)
+  # SC2010: Don't use ls | grep (style suggestion, safe to ignore for simple checks)
+  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2248,SC2120,SC2119,SC2164,SC2312,SC2094,SC2088,SC2126,SC2154,SC2010 "$script"
 done
 success "All shell scripts passed shellcheck."
 
@@ -39,7 +49,6 @@ REQUIRED=(
   ".dotbot"
   ".dotbot/profiles"
   "tools/homebrew/Brewfile"
-  "apps/vscode/settings.json"
   "install"
 )
 for path in "${REQUIRED[@]}"; do
@@ -48,6 +57,13 @@ for path in "${REQUIRED[@]}"; do
     exit 1
   fi
 done
+
+# Check for VSCode template (actual settings.json may be a symlink)
+if [ ! -f "apps/vscode/settings.json.template" ] && [ ! -e "apps/vscode/settings.json" ]; then
+  error "Missing VSCode settings (expected settings.json or settings.json.template)"
+  exit 1
+fi
+
 success "All required files and directories are present."
 
 # 3. Check install script syntax

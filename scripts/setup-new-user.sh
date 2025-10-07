@@ -57,3 +57,27 @@ cat > tools/git/gitconfig.user << EOF
 
 [color]
     ui = auto
+EOF
+
+# Update work git config
+cat > tools/git/gitconfig.work << EOF
+[user]
+    name = $FULL_NAME
+    email = $EMAIL_ADDRESS@$COMPANY_DOMAIN
+    signingkey = ~/.ssh/github.pub
+
+[gpg]
+    format = ssh
+
+[commit]
+    gpgsign = true
+EOF
+
+print_message "${GREEN}" "✅ Git configurations created successfully!"
+print_message "${YELLOW}" "📝 Next steps:"
+print_message "${YELLOW}" "1. Review and customize the generated files:"
+print_message "${YELLOW}" "   - tools/git/gitconfig.user"
+print_message "${YELLOW}" "   - tools/git/gitconfig.work"
+print_message "${YELLOW}" "2. Run: ./install profile default"
+print_message "${YELLOW}" "3. Source your shell: source ~/.zshrc"
+print_message "${GREEN}" "🎉 Setup complete!"
