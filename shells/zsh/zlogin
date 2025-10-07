@@ -1,0 +1,7 @@
+# This file is sourced when logging in interactively
+# It runs after zshrc
+
+# Print system information
+if command -v neofetch >/dev/null 2>&1; then
+    neofetch
+fi 

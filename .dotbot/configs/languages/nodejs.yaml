@@ -1,0 +1,32 @@
+- shell:
+    - command: >
+        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        asdf plugin add nodejs || true
+        asdf plugin update nodejs
+        asdf install nodejs 20.19.1
+        asdf set -u nodejs 20.19.1
+        # Ensure the new version is active and available
+        asdf reshim nodejs
+        export PATH="$HOME/.asdf/shims:$PATH"
+        export PATH="$HOME/.asdf/bin:$PATH"
+        
+        # Install global npm packages
+        npm install -g npm@10.2.4
+        npm install -g yarn
+        npm install -g pnpm
+        npm install -g typescript
+        npm install -g ts-node
+        npm install -g nodemon
+        npm install -g eslint
+        npm install -g prettier
+        npm install -g @vue/cli
+        npm install -g @angular/cli
+      description: Set up Node.js with asdf and global tools
+
+- link:
+    ~/.npmrc: tools/nodejs/npmrc
+    ~/.nvmrc: tools/nodejs/nvmrc
+    ~/.eslintrc: tools/nodejs/eslintrc
+    ~/.prettierrc: tools/nodejs/prettierrc
+    ~/.yarnrc: tools/nodejs/yarnrc
+    ~/.pnpmrc: tools/nodejs/pnpmrc 

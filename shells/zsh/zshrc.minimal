@@ -1,0 +1,135 @@
+# Minimal zshrc for maximum startup speed
+# This version removes Oh My Zsh and uses only essential components
+
+# Enable Powerlevel10k instant prompt (if using p10k)
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Fig shell integration (keep at top)
+[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
+
+# Fix for shell integrations that expect dump_zsh_state function
+dump_zsh_state() {
+    # Dummy function to prevent "command not found" errors
+    # This is used by some shell integrations for debugging
+    return 0
+}
+
+# Set DOTFILES variable
+export DOTFILES="$HOME/.dotfiles"
+
+# Essential environment variables
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export PATH="$HOME/.local/bin:$PATH"
+
+# Editor configuration
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='vim'
+else
+  export EDITOR='cursor --wait'
+fi
+export VISUAL="$EDITOR"
+
+# Initialize Starship (fast prompt)
+eval "$(starship init zsh)"
+
+# Basic completion system (minimal)
+autoload -Uz compinit
+# Only run compinit once per day
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+else
+    compinit -C
+fi
+
+# Essential aliases only
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline'
+alias gd='git diff'
+
+# Lazy load everything else
+# ASDF - load only when asdf command is used
+asdf() {
+    unfunction asdf
+    . $HOME/.asdf/asdf.sh
+    fpath=(${ASDF_DIR}/completions $fpath)
+    autoload -Uz compinit && compinit
+    asdf "$@"
+}
+
+# Direnv - load only when direnv command is used
+direnv() {
+    unfunction direnv
+    eval "$(direnv hook zsh)"
+    direnv "$@"
+}
+
+# Zoxide - load only when z command is used
+z() {
+    unfunction z
+    eval "$(zoxide init zsh)"
+    z "$@"
+}
+
+# Brew - load only when brew command is used
+brew() {
+    unfunction brew
+    # Add brew to PATH
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    brew "$@"
+}
+
+# Lazy load syntax highlighting and autosuggestions
+autoload -Uz add-zsh-hook
+
+# Load syntax highlighting on first command
+load_syntax_highlighting() {
+    if [[ -f "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
+        source "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+    fi
+    add-zsh-hook -d precmd load_syntax_highlighting
+}
+
+# Load autosuggestions on first command
+load_autosuggestions() {
+    if [[ -f "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
+        source "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    fi
+    add-zsh-hook -d precmd load_autosuggestions
+}
+
+# Set up lazy loading triggers
+add-zsh-hook precmd load_syntax_highlighting
+add-zsh-hook precmd load_autosuggestions
+
+# Lazy load custom functions
+load_custom_functions() {
+    if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
+        source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
+    fi
+    add-zsh-hook -d precmd load_custom_functions
+}
+add-zsh-hook precmd load_custom_functions
+
+# Task Master aliases
+alias tm='task-master'
+alias taskmaster='task-master'
+
+# Fig shell integration (keep at end)
+[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
+

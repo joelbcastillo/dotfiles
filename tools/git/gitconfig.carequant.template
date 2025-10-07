@@ -1,0 +1,16 @@
+[user]
+    name = Your Name
+    email = your.email@company.com
+    signingkey = YOUR_SSH_SIGNING_KEY_HERE
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+
+[commit]
+  gpgsign = true
+
+[tag]
+  forceSignAnnotated = true

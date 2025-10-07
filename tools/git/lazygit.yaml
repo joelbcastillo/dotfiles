@@ -1,0 +1,9 @@
+reporting: "off"
+startuppopupversion: 1
+gui:
+  scrollHeight: 3
+  scrollPastBottom: false
+git:
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never --24-bit-color=never --file-color=bright-yellow

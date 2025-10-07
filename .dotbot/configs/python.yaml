@@ -1,0 +1,16 @@
+- link:
+    ~/.config/flake8: tools/python/flake8
+    ~/.config/isort.cfg: tools/python/isort
+
+- pipx:
+    file: tools/pipx/requirements-devcontainer.txt
+    stdout: false
+    stderr: true
+
+- shell:
+  -
+    command: mkdir -p ~/.zfunc && ~/.local/bin/poetry completions zsh > ~/.zfunc/_poetry
+    description: Adding poetry Zsh completions
+  -
+    command: ~/.local/bin/poetry config virtualenvs.in-project true
+    description: Setting poetry configuration variable

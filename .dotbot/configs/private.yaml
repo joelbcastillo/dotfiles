@@ -1,0 +1,75 @@
+# Private repository integration configuration
+# This configuration creates symlinks to private files from the dotfiles-private repository
+# to the locations where the original dotbot configs expect them
+
+- shell:
+  - command: |
+      # Create symlinks for all files in private git directory
+      for file in ~/.dotfiles-private/git/*; do
+        if [ -f "$file" ]; then
+          filename=$(basename "$file")
+          ln -sf "$file" ~/.dotfiles/tools/git/"$filename"
+        fi
+      done
+    description: "Link private git files to dotfiles/tools/git/"
+  
+  - command: |
+      # Create symlinks for all files in private aliases directory
+      for file in ~/.dotfiles-private/aliases/*; do
+        if [ -f "$file" ]; then
+          filename=$(basename "$file")
+          ln -sf "$file" ~/.dotfiles/shells/zsh/zsh.before/"$filename"
+        fi
+      done
+    description: "Link private aliases to dotfiles/shells/zsh/zsh.before/"
+  
+  - command: |
+      # Create symlinks for all files in private vscode directory
+      for file in ~/.dotfiles-private/vscode/*; do
+        if [ -f "$file" ]; then
+          filename=$(basename "$file")
+          ln -sf "$file" ~/.dotfiles/apps/vscode/"$filename"
+        fi
+      done
+    description: "Link private VS Code files to dotfiles/apps/vscode/"
+  
+  - command: |
+      # Create symlinks for all files in private cursor directory
+      for file in ~/.dotfiles-private/cursor/*; do
+        if [ -f "$file" ]; then
+          filename=$(basename "$file")
+          ln -sf "$file" ~/.dotfiles/apps/cursor/"$filename"
+        fi
+      done
+    description: "Link private Cursor files to dotfiles/apps/cursor/"
+  
+  - command: |
+      # Create symlinks for SSH configs from private repo
+      if [ -f ~/.dotfiles-private/ssh/config ]; then
+        ln -sf ~/.dotfiles-private/ssh/config ~/.dotfiles/tools/ssh/config
+        echo "Linked private SSH config"
+      fi
+    description: "Link private SSH config to dotfiles/tools/ssh/"
+  
+  - command: |
+      # Create symlinks for personal/carequant configs from private repo
+      if [ -f ~/.dotfiles-private/dotbot/personal.yaml ]; then
+        ln -sf ~/.dotfiles-private/dotbot/personal.yaml ~/.dotfiles/.dotbot/configs/personal.yaml
+        echo "Linked private personal.yaml config"
+      fi
+      if [ -f ~/.dotfiles-private/dotbot/carequant.yaml ]; then
+        ln -sf ~/.dotfiles-private/dotbot/carequant.yaml ~/.dotfiles/.dotbot/configs/carequant.yaml
+        echo "Linked private carequant.yaml config"
+      fi
+      if [ -f ~/.dotfiles-private/dotbot/ssh-personal.yaml ]; then
+        ln -sf ~/.dotfiles-private/dotbot/ssh-personal.yaml ~/.dotfiles/.dotbot/configs/ssh-personal.yaml
+        echo "Linked private ssh-personal.yaml config"
+      fi
+      if [ -f ~/.dotfiles-private/dotbot/ssh-carequant.yaml ]; then
+        ln -sf ~/.dotfiles-private/dotbot/ssh-carequant.yaml ~/.dotfiles/.dotbot/configs/ssh-carequant.yaml
+        echo "Linked private ssh-carequant.yaml config"
+      fi
+    description: "Link private dotbot configs to dotfiles/.dotbot/configs/"
+  
+  - command: echo "Private files symlinked to dotfiles directories successfully"
+    description: "Verify private file symlinks to dotfiles"

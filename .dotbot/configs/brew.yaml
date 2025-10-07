@@ -1,0 +1,33 @@
+- shell:
+  - 
+    command: |
+      if ! command -v brew >/dev/null 2>&1; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      fi
+    description: Install Homebrew if not present
+
+- shell:
+  - 
+    command: |
+      echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    description: Configure Homebrew shell environment
+
+- link:
+    ~/Brewfile:
+      path: tools/homebrew/Brewfile
+      relink: true
+      force: true
+
+- shell:
+  - 
+    command: brew update
+    description: Update Homebrew
+  - 
+    command: brew upgrade
+    description: Upgrade Homebrew packages
+  - 
+    command: brew cleanup
+    description: Clean up Homebrew
+  - command: brew bundle --file=~/Brewfile
+    description: Install all Homebrew packages from Brewfile 

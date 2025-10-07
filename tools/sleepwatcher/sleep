@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Commands to run before sleep
+pmset displaysleepnow
+
+# Pause any media playback
+osascript -e 'tell application "Music" to pause'
+osascript -e 'tell application "Spotify" to pause'
+
+# Save any unsaved work
+osascript -e 'tell application "System Events" to tell process "Code" to keystroke "s" using {command down}'
+
+exit 0

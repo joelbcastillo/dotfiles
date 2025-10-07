@@ -1,0 +1,25 @@
+- shell:
+    - command: |
+        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        asdf plugin add ruby || true
+        asdf plugin update ruby
+        asdf install ruby 3.3.0
+        asdf set -u ruby 3.3.0
+        
+        # Install Ruby tools
+        gem install bundler
+        gem install solargraph
+        gem install rubocop
+        gem install rspec
+        gem install pry
+        gem install pry-doc
+        gem install yard
+        gem install rails
+      description: Set up Ruby with asdf and development tools
+
+- link:
+    ~/.gemrc: tools/ruby/gemrc
+    ~/.irbrc: tools/ruby/irbrc
+    ~/.pryrc: tools/ruby/pryrc
+    ~/.rubocop.yml: tools/ruby/rubocop.yml
+    ~/.solargraph.yml: tools/ruby/solargraph.yml 

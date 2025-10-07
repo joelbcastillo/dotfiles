@@ -1,0 +1,486 @@
+# Template configuration for new users
+# This config guides users to set up their private repository for secure file management
+
+- shell:
+  - command: |
+      echo "🔒 Setting up private repository for secure file management..."
+      echo ""
+      echo "This template uses a private repository approach for security:"
+      echo "• Personal files (git configs, SSH keys, credentials) go in a private repo"
+      echo "• Public files (aliases, tool configs) stay in this main repo"
+      echo ""
+    description: "Explain private repository approach"
+
+- shell:
+  - command: |
+      echo "📁 Creating private repository structure..."
+      
+      # Create the private repository directory
+      if [ ! -d ~/.dotfiles-private ]; then
+        mkdir -p ~/.dotfiles-private
+        echo "Created ~/.dotfiles-private directory"
+      else
+        echo "~/.dotfiles-private directory already exists"
+      fi
+      
+      # Create the directory structure
+      mkdir -p ~/.dotfiles-private/{git,aliases,vscode,cursor,ssh,aws,1password,dotbot}
+      echo "Created private repository directory structure"
+    description: "Create private repository directory structure"
+
+- shell:
+  - command: |
+      echo "📝 Creating comprehensive template files in private repository..."
+      
+      # Create template git configs
+      cat > ~/.dotfiles-private/git/gitconfig.user << 'EOF'
+[user]
+    name = "Your Name"
+    email = "your.email@example.com"
+[core]
+    editor = code --wait
+[init]
+    defaultBranch = main
+[push]
+    default = simple
+[pull]
+    rebase = false
+EOF
+      
+      cat > ~/.dotfiles-private/git/gitconfig.work << 'EOF'
+[user]
+    name = "Your Work Name"
+    email = "your.work@company.com"
+[core]
+    editor = code --wait
+[init]
+    defaultBranch = main
+[push]
+    default = simple
+[pull]
+    rebase = false
+EOF
+      
+      # Create template company aliases
+      cat > ~/.dotfiles-private/aliases/company-aliases.zsh << 'EOF'
+# Company-specific aliases
+# Add your company-specific aliases here
+
+# Example: Secure AI development
+# alias myproject="_secure_run ai cursor ~/.repos/github.com/company/myproject"
+
+# Example: Company-specific commands
+# alias deploy="npm run deploy:production"
+# alias test="npm run test:company"
+
+# Example: Database connections
+# alias db-connect="mysql -h company-db.internal -u myuser -p"
+EOF
+      
+      # Create 1Password configuration
+      cat > ~/.dotfiles-private/1password/config << 'EOF'
+# 1Password CLI configuration
+# This file contains your 1Password CLI settings
+
+# Example configuration:
+# vault = "Personal"
+# account = "your-account.1password.com"
+# signin_address = "your-account.1password.com"
+EOF
+      
+      # Create 1Password secret paths configuration
+      cat > ~/.dotfiles-private/1password/secret-paths.json << 'EOF'
+{
+  "ai_tools": {
+    "cursor_api_key": "vaults/Personal/items/Cursor API Key/fields/password",
+    "claude_api_key": "vaults/Personal/items/Claude API Key/fields/password",
+    "github_token": "vaults/Personal/items/GitHub Token/fields/password"
+  },
+  "development": {
+    "aws_access_key": "vaults/Personal/items/AWS Access Key/fields/password",
+    "aws_secret_key": "vaults/Personal/items/AWS Secret Key/fields/password"
+  }
+}
+EOF
+      
+      # Create SSH configuration
+      cat > ~/.dotfiles-private/ssh/config << 'EOF'
+# SSH Configuration
+# This file contains your SSH host configurations
+
+# Example personal server
+Host personal-server
+    HostName your-server.com
+    User your-username
+    Port 22
+    IdentityFile ~/.ssh/id_rsa_personal
+    IdentitiesOnly yes
+
+# Example work server
+Host work-server
+    HostName work-server.company.com
+    User your-work-username
+    Port 22
+    IdentityFile ~/.ssh/id_rsa_work
+    IdentitiesOnly yes
+
+# Example GitHub configuration
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_github
+    IdentitiesOnly yes
+EOF
+      
+      # Create AWS configuration
+      cat > ~/.dotfiles-private/aws/config << 'EOF'
+[default]
+region = us-west-2
+output = json
+
+[profile work]
+region = us-east-1
+output = table
+
+[profile personal]
+region = us-west-2
+output = json
+EOF
+      
+      cat > ~/.dotfiles-private/aws/credentials << 'EOF'
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+
+[work]
+aws_access_key_id = YOUR_WORK_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_WORK_SECRET_ACCESS_KEY
+
+[personal]
+aws_access_key_id = YOUR_PERSONAL_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_PERSONAL_SECRET_ACCESS_KEY
+EOF
+      
+      # Create VS Code private settings
+      cat > ~/.dotfiles-private/vscode/settings.json << 'EOF'
+{
+  "workbench.colorTheme": "Default Dark+",
+  "editor.fontSize": 14,
+  "editor.fontFamily": "Fira Code, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontFamily": "Fira Code, 'Courier New', monospace"
+}
+EOF
+      
+      # Create Cursor private settings
+      cat > ~/.dotfiles-private/cursor/settings.json << 'EOF'
+{
+  "workbench.colorTheme": "Default Dark+",
+  "editor.fontSize": 14,
+  "editor.fontFamily": "Fira Code, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontFamily": "Fira Code, 'Courier New', monospace"
+}
+EOF
+      
+      # Create AI tools configuration templates with 1password:// references
+      cat > ~/.dotfiles-private/cursor-agent/config.json.template << 'EOF'
+{
+  "api_key": "1password://cursor_api_key",
+  "model": "claude-3.5-sonnet",
+  "max_tokens": 4000,
+  "temperature": 0.7,
+  "enable_autocomplete": true,
+  "enable_suggestions": true,
+  "theme": "dark",
+  "log_level": "info"
+}
+EOF
+      
+      cat > ~/.dotfiles-private/claude/config.json.template << 'EOF'
+{
+  "api_key": "1password://claude_api_key",
+  "model": "claude-3.5-sonnet",
+  "max_tokens": 4000,
+  "temperature": 0.7,
+  "theme": "dark",
+  "log_level": "info"
+}
+EOF
+      
+      echo "Created comprehensive template files in private repository"
+    description: "Create comprehensive template files in private repository"
+
+- shell:
+  - command: |
+      echo "🔧 Initializing private repository..."
+      
+      cd ~/.dotfiles-private
+      
+      # Initialize git repository
+      if [ ! -d .git ]; then
+        git init
+        echo "Initialized git repository in ~/.dotfiles-private"
+      else
+        echo "Git repository already initialized in ~/.dotfiles-private"
+      fi
+      
+      # Create .gitignore
+      cat > .gitignore << 'EOF'
+# Ignore sensitive files
+*.key
+*.pem
+*.p12
+credentials
+.env
+*.log
+.DS_Store
+EOF
+      
+      # Create comprehensive README
+      cat > README.md << 'EOF'
+# Private Dotfiles Repository
+
+This repository contains your personal and sensitive configuration files that are linked to your main dotfiles repository.
+
+## 🔒 What's in This Repository
+
+This private repository contains:
+
+- **Git configurations** (`git/`) - Personal and work git configs
+- **SSH configurations** (`ssh/`) - SSH host configs and key references
+- **AWS credentials** (`aws/`) - AWS access keys and profiles
+- **1Password integration** (`1password/`) - API keys and secret paths
+- **Company aliases** (`aliases/`) - Company-specific shell aliases
+- **Editor settings** (`vscode/`, `cursor/`) - Personal editor configurations
+
+## 📁 Directory Structure
+
+```
+dotfiles-private/
+├── git/
+│   ├── gitconfig.user          # Personal git configuration
+│   └── gitconfig.work          # Work git configuration
+├── ssh/
+│   └── config                  # SSH host configurations
+├── aws/
+│   ├── config                  # AWS CLI configuration
+│   └── credentials              # AWS access keys
+├── 1password/
+│   ├── config                  # 1Password CLI configuration
+│   └── secret-paths.json       # 1Password secret references
+├── aliases/
+│   └── company-aliases.zsh     # Company-specific aliases
+├── vscode/
+│   └── settings.json           # VS Code personal settings
+├── cursor/
+│   └── settings.json           # Cursor personal settings
+└── dotbot/                     # Private dotbot configurations
+    ├── personal.yaml
+    ├── carequant.yaml
+    ├── ssh-personal.yaml
+    └── ssh-carequant.yaml
+```
+
+## 🚀 Getting Started
+
+### 1. Edit Your Personal Information
+
+Update the template files with your actual information:
+
+```bash
+# Edit git configurations
+code git/gitconfig.user
+code git/gitconfig.work
+
+# Edit SSH configurations
+code ssh/config
+
+# Edit AWS credentials
+code aws/credentials
+
+# Edit 1Password secret paths
+code 1password/secret-paths.json
+
+# Edit company aliases
+code aliases/company-aliases.zsh
+```
+
+### 2. 1Password Integration
+
+The dotfiles support 1Password CLI integration for secure secret management:
+
+1. **Install 1Password CLI**: `brew install 1password-cli`
+2. **Sign in**: `op signin`
+3. **Update secret paths**: Edit `1password/secret-paths.json` with your actual 1Password item references
+4. **Create 1Password items**: Create the following items in your 1Password vault:
+   - "Cursor API Key" (password field)
+   - "Claude API Key" (password field)
+   - "GitHub Token" (password field)
+   - "AWS Access Key" (password field)
+   - "AWS Secret Key" (password field)
+5. **Test**: Run `op item get "Cursor API Key"` to verify access
+
+### 3. SSH Key Setup
+
+1. **Generate SSH keys** (if you don't have them):
+   ```bash
+   ssh-keygen -t ed25519 -C "your.email@example.com" -f ~/.ssh/id_rsa_personal
+   ssh-keygen -t ed25519 -C "your.work@company.com" -f ~/.ssh/id_rsa_work
+   ```
+
+2. **Add to SSH agent**:
+   ```bash
+   ssh-add ~/.ssh/id_rsa_personal
+   ssh-add ~/.ssh/id_rsa_work
+   ```
+
+3. **Update SSH config**: Edit `ssh/config` with your actual server details
+
+### 4. AWS Configuration
+
+1. **Get AWS credentials** from your AWS console
+2. **Update credentials**: Edit `aws/credentials` with your actual access keys
+3. **Configure profiles**: Edit `aws/config` with your preferred regions and output formats
+
+## 🔧 Usage
+
+### Linking to Main Repository
+
+After setting up this private repository, link it to your main dotfiles:
+
+```bash
+# In your main dotfiles directory
+cp config.json.example config.json
+# Edit config.json with your private repository URL
+./install config private
+```
+
+### Updating Private Files
+
+When you make changes to files in this repository:
+
+```bash
+git add .
+git commit -m "Update private configurations"
+git push origin main
+```
+
+### Pulling Updates
+
+To pull the latest private configurations:
+
+```bash
+# In your main dotfiles directory
+./install config private
+```
+
+## 🛡️ Security Best Practices
+
+- **Never commit real credentials** - use placeholders and 1Password integration
+- **Use SSH keys** instead of passwords for server access
+- **Rotate credentials regularly** and update this repository
+- **Keep this repository private** - never make it public
+- **Use different keys** for different purposes (personal, work, etc.)
+
+## 📚 Related Documentation
+
+- [Main dotfiles documentation](../README.md)
+- [Private setup guide](../docs/private-setup.md)
+- [1Password integration](../docs/secrets.md)
+
+## 🆘 Troubleshooting
+
+### SSH Issues
+```bash
+# Test SSH connection
+ssh -T git@github.com
+
+# Check SSH agent
+ssh-add -l
+
+# Add keys to agent
+ssh-add ~/.ssh/id_rsa_personal
+```
+
+### 1Password Issues
+```bash
+# Check 1Password CLI
+op --version
+
+# Test secret access
+op item get "Cursor API Key"
+```
+
+### AWS Issues
+```bash
+# Test AWS CLI
+aws sts get-caller-identity
+
+# Check profiles
+aws configure list-profiles
+```
+EOF
+      
+      echo "Created .gitignore and comprehensive README for private repository"
+    description: "Initialize private repository"
+
+- shell:
+  - command: |
+      echo "✅ Private repository setup completed!"
+      echo ""
+      echo "📋 Next Steps:"
+      echo ""
+      echo "1. 📝 Edit your personal information:"
+      echo "   • Git configs: ~/.dotfiles-private/git/"
+      echo "   • SSH configs: ~/.dotfiles-private/ssh/config"
+      echo "   • AWS credentials: ~/.dotfiles-private/aws/credentials"
+      echo "   • 1Password paths: ~/.dotfiles-private/1password/secret-paths.json"
+      echo "   • Company aliases: ~/.dotfiles-private/aliases/company-aliases.zsh"
+      echo ""
+      echo "2. 🔑 Set up 1Password integration (recommended):"
+      echo "   • Install: brew install 1password-cli"
+      echo "   • Sign in: op signin"
+      echo "   • Create 1Password items: Cursor API Key, Claude API Key, GitHub Token, AWS keys"
+      echo "   • Update secret paths in 1password/secret-paths.json"
+      echo ""
+      echo "3. 🔐 Set up SSH keys (if needed):"
+      echo "   • Generate keys: ssh-keygen -t ed25519 -C 'your.email@example.com'"
+      echo "   • Add to agent: ssh-add ~/.ssh/id_rsa_personal"
+      echo "   • Update SSH config with your server details"
+      echo ""
+      echo "4. ☁️  Set up AWS credentials:"
+      echo "   • Get credentials from AWS console"
+      echo "   • Update aws/credentials with your access keys"
+      echo "   • Configure regions in aws/config"
+      echo ""
+      echo "5. 🚀 Create and push to GitHub:"
+      echo "   • Create private repository on GitHub (e.g., 'dotfiles-private')"
+      echo "   • Add remote: git remote add origin https://github.com/yourusername/dotfiles-private.git"
+      echo "   • Push: git add . && git commit -m 'Initial private dotfiles' && git push -u origin main"
+      echo ""
+      echo "6. 🔗 Link to main repository:"
+      echo "   • Configure: cp config.json.example config.json"
+      echo "   • Edit config.json with your private repository URL"
+      echo "   • Link: ./install config private"
+      echo ""
+      echo "7. 📚 Read the comprehensive guide:"
+      echo "   • cat ~/.dotfiles-private/README.md"
+      echo "   • See docs/private-setup.md for detailed instructions"
+      echo ""
+      echo "🎉 Your private repository is ready! Edit the files and follow the steps above."
+    description: "Provide comprehensive next steps for private repository setup"

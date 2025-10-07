@@ -1,0 +1,4 @@
+{
+  "private_repo_url": "https://github.com/yourusername/dotfiles-private.git",
+  "default_ssh_configs": "all"
+}

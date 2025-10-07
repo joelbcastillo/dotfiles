@@ -1,0 +1,36 @@
+- shell:
+    - command: |
+        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        asdf plugin add rust || true
+        asdf plugin update rust
+        asdf install rust 1.85.0
+        asdf set -u rust 1.85.0
+
+        # Install Rust tools with --locked flag for better compatibility
+        cargo install --locked cargo-edit
+        cargo install --locked cargo-watch
+        cargo install --locked cargo-expand
+        cargo install --locked cargo-udeps
+        cargo install --locked cargo-audit
+        cargo install --locked cargo-outdated
+        cargo install --locked cargo-tarpaulin
+        cargo install --locked cargo-asm
+        cargo install --locked cargo-bloat
+        cargo install --locked cargo-llvm-cov
+        cargo install --locked cargo-nextest
+        cargo install --locked cargo-release
+        cargo install --locked cargo-sweep
+        cargo install --locked cargo-update
+        cargo install --locked cargo-vet
+        cargo install --locked cargo-workspaces
+        cargo install --locked cross
+        cargo install --locked flamegraph
+        cargo install --locked rustfmt
+        rustup component add clippy
+        rustup component add rust-analyzer
+      description: Install Rust and common tools
+
+- link:
+    ~/.cargo/config.toml: tools/rust/config.toml
+    ~/.rustfmt.toml: tools/rust/rustfmt.toml
+    ~/.clippy.toml: tools/rust/clippy.toml 

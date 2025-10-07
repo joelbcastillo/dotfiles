@@ -1,0 +1,26 @@
+- defaults:
+    link:
+      relink: true
+      force: true
+      create: true
+
+- clean: ['~']
+
+- import:
+    - configs/git.yaml
+    - configs/oh-my-zsh.yaml
+    - configs/starship.yaml
+    - configs/tmux.yaml
+    - configs/vscode.yaml
+    - configs/cursor.yaml
+    - configs/ghostty.yaml
+    - configs/ssh.yaml
+    - configs/utils.yaml
+    - configs/python.yaml
+    - configs/ripgrep.yaml
+    - configs/aws.yaml
+    - configs/gh.yaml
+
+- shell:
+    - [git submodule update --init --recursive, Installing git submodules]
+    - [chmod +x ~/.dotfiles/scripts/*, Making scripts executable] 

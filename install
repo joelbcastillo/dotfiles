@@ -1,0 +1,409 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Script configuration
+META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.dotbot"
+PROFILE_DIR="${META_DIR}/profiles"
+CONFIG_DIR="${META_DIR}/configs"
+CONFIG_SUFFIX=".yaml"
+MIN_MACOS_VERSION="13.0"  # macOS Ventura
+REQUIRED_TOOLS=("git" "curl" "xcode-select")
+
+# Script state
+OPERATION=${1}
+SELF_NAME=$(basename "$0")
+ERROR_COUNT=0
+WARNING_COUNT=0
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Progress indicators
+SPINNER_CHARS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+SPINNER_POS=0
+SPINNER_PID=""
+
+function spinner() {
+    local msg="$1"
+    local delay=0.1
+    
+    # Start spinner
+    while true; do
+        printf "\r${BLUE}[%c] %s${NC}" "${SPINNER_CHARS:$SPINNER_POS:1}" "$msg"
+        SPINNER_POS=$(( (SPINNER_POS + 1) % ${#SPINNER_CHARS} ))
+        sleep "$delay"
+    done
+}
+
+function start_spinner() {
+    spinner "$1" &
+    SPINNER_PID=$!
+    # Disable cursor
+    tput civis
+}
+
+function stop_spinner() {
+    if [ -n "$SPINNER_PID" ]; then
+        kill "$SPINNER_PID" 2>/dev/null
+        wait "$SPINNER_PID" 2>/dev/null
+        SPINNER_PID=""
+    fi
+    # Enable cursor
+    tput cnorm
+    # Clear the spinner line
+    printf "\r\033[K"
+}
+
+function check_macos_version() {
+    local macos_version
+    macos_version=$(sw_vers -productVersion)
+    
+    if [ "$(printf '%s\n' "$MIN_MACOS_VERSION" "$macos_version" | sort -V | head -n1)" != "$MIN_MACOS_VERSION" ]; then
+        red_echo "Version Check" "macOS version $macos_version is not supported. Minimum required version is $MIN_MACOS_VERSION"
+        return 1
+    fi
+    green_echo "Version Check" "macOS version $macos_version is supported"
+    return 0
+}
+
+function check_required_tools() {
+    local missing_tools=()
+    
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [ ${#missing_tools[@]} -ne 0 ]; then
+        red_echo "Dependency Check" "Missing required tools: ${missing_tools[*]}"
+        return 1
+    fi
+    green_echo "Dependency Check" "All required tools are installed"
+    return 0
+}
+
+function check_xcode_tools() {
+    if ! xcode-select -p >/dev/null 2>&1; then
+        red_echo "Xcode Check" "Xcode Command Line Tools are not installed"
+        blue_echo "Xcode Check" "Installing Xcode Command Line Tools..."
+        xcode-select --install
+        return 1
+    fi
+    green_echo "Xcode Check" "Xcode Command Line Tools are installed"
+    return 0
+}
+
+function backup_existing_config() {
+    local backup_dir
+    backup_dir="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    
+    # Backup common dotfiles
+    local files_to_backup=(
+        "$HOME/.zshrc"
+        "$HOME/.gitconfig"
+        "$HOME/.ssh/config"
+        "$HOME/Library/Application Support/Code/User/settings.json"
+    )
+    
+    for file in "${files_to_backup[@]}"; do
+        if [ -f "$file" ]; then
+            cp "$file" "$backup_dir/"
+            blue_echo "Backup" "Backed up $file to $backup_dir"
+        fi
+    done
+}
+
+function rollback() {
+    local backup_dir="$1"
+    if [ -d "$backup_dir" ]; then
+        blue_echo "Rollback" "Restoring from backup..."
+        cp -r "$backup_dir"/* "$HOME/"
+        green_echo "Rollback" "Restored configuration from backup"
+    else
+        red_echo "Rollback" "No backup found to restore from"
+    fi
+}
+
+function usage() {
+    simple_blue_echo "Usage: [profile|config|bootstrap|private] <name>"
+    simple_blue_echo "Options:"
+    simple_blue_echo "  profile - setup the specified profiles. Profiles are found in .dotbot/profiles"
+    simple_blue_echo "  config - setup the specified config. Configs are found in .dotbot/configs"
+    simple_blue_echo "  bootstrap - Bootstrap the system for dotfiles."
+    simple_blue_echo "  private - Setup private files from dotfiles-private repository"
+    simple_blue_echo "Arguments:"
+    simple_blue_echo "  name: name of the profile or config to install"
+    simple_blue_echo ""
+    simple_blue_echo "For private setup, copy and edit the example config:"
+    simple_blue_echo "  cp config.json.example config.json"
+    simple_blue_echo "  # Edit with your private repository URL"
+    simple_blue_echo "  Then run: ./install private [ssh-configs]"
+    simple_blue_echo "  SSH configs: any config name from your private repo, or 'all' for all configs"
+    exit 0
+}
+
+function submodules() {
+    blue_echo "${SELF_NAME}" "Updating submodules"
+    start_spinner "Updating git submodules..."
+    if ! git submodule update --init --recursive --remote; then
+        stop_spinner
+        red_echo "${SELF_NAME}" "Failed to update submodules"
+        return 1
+    fi
+    stop_spinner
+    green_echo "${SELF_NAME}" "Submodules updated successfully"
+    return 0
+}
+
+function exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+function prompt() {
+    read -r -p "$1 [y|N] " response
+    [[ $response =~ (yes|y|Y) ]] || return 1
+}
+
+function red_echo() {
+    printf "${RED}[E] %s: %s${NC}\n" "${1}" "${2}"
+    ((ERROR_COUNT++))
+}
+
+function simple_red_echo() {
+    printf "${RED}%s${NC}\n" "${1}"
+}
+
+function green_echo() {
+    printf "${GREEN}[S] %s: %s${NC}\n" "${1}" "${2}"
+}
+
+function simple_green_echo() {
+    printf "${GREEN}%s${NC}\n" "${1}"
+}
+
+function blue_echo() {
+    printf "${BLUE}[I] %s: %s${NC}\n" "${1}" "${2}"
+}
+
+function simple_blue_echo() {
+    printf "${BLUE}%s${NC}\n" "${1}"
+}
+
+function yellow_echo() {
+    printf "${YELLOW}[W] %s: %s${NC}\n" "${1}" "${2}"
+    ((WARNING_COUNT++))
+}
+
+function bootstrap() {
+    local backup_dir
+    backup_dir="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+    
+    # Pre-installation checks
+    blue_echo "${SELF_NAME}" "Running pre-installation checks..."
+    
+    if ! check_macos_version; then
+        red_echo "${SELF_NAME}" "System requirements not met"
+        return 1
+    fi
+    
+    if ! check_xcode_tools; then
+        red_echo "${SELF_NAME}" "Xcode Command Line Tools installation required"
+        return 1
+    fi
+    
+    if ! check_required_tools; then
+        red_echo "${SELF_NAME}" "Required tools are missing"
+        return 1
+    fi
+    
+    # Backup existing configuration
+    blue_echo "${SELF_NAME}" "Backing up existing configuration..."
+    backup_existing_config "$backup_dir"
+    
+    # Install Homebrew if not present
+    if ! exists brew; then
+        blue_echo "${SELF_NAME}" "Installing Homebrew"
+        start_spinner "Installing Homebrew..."
+        if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"; then
+            stop_spinner
+            red_echo "${SELF_NAME}" "Failed to install Homebrew"
+            rollback "$backup_dir"
+            return 1
+        fi
+        stop_spinner
+    fi
+    
+    # Install 1Password CLI if not present
+    if ! exists op; then
+        blue_echo "${SELF_NAME}" "Installing 1Password CLI"
+        start_spinner "Installing 1Password CLI..."
+        if ! brew install --cask 1password-cli; then
+            stop_spinner
+            red_echo "${SELF_NAME}" "Failed to install 1Password CLI"
+            rollback "$backup_dir"
+            return 1
+        fi
+        stop_spinner
+        blue_echo "${SELF_NAME}" "Please sign in to 1Password CLI: op signin"
+    else
+        green_echo "${SELF_NAME}" "1Password CLI is already installed"
+    fi
+    
+    # Update submodules
+    if ! submodules; then
+        red_echo "${SELF_NAME}" "Failed to update submodules"
+        rollback "$backup_dir"
+        return 1
+    fi
+    
+    green_echo "${SELF_NAME}" "Bootstrap completed successfully"
+    if [ $WARNING_COUNT -gt 0 ]; then
+        yellow_echo "${SELF_NAME}" "Completed with $WARNING_COUNT warnings"
+    fi
+    return 0
+}
+
+function setup_private() {
+    blue_echo "${SELF_NAME}" "Setting up private files from dotfiles-private repository..."
+    
+    # Check for config file first
+    local config_file="config.json"
+    local private_repo_url=""
+    local default_ssh_configs="all"
+    
+    if [ -f "$config_file" ]; then
+        # Read from config file
+        private_repo_url=$(grep -o '"private_repo_url": *"[^"]*"' "$config_file" | sed 's/.*": *"\([^"]*\)".*/\1/')
+        default_ssh_configs=$(grep -o '"default_ssh_configs": *"[^"]*"' "$config_file" | sed 's/.*": *"\([^"]*\)".*/\1/')
+        
+        if [ -z "$default_ssh_configs" ]; then
+            default_ssh_configs="all"
+        fi
+    fi
+    
+    # Fall back to environment variable if config file doesn't exist or URL is empty
+    if [ -z "$private_repo_url" ]; then
+        private_repo_url="$PRIVATE_REPO_URL"
+    fi
+    
+    # Check if we have a private repo URL
+    if [ -z "$private_repo_url" ]; then
+        red_echo "${SELF_NAME}" "No private repository URL configured"
+        blue_echo "${SELF_NAME}" "Create config.json with your private repo URL:"
+        blue_echo "${SELF_NAME}" "  cp config.json.example config.json"
+        blue_echo "${SELF_NAME}" "  # Then edit the file with your private repository URL"
+        blue_echo "${SELF_NAME}" ""
+        blue_echo "${SELF_NAME}" "Or set PRIVATE_REPO_URL environment variable:"
+        blue_echo "${SELF_NAME}" "  PRIVATE_REPO_URL=https://github.com/yourusername/dotfiles-private.git ./install private"
+        return 1
+    fi
+    
+    # Set SSH configs to setup (use parameter if provided, otherwise use config default)
+    local ssh_configs="${1:-$default_ssh_configs}"
+    
+    # Export variables for the setup script
+    export PRIVATE_REPO_URL="$private_repo_url"
+    export SSH_CONFIGS="$ssh_configs"
+    
+    # Run the simple private setup script
+    if ! ./scripts/setup-private-files.sh; then
+        red_echo "${SELF_NAME}" "Failed to setup private files"
+        return 1
+    fi
+    
+    green_echo "${SELF_NAME}" "Private files setup completed successfully"
+    return 0
+}
+
+function bootstrap_devcontainer() {
+    if ! submodules; then
+        red_echo "${SELF_NAME}" "Failed to update submodules"
+        return 1
+    fi
+    green_echo "${SELF_NAME}" "Devcontainer bootstrap completed successfully"
+    return 0
+}
+
+function install_profile() {
+    local PROFILE=${1}
+    if [ ! -f "${PROFILE_DIR}/${PROFILE}" ]; then
+        simple_red_echo "${PROFILE} does not exist."
+        profiles=$(ls "${PROFILE_DIR}")
+        simple_red_echo "Valid profiles are:"
+        simple_red_echo "${profiles}"
+        return 1
+    fi
+    
+    blue_echo "${SELF_NAME}" "Installing Dotbot Profile: ${PROFILE}"
+    start_spinner "Installing profile ${PROFILE}..."
+    # shellcheck source=/dev/null
+    if ! . "${META_DIR}/install-profile" "${PROFILE}"; then
+        stop_spinner
+        red_echo "${SELF_NAME}" "Failed to install profile ${PROFILE}"
+        return 1
+    fi
+    stop_spinner
+    
+    green_echo "${SELF_NAME}" "Profile ${PROFILE} installed successfully"
+    return 0
+}
+
+function install_config() {
+    local CONFIG=${1}
+    if [ ! -f "${CONFIG_DIR}/${CONFIG}${CONFIG_SUFFIX}" ]; then
+        simple_red_echo "${CONFIG} does not exist."
+        configs=$(ls -R "${CONFIG_DIR}")
+        simple_red_echo "Valid configs are:"
+        simple_red_echo "${configs}"
+        return 1
+    fi
+    
+    blue_echo "${SELF_NAME}" "Installing Dotbot Config: ${CONFIG}"
+    start_spinner "Installing config ${CONFIG}..."
+    # shellcheck source=/dev/null
+    if ! . "${META_DIR}/install-config" "${CONFIG}"; then
+        stop_spinner
+        red_echo "${SELF_NAME}" "Failed to install config ${CONFIG}"
+        return 1
+    fi
+    stop_spinner
+    
+    green_echo "${SELF_NAME}" "Config ${CONFIG} installed successfully"
+    return 0
+}
+
+# Cleanup function to ensure spinner is stopped
+function cleanup() {
+    stop_spinner
+}
+
+# Set up trap to ensure cleanup on exit
+trap cleanup EXIT
+
+# Main execution
+if [ "${OPERATION}" == 'profile' ]; then
+    install_profile "${2}"
+elif [ "${OPERATION}" == 'config' ]; then
+    install_config "${2}"
+elif [ "${OPERATION}" == 'bootstrap' ]; then
+    bootstrap
+elif [ "${OPERATION}" == 'bootstrap_devcontainer' ]; then
+    bootstrap_devcontainer
+elif [ "${OPERATION}" == 'private' ]; then
+    setup_private
+else
+    usage
+fi
+
+# Exit with appropriate status
+if [ $ERROR_COUNT -gt 0 ]; then
+    exit 1
+fi
+exit 0

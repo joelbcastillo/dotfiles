@@ -1,0 +1,67 @@
+- shell:
+  - 
+    command: |
+      echo "Installing AI development tools..."
+    description: Installing AI development tools
+
+- shell:
+  - 
+    command: |
+      if ! command -v cursor-agent >/dev/null 2>&1; then
+        echo "Installing cursor-agent..."
+        curl https://cursor.com/install -fsS | bash
+        # Add ~/.local/bin to PATH if not already there
+        if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+          export PATH="$HOME/.local/bin:$PATH"
+        fi
+      else
+        echo "cursor-agent is already installed"
+      fi
+    description: Install cursor-agent
+
+- shell:
+  - 
+    command: |
+      if ! command -v claude >/dev/null 2>&1; then
+        echo "Installing Claude Code..."
+        if command -v brew >/dev/null 2>&1; then
+          brew install claude
+        else
+          echo "Homebrew not found. Please install Homebrew first."
+          exit 1
+        fi
+      else
+        echo "Claude Code is already installed"
+      fi
+    description: Install Claude Code
+
+- shell:
+  - 
+    command: |
+      # Create symlink for claude in ~/.local/bin if it doesn't exist
+      if [ -f "/opt/homebrew/bin/claude" ] && [ ! -L "$HOME/.local/bin/claude" ]; then
+        echo "Creating symlink for claude in ~/.local/bin"
+        ln -sf /opt/homebrew/bin/claude "$HOME/.local/bin/claude"
+      elif [ -L "$HOME/.local/bin/claude" ]; then
+        echo "Claude symlink already exists in ~/.local/bin"
+      else
+        echo "Warning: Claude not found in /opt/homebrew/bin/claude"
+      fi
+    description: Create Claude symlink in ~/.local/bin
+
+- shell:
+  - 
+    command: |
+      echo "AI tools installation completed successfully"
+      # Ensure ~/.local/bin is in PATH for this session
+      export PATH="$HOME/.local/bin:$PATH"
+      if command -v cursor-agent >/dev/null 2>&1; then
+        echo "cursor-agent version: $(cursor-agent --version)"
+      else
+        echo "Warning: cursor-agent not found in PATH"
+      fi
+      if command -v claude >/dev/null 2>&1; then
+        echo "Claude Code version: $(claude --version)"
+      fi
+    description: Verify AI tools installation

@@ -1,0 +1,11 @@
+asciinema
+black
+blastradius
+cookiecutter
+divio-cli
+httpie
+pipenv
+pipenv-poetry-migrate
+poetry
+cfn-lint
+policy-sentry

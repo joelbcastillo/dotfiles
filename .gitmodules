@@ -1,0 +1,30 @@
+[submodule ".dotbot/dotbot"]
+    path = .dotbot/dotbot
+    url = https://github.com/anishathalye/dotbot.git
+[submodule ".dotbot/plugins/dotbot-asdf"]
+    path = .dotbot/plugins/dotbot-asdf
+    url = https://github.com/sobolevn/dotbot-asdf.git
+[submodule ".dotbot/plugins/dotbot-brew"]
+    path = .dotbot/plugins/dotbot-brew
+    url = https://github.com/d12frosted/dotbot-brew.git
+[submodule ".dotbot/plugins/dotbot-ghq"]
+    path = .dotbot/plugins/dotbot-ghq
+    url = https://github.com/klane/dotbot-ghq.git
+[submodule ".dotbot/plugins/dotbot-pip"]
+    path = .dotbot/plugins/dotbot-pip
+    url = https://github.com/sobolevn/dotbot-pip.git
+[submodule ".dotbot/plugins/dotbot-vscode"]
+	path = .dotbot/plugins/dotbot-vscode
+	url = https://github.com/hujianxin/dotbot-vscode
+[submodule "shells/prezto/prezto"]
+	path = shells/prezto/prezto
+	url = https://github.com/sorin-ionescu/prezto
+[submodule "dotbot-git"]
+	path = .dotbot/plugins/dotbot-git
+	url = https://github.com/DrDynamic/dotbot-git.git
+[submodule "shells/oh-my-zsh/custom/plugins/zsh-autosuggestions"]
+	path = shells/oh-my-zsh/custom/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions.git
+[submodule "shells/oh-my-zsh/custom/plugins/zsh-syntax-highlighting"]
+	path = shells/oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting.git

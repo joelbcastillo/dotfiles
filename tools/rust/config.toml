@@ -1,0 +1,8 @@
+[build]
+target-dir = "target"
+
+[term]
+color = "auto"
+
+[net]
+git-fetch-with-cli = true 

@@ -1,0 +1,5 @@
+# Assumes you have an item named 'AWS' in your 'Personal' vault.
+# Please update these paths if they are incorrect.
+export AWS_ACCESS_KEY_ID=$(op read "op://Personal/AWS/access_key_id")
+export AWS_SECRET_ACCESS_KEY=$(op read "op://Personal/AWS/secret_access_key")
+export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-"us-east-1"} 

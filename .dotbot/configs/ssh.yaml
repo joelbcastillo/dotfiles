@@ -1,0 +1,41 @@
+- shell:
+  - command: |
+      echo "Setting up SSH configuration..."
+    description: Setting up SSH configuration
+
+- link:
+    ~/.ssh/config: ~/.dotfiles/tools/ssh/config
+
+- shell:
+  - command: |
+      # Create SSH keys directory
+      mkdir -p ~/.dotfiles/tools/ssh/keys/personal
+      echo "SSH keys directory created"
+    description: Create SSH keys directory
+
+- shell:
+  - command: |
+      # Check if 1Password CLI is available and user is signed in
+      if command -v op >/dev/null 2>&1 && op account list >/dev/null 2>&1; then
+        echo "1Password CLI is available, setting up SSH keys..."
+        # Use environment variables to determine which SSH keys to fetch
+        if [ "$SSH_PROFILE" = "personal" ]; then
+          echo "Setting up personal SSH keys..."
+          ~/.dotfiles/scripts/fetch-ssh-keys.sh "SSH Key - Personal" "github" "Personal" "my.1password.com"
+        elif [ "$SSH_PROFILE" = "carequant" ]; then
+          echo "Setting up CareQuant SSH keys..."
+          ~/.dotfiles/scripts/fetch-ssh-keys.sh "Github SSH" "github" "Employee" "carequant.1password.com"
+        else
+          echo "Setting up default SSH keys..."
+          ~/.dotfiles/scripts/fetch-ssh-keys.sh "SSH Key - Personal" "github" "Personal" "my.1password.com"
+        fi
+      else
+        echo "1Password CLI not available or not signed in."
+        echo "Please run 'op signin' and then '~/.dotfiles/scripts/fetch-ssh-keys.sh' to set up SSH keys."
+      fi
+    description: Setup SSH keys from 1Password based on profile
+
+- shell:
+  - command: |
+      echo "SSH configuration setup completed"
+    description: Complete SSH setup

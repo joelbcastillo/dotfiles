@@ -1,0 +1,193 @@
+add_newline = true
+command_timeout = 500
+
+# format = """
+# $username\
+# $memory_usage\
+# $hostname\
+# $kubernetes\
+# $directory\
+# $git_branch\
+# $git_commit\
+# $git_state\
+# $git_status\
+# $hg_branch\
+# $package\
+# $dotnet\
+# $elixir\
+# $elm\
+# $golang\
+# $haskell\
+# $java\
+# $nodejs\
+# $php\
+# $python\
+# $ruby\
+# $rust\
+# $terraform\
+# $nix_shell\
+# $conda\
+# $aws\
+# $env_var\
+# $crystal\
+# $jobs\
+# $cmd_duration\
+# $line_break\
+# $battery\
+# $character\
+# """
+
+format = """
+$username\
+$hostname\
+$kubernetes\
+$directory\
+$git_branch\
+$git_commit\
+$git_state\
+$git_status\
+$package\
+$golang\
+$python\
+$ruby\
+$terraform\
+$aws\
+$env_var\
+$crystal\
+$jobs\
+$cmd_duration\
+$line_break\
+$battery\
+$character\
+"""
+
+[aws]
+format = 'on [$symbol($profile )(\($region\) )]($style)'
+
+[battery]
+full_symbol = "🔋"
+charging_symbol = "⚡️"
+discharging_symbol = "💀"
+
+[[battery.display]]
+threshold = 10
+style = "bold red"
+
+[[battery.display]]
+threshold = 60
+style = "bold yellow"
+
+[[battery.display]]
+threshold = 100
+style = "bold green"
+
+[character]
+format = "$symbol "
+success_symbol = "➜(bold green)"
+error_symbol = "✗(bold red)"
+
+[cmd_duration]
+min_time = 0
+format = "took [$duration]($style) "
+
+[directory]
+truncation_length = 6
+truncate_to_repo = true
+format = "in [$path]($style)[$read_only]($read_only_style) "
+style = "bold cyan"
+disabled = false
+
+# [env_var]
+# variable = "SHELL"
+# default = "Zsh"
+# prefix = "<"
+# suffix = ">"
+
+[git_branch]
+# symbol = "🌱 "
+truncation_symbol = "..."
+style = "bold purple"
+disabled = false
+
+[git_state]
+format = '[\($state\)( $progress_current of $progress_total)\)]($style) '
+cherry_pick = "CHERRY PICKING"
+rebase = "REBASING"
+merge = "MERGING"
+revert = "REVERTING"
+bisect = "BISECTING"
+am = "AM"
+am_or_rebase = "AM/REBASE"
+style = "bold yellow"
+disabled = false
+
+[git_status]
+# conflicted = "🏳"
+# ahead = "🏎💨"
+# behind = "😰"
+# diverged = "😵"
+# untracked = "🤷‍"
+# stashed = "📦"
+# modified = "📝"
+staged = "[++($count)](green)"
+# renamed = "👅"
+# deleted = "🗑"
+
+[hostname]
+ssh_only = false
+format = "🤖 [$hostname]($style) "
+# suffix = "⟫"
+trim_at = "."
+disabled = false
+
+# [jobs]
+# symbol = "+ "
+# threshold = 1
+
+[line_break]
+disabled = false
+
+# [memory_usage]
+# disabled = false
+# show_percentage = true
+# show_swap = false
+# threshold = -1
+# symbol = " "
+# separator = "/"
+# style = "bold dimmed white"
+
+[nodejs]
+symbol = "⬢ "
+style = "bold green"
+disabled = false
+
+# [package]
+# symbol = "📦 "
+# style = "bold red"
+# disabled = false
+
+[python]
+symbol = "🐍 "
+pyenv_version_name = false
+pyenv_prefix = "pyenv"
+style = "bold yellow"
+disabled = false
+python_binary = ["$HOME/.asdf/shims/python"]
+
+[terraform]
+symbol = "💠"
+format = "via [$version$workspace]($style) "
+version_format = "v${raw}"
+
+[time]
+format = "🕙%T"
+style_root = "bold red"
+style_user = "bold yellow"
+show_always = true
+disabled = false
+
+[username]
+style_root = "bold red"
+style_user = "bold yellow"
+show_always = false
+disabled = false

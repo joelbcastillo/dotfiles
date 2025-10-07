@@ -1,0 +1,23 @@
+- shell:
+    - command: |
+        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        asdf plugin add python || true
+        asdf plugin update python
+        asdf install python 3.12.2
+        asdf set -u python 3.12.2
+        
+      description: Set up Python with asdf and development tools
+
+- link:
+    ~/.pip/pip.conf: tools/python/pip.conf
+    ~/.pythonrc: tools/python/pythonrc
+    ~/.config/pipx/config.json: tools/pipx/config.json
+    ~/.pylintrc: tools/python/pylintrc
+    ~/.flake8: tools/python/flake8
+    ~/.mypy.ini: tools/python/mypy.ini
+    ~/.isort.cfg: tools/python/isort.cfg
+    ~/.pre-commit-config.yaml: tools/python/pre-commit-config.yaml
+    ~/.poetry/config.toml: tools/python/poetry.toml
+
+- pipx:
+    file: tools/pipx/requirements.txt 

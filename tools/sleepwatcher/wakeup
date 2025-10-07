@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Commands to run after wake
+# Refresh Homebrew
+brew update
+
+# Check for system updates
+softwareupdate -l
+
+# Refresh DNS cache
+dscacheutil -flushcache
+sudo killall -HUP mDNSResponder
+
+exit $?

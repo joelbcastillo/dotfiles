@@ -1,0 +1,185 @@
+[color]
+  ui = true
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+[color "diff"]
+  meta = yellow bold
+  frag = magenta bold
+  old = red
+  new = green
+[alias]
+  # add
+  a = add                           # add
+  chunkyadd = add --patch           # stage commits chunk by chunk
+
+  # via http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+  snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+  snapshots = !git stash list --grep snapshot
+
+  #via http://stackoverflow.com/questions/5188320/how-can-i-get-a-list-of-git-branches-ordered-by-most-recent-commit
+  recent-branches = !git for-each-ref --count=15 --sort=-committerdate refs/heads/ --format='%(refname:short)'
+
+  # via https://stackoverflow.com/questions/2517339/how-to-restore-the-permissions-of-files-and-directories-within-git-if-they-have
+	permission-reset = !git diff -p -R --no-ext-diff --no-color | grep -E \"^(diff|(old|new) mode)\" --color=never | git apply
+
+  # branch
+  b = branch -v                     # branch (verbose)
+
+  # commit
+  c = commit -m                     # commit with message
+  ca = commit -am                   # commit all with message
+  ci = commit                       # commit
+  amend = commit --amend            # ammend your last commit
+  ammend = commit --amend           # ammend your last commit
+
+  # checkout
+  co = checkout                     # checkout
+  nb = checkout -b                  # create and switch to a new branch (mnemonic: "git new branch branchname...")
+
+  # cherry-pick
+  cp = cherry-pick -x               # grab a change from a branch
+
+  # diff
+  d = diff                          # diff unstaged changes
+  dc = diff --cached                # diff staged changes
+  last = diff HEAD^                 # diff last committed change
+
+  # log
+  l = log --graph --date=short
+  changes = log --pretty=format:\"%h %cr %cn %Cgreen%s%Creset\" --name-status
+  short = log --pretty=format:\"%h %cr %cn %Cgreen%s%Creset\"
+  simple = log --pretty=format:\" * %s\"
+  shortnocolor = log --pretty=format:\"%h %cr %cn %s\"
+
+  # pull
+  pl = pull                         # pull
+
+  # push
+  ps = push                         # push
+
+  # rebase
+  rc = rebase --continue            # continue rebase
+  rs = rebase --skip                # skip rebase
+
+  # remote
+  r = remote -v                     # show remotes (verbose)
+
+  # reset
+  unstage = reset HEAD              # remove files from index (tracking)
+  uncommit = reset --soft HEAD^     # go back before last commit, with files in uncommitted state
+  filelog = log -u                  # show changes to a file
+  mt = mergetool                    # fire up the merge tool
+
+  # stash
+  ss = stash                        # stash changes
+  sl = stash list                   # list stashes
+  sa = stash apply                  # apply stash (restore changes)
+  sd = stash drop                   # drop stashes (destory changes)
+
+  # status
+  s = status                        # status
+  st = status                       # status
+  stat = status                     # status
+
+  # tag
+  t = tag -n                        # show tags with <n> lines of each tag message
+
+  # svn helpers
+  svnr = svn rebase
+  svnd = svn dcommit
+  svnl = svn log --oneline --show-commit
+  
+  # Conventional Commits
+  build = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"build: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"build(${2}): ${@:3}\"; else git commit -m \"build: ${@}\"; fi }; f"
+  co-build = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"build/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"build/${2}-${@:3}\"; else git checkout -b \"build/${@}\"; fi }; f"
+  chore = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"chore: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"chore(${2}): ${@:3}\"; else git commit -m \"chore: ${@}\"; fi }; f"
+  co-chore = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"chore/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"chore/${2}-${@:3}\"; else git checkout -b \"chore/${@}\"; fi }; f"
+  ci = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"ci: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"ci(${2}): ${@:3}\"; else git commit -m \"ci: ${@}\"; fi }; f"
+  co-ci = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"ci/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"ci/${2}-${@:3}\"; else git checkout -b \"ci/${@}\"; fi }; f"
+	docs = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"docs: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"docs(${2}): ${@:3}\"; else git commit -m \"docs: ${@}\"; fi }; f"
+  co-docs = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"docs/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"docs/${2}-${@:3}\"; else git checkout -b \"docs/${@}\"; fi }; f"
+	feat = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"feat: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"feat(${2}): ${@:3}\"; else git commit -m \"feat: ${@}\"; fi }; f"
+  co-feat = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"feat/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"feat/${2}-${@:3}\"; else git checkout -b \"feat/${@}\"; fi }; f"
+	fix = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"fix: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"fix(${2}): ${@:3}\"; else git commit -m \"fix: ${@}\"; fi }; f"
+  co-fix = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"fix/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"fix/${2}-${@:3}\"; else git checkout -b \"fix/${@}\"; fi }; f"
+	localize = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"localize: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"localize(${2}): ${@:3}\"; else git commit -m \"localize: ${@}\"; fi }; f"
+  co-localize = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"localize/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"localize/${2}-${@:3}\"; else git checkout -b \"localize/${@}\"; fi }; f"
+	perf = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"perf: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"perf(${2}): ${@:3}\"; else git commit -m \"perf: ${@}\"; fi }; f"
+  co-perf = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"perf/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"perf/${2}-${@:3}\"; else git checkout -b \"perf/${@}\"; fi }; f"
+	refactor = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"refactor: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"refactor(${2}): ${@:3}\"; else git commit -m \"refactor: ${@}\"; fi }; f"
+  co-refactor = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"refactor/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"refactor/${2}-${@:3}\"; else git checkout -b \"refactor/${@}\"; fi }; f"
+  revert = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"revert: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"revert(${2}): ${@:3}\"; else git commit -m \"revert: ${@}\"; fi }; f"
+  co-revert = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"revert/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"revert/${2}-${@:3}\"; else git checkout -b \"revert/${@}\"; fi }; f"
+	style = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"style: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"style(${2}): ${@:3}\"; else git commit -m \"style: ${@}\"; fi }; f"
+  co-style = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"style/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"style/${2}-${@:3}\"; else git checkout -b \"style/${@}\"; fi }; f"
+	test = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git commit -m \"test: \" -e; elif [ \"$1\" == \"-s\" ]; then git commit -m \"test(${2}): ${@:3}\"; else git commit -m \"test: ${@}\"; fi }; f"
+  co-test = "!f() { [[ -z \"$GIT_PREFIX\" ]] || cd \"$GIT_PREFIX\" && if [ -z \"$1\" ]; then git checkout -b \"test/\" -e; elif [ \"$1\" == \"-s\" ]; then git checkout -b \"test/${2}-${@:3}\"; else git checkout -b \"test/${@}\"; fi }; f"
+
+  # Secrets
+	delete-squashed = "!f() { local targetBranch=${1:-main} && git checkout -q $targetBranch && git branch --merged | grep -v \"\\*\" | xargs -n 1 git branch -d && git for-each-ref refs/heads/ \"--format=%(refname:short)\" | while read branch; do mergeBase=$(git merge-base $targetBranch $branch) && [[ $(git cherry $targetBranch $(git commit-tree $(git rev-parse $branch^{tree}) -p $mergeBase -m _)) == \"-\"* ]] && git branch -D $branch; done; }; f"
+
+  gone = "!f() { git fetch --all --prune; git branch -vv | awk '/: gone]/{print $1}' | xargs git branch -D; }; f"
+
+[format]
+  pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
+  
+[merge]
+  summary = true
+  verbosity = 1
+  tool = vscode
+[mergetool]
+  prompt = false
+[mergetool "vscode"]
+  cmd = code --wait $MERGED  # use fugitive.vim for 3-way merge
+  keepbackup=false
+[apply]
+  whitespace = nowarn
+[branch]
+  autosetupmerge = true
+[push]
+  # 'git push' will push the current branch to its tracking branch
+  # the usual default is to push all branches
+  default = upstream
+[core]
+  autocrlf = false
+	editor = code --wait
+  excludesfile = ~/.gitignore
+[advice]
+  statusHints = false
+[rerere]
+  # Remember my merges
+  # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
+  enabled = true
+[include]
+  path = ~/.gitconfig.user
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[pull]
+	rebase = false
+[init]
+	defaultBranch = main
+[ghq]
+  root = ~/.repos
+[credential "https://github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[diff]
+  # Git diff will use (i)ndex, (w)ork tree, (c)ommit and (o)bject
+  # instead of a/b/c/d as prefixes for patches
+  mnemonicprefix = true
+	algorithm = patience
+  tool = vscode
+[difftool "vscode"]
+  cmd = code --wait --diff $LOCAL $REMOTE
+[merge]
+  tool = vscode
+[mergetool "vscode"]
+  cmd = code --wait $MERGED
+[gpg "ssh"]
+	allowedSignersFile = ~/.ssh/allowed_signers

@@ -1,0 +1,9 @@
+- shell:
+    - command: |
+        if ! command -v starship >/dev/null 2>&1; then
+          curl -sS https://starship.rs/install.sh | sh -s -- -y
+        fi
+      description: Install starship if not present
+
+- link:
+    ~/.config/starship.toml: shells/starship/starship.toml

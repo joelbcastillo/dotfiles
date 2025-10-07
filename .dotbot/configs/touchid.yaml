@@ -1,0 +1,28 @@
+- shell:
+  -
+    command: |
+      # Check if TouchID is already configured
+      if grep -q "pam_tid.so" /etc/pam.d/sudo; then
+        echo "TouchID for sudo is already configured"
+        exit 0
+      fi
+      
+      # Create backup directory
+      mkdir -p "${HOME}/.touchid-for-sudo"
+      
+      # Backup original sudo configuration
+      if [ ! -f "${HOME}/.touchid-for-sudo/sudo" ]; then
+        cp /etc/pam.d/sudo "${HOME}/.touchid-for-sudo/sudo"
+        echo "Backed up original sudo configuration to ${HOME}/.touchid-for-sudo/sudo"
+      fi
+      
+      # Add TouchID authentication to sudo
+      awk 'NR==2 {print "auth       sufficient     pam_tid.so"} 1' /etc/pam.d/sudo > /tmp/sudo_touchid
+      sudo mv /tmp/sudo_touchid /etc/pam.d/sudo
+      
+      echo "TouchID for sudo has been configured successfully"
+      echo "To uninstall, run: sudo cp ${HOME}/.touchid-for-sudo/sudo /etc/pam.d/sudo"
+    description: Configure TouchID authentication for sudo
+    stdin: false
+    stdout: false
+    stderr: false

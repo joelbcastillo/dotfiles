@@ -1,0 +1,26 @@
+[user]
+    name = Joel Castillo
+    email = your.email@company.com
+    signingkey = ~/.ssh/github.pub
+
+[gpg]
+    format = ssh
+
+[commit]
+    gpgsign = true
+
+[core]
+    editor = vim
+    excludesfile = ~/.gitignore_global
+
+[init]
+    defaultBranch = main
+
+[push]
+    default = simple
+
+[pull]
+    rebase = false
+
+[color]
+    ui = auto 

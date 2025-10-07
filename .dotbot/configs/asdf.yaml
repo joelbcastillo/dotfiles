@@ -1,0 +1,10 @@
+- shell:
+    - command: |
+        # Add asdf to shell
+        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+      description: Set up asdf in shell
+
+- link:
+    ~/.asdfrc: tools/asdf/asdfrc
+    ~/.tool-versions: tools/asdf/tool-versions
+    ~/.asdf/asdf.sh: /opt/homebrew/opt/asdf/libexec/asdf.sh 

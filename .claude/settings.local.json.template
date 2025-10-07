@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/*/.local/bin/**)",
+      "Bash(echo $PATH)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
