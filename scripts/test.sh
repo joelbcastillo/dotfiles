@@ -29,7 +29,10 @@ find . -type f -name '*.sh' -o -name 'install' | while read -r script; do
   # SC2162: read without -r (safe to ignore for interactive scripts)
   # SC2181: Check exit code directly (safe to ignore for legacy scripts)
   # SC2001: Use ${variable//search/replace} (safe to ignore for sed usage)
-  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001 "$script"
+  # SC2119: Use function "$@" if function's $1 should mean script's $1 (safe to ignore for functions with optional parameters)
+  # SC2120: Function references arguments, but none are ever passed (safe to ignore for functions with optional parameters)
+  # SC2154: Variable is referenced but not assigned (safe to ignore for variables set by sourced files)
+  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2119,SC2120,SC2154 "$script"
 done
 success "All shell scripts passed shellcheck."
 

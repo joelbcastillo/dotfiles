@@ -57,3 +57,10 @@ cat > tools/git/gitconfig.user << EOF
 
 [color]
     ui = auto
+EOF
+
+print_message "${GREEN}" "✅ Git configuration updated successfully!"
+print_message "${YELLOW}" "📋 Next steps:"
+print_message "${YELLOW}" "1. Review the generated configuration files"
+print_message "${YELLOW}" "2. Run: ./install"
+print_message "${YELLOW}" "3. Source your shell: source ~/.zshrc"

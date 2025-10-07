@@ -264,7 +264,7 @@ function bootstrap() {
     fi
     
     green_echo "${SELF_NAME}" "Bootstrap completed successfully"
-    if [ $WARNING_COUNT -gt 0 ]; then
+    if [ "$WARNING_COUNT" -gt 0 ]; then
         yellow_echo "${SELF_NAME}" "Completed with $WARNING_COUNT warnings"
     fi
     return 0
@@ -403,7 +403,7 @@ else
 fi
 
 # Exit with appropriate status
-if [ $ERROR_COUNT -gt 0 ]; then
+if [ "$ERROR_COUNT" -gt 0 ]; then
     exit 1
 fi
 exit 0
