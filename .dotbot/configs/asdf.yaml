@@ -1,0 +1,20 @@
+- shell:
+    - command: |
+        # Validate and source asdf
+        BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/opt/homebrew")
+
+        if [ -f "$BREW_PREFIX/opt/asdf/libexec/asdf.sh" ]; then
+          . "$BREW_PREFIX/opt/asdf/libexec/asdf.sh"
+          echo "✅ asdf loaded successfully"
+        else
+          echo "⚠️  WARNING: asdf not found at $BREW_PREFIX/opt/asdf"
+          echo "Skipping asdf setup. Install with:"
+          echo "  brew install asdf"
+          exit 0
+        fi
+      description: Validate and source asdf with error handling
+
+- link:
+    ~/.asdfrc: tools/asdf/asdfrc
+    ~/.tool-versions: tools/asdf/tool-versions
+    ~/.asdf/asdf.sh: /opt/homebrew/opt/asdf/libexec/asdf.sh 

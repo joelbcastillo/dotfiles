@@ -1,0 +1,12 @@
+# ~/.pryrc
+Pry.config.history.file = File.expand_path('~/.pry_history')
+Pry.config.history.should_save = true
+Pry.config.history.should_load = true
+Pry.config.history.size = 1000
+Pry.config.prompt = [
+  proc { |obj, nest_level, _| "[pry-#{Pry.view_clip(obj)}]#{":#{nest_level}" if nest_level > 0}> " },
+  proc { |obj, nest_level, _| "[pry-#{Pry.view_clip(obj)}]*#{":#{nest_level}" if nest_level > 0}> " }
+]
+Pry.config.color = true
+Pry.config.pager = true
+Pry.config.editor = ENV['EDITOR'] || 'vim' 

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Commands to run before sleep
+pmset displaysleepnow
+
+# Pause any media playback
+osascript -e 'tell application "Music" to pause' 2>/dev/null
+osascript -e 'tell application "Spotify" to pause' 2>/dev/null
+
+# Save any unsaved work in editors from Brewfile
+# Editors installed via brew (from tools/homebrew/Brewfile):
+# - cask "cursor" -> Process: "Cursor"
+# - cask "visual-studio-code" -> Process: "Code"
+EDITORS=("Cursor" "Code")
+
+for editor in "${EDITORS[@]}"; do
+    if pgrep -x "$editor" > /dev/null 2>&1; then
+        osascript -e "tell application \"System Events\" to tell process \"$editor\" to keystroke \"s\" using {command down}" 2>/dev/null
+    fi
+done
+
+exit 0

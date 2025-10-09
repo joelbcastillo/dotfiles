@@ -1,0 +1,35 @@
+import readline
+import rlcompleter
+import os
+import sys
+from datetime import datetime
+import json
+import pprint
+pp = pprint.pprint
+
+# Enable tab completion
+readline.parse_and_bind("tab: complete")
+
+# History file
+histfile = os.path.join(os.path.expanduser("~"), ".python_history")
+try:
+    readline.read_history_file(histfile)
+except IOError:
+    pass
+
+# Save history on exit
+import atexit
+atexit.register(readline.write_history_file, histfile)
+
+# Readline settings
+readline.set_history_length(1000)
+readline.set_completer_delims(' \t\n`!@#$%^&*()=+[{]}\\|;:\'",<>/?')
+
+# Custom prompt
+sys.ps1 = f"\033[1;32m>>> \033[0m"
+sys.ps2 = f"\033[1;32m... \033[0m"
+
+# Welcome message
+print(f"Python {sys.version.split()[0]} on {sys.platform}")
+print(f"Started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print("Type 'help()' for more information.") 

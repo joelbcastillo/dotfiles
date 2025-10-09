@@ -1,0 +1,7 @@
+{
+  "private_repo_url": "https://github.com/yourusername/dotfiles-private.git",
+  "default_ssh_configs": "all",
+  "git_user_config": "gitconfig.user",
+  "active_profile": "",
+  "onepassword_account": "company.1password.com"
+}

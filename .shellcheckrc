@@ -1,0 +1,28 @@
+# Shellcheck configuration for dotfiles
+# https://github.com/koalaman/shellcheck/wiki/SC2034
+
+# Disable SC2034: Variable appears unused
+# Many variables in dotfiles are sourced by other scripts
+disable=SC2034
+
+# Disable SC1090: Can't follow non-constant source
+# We source many dynamic files
+disable=SC1090
+
+# Disable SC1091: Not following sourced file
+# We have many sourced files that may not exist yet
+disable=SC1091
+
+# Disable SC2250: Prefer braces around variables
+# This is a style preference, not a bug
+disable=SC2250
+
+# Enable all optional checks
+enable=add-default-case
+enable=avoid-nullary-conditions
+enable=check-unassigned-uppercase
+enable=deprecate-which
+enable=quote-safe-variables
+
+# Shell dialect
+shell=bash

@@ -1,0 +1,8 @@
+
+- git:
+    '~/.repos/github.com/tmux-plugins/tpm':
+      url: 'git@github.com:tmux-plugins/tpm.git'
+
+- link:
+    ~/.tmux.conf: tools/tmux/tmux.conf
+    ~/.tmux/plugins/tpm: ~/.repos/github.com/tmux-plugins/tpm

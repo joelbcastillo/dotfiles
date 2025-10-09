@@ -1,0 +1,33 @@
+# Set language
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# Set dotfiles directory
+export DOTFILES="$HOME/.dotfiles"
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Add Homebrew to PATH - detect location automatically
+if [ -x "$HOME/.homebrew/bin/brew" ]; then
+    # User-local Homebrew - also load user-local configuration
+    eval "$($HOME/.homebrew/bin/brew shellenv)"
+    [ -f "$HOME/.homebrew/homebrew.env" ] && source "$HOME/.homebrew/homebrew.env"
+elif [ -x "/opt/homebrew/bin/brew" ]; then
+    # Apple Silicon Mac (ARM)
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    # Load group configuration if it exists
+    [ -f "/opt/homebrew/etc/homebrew.env" ] && source "/opt/homebrew/etc/homebrew.env"
+elif [ -x "/usr/local/bin/brew" ]; then
+    # Intel Mac
+    eval "$(/usr/local/bin/brew shellenv)"
+    # Load group configuration if it exists
+    [ -f "/usr/local/etc/homebrew.env" ] && source "/usr/local/etc/homebrew.env"
+elif command -v brew >/dev/null 2>&1; then
+    # Homebrew in PATH
+    eval "$(brew shellenv)"
+fi
+
+# Set umask for group-writable files (for group-based Homebrew)
+# This doesn't hurt for user-local installations
+umask 0002 

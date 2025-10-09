@@ -1,0 +1,19 @@
+- shell:
+    - command: |
+        if ! grep -q "/opt/homebrew/bin/zsh" /etc/shells; then
+          echo "/opt/homebrew/bin/zsh" | sudo tee -a /etc/shells
+        fi
+        if [ "$SHELL" != "/opt/homebrew/bin/zsh" ]; then
+          echo -e "[INFO] You will now be prompted for your password to change your default shell. Please enter your password when prompted."
+          chsh -s /opt/homebrew/bin/zsh
+        fi
+      description: Add ZSH to allowed shells and set as default shell
+
+- link:
+    ~/.zshenv: shells/zsh/zshenv
+    ~/.zprofile: shells/zsh/zprofile
+    ~/.zshrc: shells/zsh/zshrc
+    ~/.zlogin: shells/zsh/zlogin
+    ~/.zlogout: shells/zsh/zlogout
+    ~/.zsh.before: shells/zsh/zsh.before
+    ~/.zsh.after: shells/zsh/zsh.after

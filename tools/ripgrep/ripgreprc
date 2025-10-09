@@ -1,0 +1,43 @@
+# Don't let ripgrep vomit really long lines to my terminal, and show a preview.
+--max-columns=150
+--max-columns-preview
+
+# Add my 'web' type.
+--type-add
+web:*.{html,css,js}*
+
+# Using glob patterns to include/exclude files or folders
+--glob=!git/*
+
+# or
+--glob
+!git/*
+
+# Set the colors.
+--colors=line:none
+--colors=line:style:bold
+
+# Because who cares about case!?
+--smart-case
+
+# Additional glob patterns
+--hidden
+--glob '!.git/*'
+--glob '!node_modules/*'
+--glob '!.venv/*'
+--glob '!__pycache__/*'
+--glob '!*.pyc'
+--glob '!*.pyo'
+--glob '!*.pyd'
+--glob '!.Python'
+--glob '!build/*'
+--glob '!develop-eggs/*'
+--glob '!.eggs/*'
+--glob '!*.egg-info/*'
+--glob '!*.egg'
+--glob '!dist/*'
+--glob '!downloads/*'
+--glob '!*.so'
+--glob '!.env'
+--glob '!.env.*'
+--glob '!.DS_Store'

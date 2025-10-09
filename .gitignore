@@ -1,0 +1,74 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# User-specific files
+*.log
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+tmp/
+temp/
+
+# Private configuration files (users should create their own)
+config.json
+
+# Private files (managed by dotfiles-private repository)
+# The pre-commit hook automatically ignores any symlinks pointing to the private repo
+
+# Personal SSH configurations (symlinked from private repo)
+.dotbot/configs/ssh-*.yaml
+
+# AI tools personal configurations
+tools/claude/config.json
+tools/cursor-agent/config.json
+tools/1password/secret-paths.json
+
+# 1Password config (contains device/account IDs - should be per-user)
+tools/1password/config
+!tools/1password/*.template
+
+# Claude AI configuration (personal settings)
+.claude/settings.local.json
+
+# Backup location files
+.backup_location
+
+# Template files (these are the public versions)
+!tools/git/gitconfig.user.template
+!tools/git/gitconfig.work.template
+!shells/zsh/zsh.before/aliases.zsh.template
+!apps/vscode/settings.json.template
+!apps/cursor/settings.json.template
+!.claude/settings.local.json.template
+!tools/claude/config.json.template
+!tools/cursor-agent/config.json.template
+!tools/1password/secret-paths.json.template
+
+# SSH - Ignore everything except templates and docs
+tools/ssh/config
+tools/ssh/keys/**/*
+!tools/ssh/keys/**/.gitkeep
+!tools/ssh/**/*.template
+!tools/ssh/**/*.md
+
+# Application-specific configs
+tools/aws/*/credentials
+apps/vscode/*-settings.json

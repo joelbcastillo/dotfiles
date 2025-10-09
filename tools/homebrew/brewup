@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# function to echo green text
+function gecho() {
+    echo "$(tput setaf 2)$1$(tput sgr0)"
+}
+
+# Update Homebrew
+gecho 'Updating Homebrew'
+brew update
+
+# Upgrade all packages
+gecho 'Upgrading packages'
+brew upgrade
+
+# Upgrade all casks
+gecho 'Upgrading casks'
+brew upgrade --cask
+
+# Clean up
+gecho 'Cleaning up'
+brew cleanup
+
+# Check system
+gecho 'Checking system'
+brew doctor
+
+gecho 'Installing missing packages'
+brew bundle check --file="$DOTFILES/tools/homebrew/Brewfile" || brew bundle --file="$DOTFILES/tools/homebrew/Brewfile"

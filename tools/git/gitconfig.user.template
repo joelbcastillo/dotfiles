@@ -1,0 +1,30 @@
+[user]
+    name = Your Name
+    email = your.email@company.com
+    # SSH public key for commit signing
+    # Fetch from 1Password: Run scripts/fetch-ssh-keys.sh
+    # Or manually place your public key at ~/.ssh/github.pub
+    # See docs/ssh-keys-1password.md for details
+    signingkey = ~/.ssh/github.pub
+
+[gpg]
+    format = ssh
+
+[commit]
+    gpgsign = true
+
+[core]
+    editor = vim
+    excludesfile = ~/.gitignore_global
+
+[init]
+    defaultBranch = main
+
+[push]
+    default = simple
+
+[pull]
+    rebase = false
+
+[color]
+    ui = auto

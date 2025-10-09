@@ -1,0 +1,18 @@
+require 'irb/completion'
+require 'irb/ext/save-history'
+
+IRB.conf[:SAVE_HISTORY] = 1000
+IRB.conf[:HISTORY_FILE] = "#{ENV['HOME']}/.irb_history"
+IRB.conf[:AUTO_INDENT] = true
+IRB.conf[:USE_READLINE] = true
+IRB.conf[:ECHO] = true
+IRB.conf[:ECHO_ON_ASSIGNMENT] = true
+IRB.conf[:USE_COLORIZE] = true
+IRB.conf[:PROMPT_MODE] = :SIMPLE
+IRB.conf[:PROMPT] = {
+  :PROMPT_I => "%N(%m):%03n:%i> ",
+  :PROMPT_N => "%N(%m):%03n:%i> ",
+  :PROMPT_S => "%N(%m):%03n:%i%l ",
+  :PROMPT_C => "%N(%m):%03n:%i* ",
+  :RETURN => "=> %s\n"
+} 

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -e
+
+BASE_CONFIG="base"
+CONFIG_SUFFIX=".yaml"
+
+META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(dirname ${META_DIR})"
+
+PLUGIN_DIR="${META_DIR}/plugins"
+CONFIG_DIR="${META_DIR}/configs"
+
+DOTBOT_DIR="${META_DIR}/dotbot"
+DOTBOT_BIN="bin/dotbot"
+
+cd "${BASE_DIR}"
+
+for config in ${@}; do
+    echo -e "\nConfigure $config"
+    configFile="$(mktemp)" ; echo -e "$(<"${META_DIR}/${BASE_CONFIG}${CONFIG_SUFFIX}")\n$(<"${CONFIG_DIR}/${config}${CONFIG_SUFFIX}")" > "$configFile"
+
+    # Build plugin directory arguments
+    PLUGIN_ARGS=""
+    for plugin in "${PLUGIN_DIR}"/dotbot-*; do
+        if [ -d "$plugin" ]; then
+            PLUGIN_ARGS="${PLUGIN_ARGS} --plugin-dir ${plugin}"
+        fi
+    done
+
+    "${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASE_DIR}" ${PLUGIN_ARGS} -c "$configFile" ; rm -f "$configFile"
+done

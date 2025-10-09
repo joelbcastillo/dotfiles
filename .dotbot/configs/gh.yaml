@@ -1,0 +1,10 @@
+- shell:
+  - 
+    command: |
+      if ! command -v gh >/dev/null 2>&1; then
+        brew install gh
+      fi
+    description: Install GH CLI
+
+- link:
+    ~/.config/gh/config.yml: tools/gh/config.yml

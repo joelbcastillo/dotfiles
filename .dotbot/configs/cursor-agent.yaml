@@ -1,0 +1,60 @@
+- shell:
+  - 
+    command: |
+      echo "Setting up cursor-agent..."
+    description: Setting up cursor-agent
+
+- shell:
+  - 
+    command: |
+      if ! command -v cursor-agent >/dev/null 2>&1; then
+        echo "Installing cursor-agent..."
+        curl https://cursor.com/install -fsS | bash
+        # Add ~/.local/bin to PATH if not already there
+        if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+          export PATH="$HOME/.local/bin:$PATH"
+        fi
+      else
+        echo "cursor-agent is already installed"
+      fi
+    description: Install cursor-agent
+
+- shell:
+  - 
+    command: |
+      # Create cursor-agent config directory if it doesn't exist
+      mkdir -p ~/.config/cursor-agent
+    description: Create cursor-agent config directory
+
+- link:
+    ~/.config/cursor-agent/config.json:
+      path: tools/cursor-agent/config.json.template
+      relink: true
+      force: true
+    description: Link cursor-agent configuration template
+
+- shell:
+  - 
+    command: |
+      # Resolve 1password:// references in config
+      if command -v op >/dev/null 2>&1; then
+        ~/.dotfiles/scripts/resolve-1password-secrets.sh ~/.config/cursor-agent/config.json
+      else
+        echo "Warning: 1Password CLI not available, config will use placeholder values"
+      fi
+    description: Resolve secrets in cursor-agent config
+
+- shell:
+  - 
+    command: |
+      # Ensure ~/.local/bin is in PATH for this session
+      export PATH="$HOME/.local/bin:$PATH"
+      if command -v cursor-agent >/dev/null 2>&1; then
+        echo "cursor-agent version: $(cursor-agent --version)"
+        echo "cursor-agent setup completed"
+      else
+        echo "Warning: cursor-agent not found in PATH"
+        echo "cursor-agent setup completed with warnings"
+      fi
+    description: Complete cursor-agent setup

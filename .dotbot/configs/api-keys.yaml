@@ -1,0 +1,39 @@
+- shell:
+  - 
+    command: |
+      echo "Setting up API keys for AI tools..."
+    description: Setting up API keys
+
+- shell:
+  - 
+    command: |
+      # Create secrets directory if it doesn't exist
+      mkdir -p ~/.config/secrets
+    description: Create secrets directory
+
+- link:
+    ~/.config/secrets/secret-paths.json:
+      path: tools/1password/secret-paths.json
+      relink: true
+      force: true
+    description: Link 1Password secrets configuration
+
+- shell:
+  - 
+    command: |
+      # Make the fetch secrets script executable
+      chmod +x ~/.dotfiles/scripts/fetch-1password-secrets.sh
+    description: Make secrets script executable
+
+- shell:
+  - 
+    command: |
+      echo "API keys setup completed"
+      echo "API keys will be fetched from 1Password when needed"
+      echo "Make sure to:"
+      echo "1. Sign in to 1Password CLI: op signin"
+      echo "2. Create the required items in 1Password:"
+      echo "   - Cursor API Key"
+      echo "   - Claude API Key" 
+      echo "   - Anthropic API Key"
+    description: Complete API keys setup

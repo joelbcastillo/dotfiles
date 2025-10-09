@@ -1,0 +1,18 @@
+# zsh.after - Additional zsh configuration loaded after main zshrc
+# This file is sourced after the main zshrc configuration
+
+# Add any additional zsh configuration here
+# This file is loaded after the main zshrc file
+
+# Example: Additional aliases
+# alias ll='ls -la'
+# alias la='ls -A'
+# alias l='ls -CF'
+
+# Example: Additional environment variables
+# export CUSTOM_VAR="value"
+
+# Example: Additional functions
+# my_function() {
+#   echo "This is a custom function"
+# }

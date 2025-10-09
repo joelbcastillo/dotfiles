@@ -1,0 +1,61 @@
+- shell:
+  -
+    command: |
+      if ! command -v brew >/dev/null 2>&1; then
+        echo "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Verify installation
+        if ! command -v brew >/dev/null 2>&1; then
+          echo "❌ ERROR: Homebrew installation failed"
+          echo "Please install Homebrew manually:"
+          echo "  /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+          exit 1
+        fi
+
+        echo "✅ Homebrew installed successfully"
+      else
+        echo "✅ Homebrew already installed"
+      fi
+    description: Install and verify Homebrew
+
+- shell:
+  -
+    command: |
+      # Detect Homebrew location (prioritize user-local)
+      if [ -d "$HOME/.homebrew" ]; then
+        BREW_PREFIX="$HOME/.homebrew"
+      elif [ -d "/opt/homebrew" ]; then
+        BREW_PREFIX="/opt/homebrew"
+      elif [ -d "/usr/local/Homebrew" ]; then
+        BREW_PREFIX="/usr/local"
+      fi
+
+      if [ -n "$BREW_PREFIX" ]; then
+        # Remove any existing brew shellenv lines
+        sed -i.bak '/brew shellenv/d' ~/.zprofile 2>/dev/null || true
+        # Add the correct brew shellenv
+        echo "eval \"\$($BREW_PREFIX/bin/brew shellenv)\"" >> ~/.zprofile
+        eval "$($BREW_PREFIX/bin/brew shellenv)"
+        echo "✅ Configured Homebrew from: $BREW_PREFIX"
+      fi
+    description: Configure Homebrew shell environment (detects user-local or system)
+
+- link:
+    ~/Brewfile:
+      path: tools/homebrew/Brewfile
+      relink: true
+      force: true
+
+- shell:
+  - 
+    command: brew update
+    description: Update Homebrew
+  - 
+    command: brew upgrade
+    description: Upgrade Homebrew packages
+  - 
+    command: brew cleanup
+    description: Clean up Homebrew
+  - command: ~/.dotfiles/scripts/brew-bundle-safe.sh ~/Brewfile
+    description: Install all Homebrew packages from Brewfile (with warnings for failed casks) 

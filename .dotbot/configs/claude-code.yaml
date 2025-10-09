@@ -1,0 +1,36 @@
+- shell:
+  - 
+    command: |
+      echo "Setting up Claude Code..."
+    description: Setting up Claude Code
+
+- shell:
+  - 
+    command: |
+      # Create Claude config directory if it doesn't exist
+      mkdir -p ~/.config/claude
+    description: Create Claude config directory
+
+- link:
+    ~/.config/claude/config.json:
+      path: tools/claude/config.json.template
+      relink: true
+      force: true
+    description: Link Claude configuration template
+
+- shell:
+  - 
+    command: |
+      # Resolve 1password:// references in config
+      if command -v op >/dev/null 2>&1; then
+        ~/.dotfiles/scripts/resolve-1password-secrets.sh ~/.config/claude/config.json
+      else
+        echo "Warning: 1Password CLI not available, config will use placeholder values"
+      fi
+    description: Resolve secrets in Claude config
+
+- shell:
+  - 
+    command: |
+      echo "Claude Code setup completed"
+    description: Complete Claude Code setup

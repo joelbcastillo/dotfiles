@@ -1,0 +1,16 @@
+---
+include:
+  - "lib/**/*.rb"
+  - "app/**/*.rb"
+exclude:
+  - "spec/fixtures/**/*"
+  - "tmp/**/*"
+require:
+  - rubocop
+  - pry
+reporters:
+  - rubocop
+  - require_not_found
+  - type_check
+plugins: []
+max_files: 5000 

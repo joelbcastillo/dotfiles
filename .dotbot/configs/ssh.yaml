@@ -1,0 +1,42 @@
+- shell:
+  - command: |
+      echo "Setting up SSH configuration..."
+    description: Setting up SSH configuration
+
+- link:
+    ~/.ssh/config: ~/.dotfiles/tools/ssh/config
+
+- shell:
+  - command: |
+      # Create SSH keys directory
+      mkdir -p ~/.dotfiles/tools/ssh/keys/personal
+      echo "SSH keys directory created"
+    description: Create SSH keys directory
+
+- shell:
+  - command: |
+      # Check if 1Password CLI is available and user is signed in
+      if command -v op >/dev/null 2>&1 && op account list >/dev/null 2>&1; then
+        echo "1Password CLI is available, setting up SSH keys..."
+
+        # Use configuration-based approach if accounts.json exists
+        if [ -f ~/.dotfiles/tools/1password/accounts.json ]; then
+          ~/.dotfiles/scripts/fetch-ssh-keys.sh
+        else
+          echo "No 1Password accounts configuration found."
+          echo "To set up SSH keys from 1Password, create:"
+          echo "  tools/1password/accounts.json"
+          echo ""
+          echo "Or copy from template:"
+          echo "  cp tools/1password/accounts.json.template tools/1password/accounts.json"
+        fi
+      else
+        echo "1Password CLI not available or not signed in."
+        echo "Please run 'op signin' and then '~/.dotfiles/scripts/fetch-ssh-keys.sh' to set up SSH keys."
+      fi
+    description: Setup SSH keys from 1Password using configuration
+
+- shell:
+  - command: |
+      echo "SSH configuration setup completed"
+    description: Complete SSH setup

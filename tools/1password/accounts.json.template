@@ -1,0 +1,44 @@
+{
+  "accounts": {
+    "personal": {
+      "domain": "my.1password.com",
+      "default_vault": "Personal",
+      "ssh_keys": [
+        {
+          "name": "SSH Key - Personal",
+          "filename": "github",
+          "vault": "Personal"
+        }
+      ]
+    },
+    "work": {
+      "domain": "company.1password.com",
+      "default_vault": "Employee",
+      "ssh_keys": [
+        {
+          "name": "Github SSH - Work",
+          "filename": "github-work",
+          "vault": "Employee"
+        },
+        {
+          "name": "AWS SSH - Work",
+          "filename": "aws-work",
+          "vault": "Employee"
+        }
+      ]
+    },
+    "client1": {
+      "domain": "client1.1password.com",
+      "default_vault": "Shared",
+      "ssh_keys": [
+        {
+          "name": "Client1 SSH",
+          "filename": "client1",
+          "vault": "Shared"
+        }
+      ]
+    }
+  },
+  "active_accounts": ["personal", "work"],
+  "default_account": "personal"
+}

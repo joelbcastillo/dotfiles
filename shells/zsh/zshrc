@@ -1,0 +1,117 @@
+# Optimized zshrc with lazy loading for heavy components
+# Maintains all functionality while improving startup performance
+
+# Enable Powerlevel10k instant prompt
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Fig shell integration
+[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
+
+# Fix for shell integrations that expect dump_zsh_state function
+dump_zsh_state() {
+    # Dummy function to prevent "command not found" errors
+    # This is used by some shell integrations for debugging
+    return 0
+}
+
+# Set DOTFILES variable
+export DOTFILES="$HOME/.dotfiles"
+
+# Path to your oh-my-zsh installation
+export ZSH="$HOME/.oh-my-zsh"
+
+# Theme configuration
+ZSH_THEME="steeef"
+
+# Plugin configuration
+plugins=(
+    git
+    brew
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+# Disable compinit errors for group owned directories
+ZSH_DISABLE_COMPFIX="true"
+
+# Editor configuration
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='vim'
+else
+  export EDITOR='cursor --wait'
+fi
+export VISUAL="$EDITOR"
+
+# 1Password SSH Agent Configuration
+export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+
+# Amazon Q integration
+[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh"
+
+# Lazy load Oh My Zsh and heavy components
+load_oh_my_zsh() {
+    # Load Oh My Zsh
+    source $ZSH/oh-my-zsh.sh
+    
+    # Source custom functions
+    if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
+        source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
+    fi
+    
+    # Initialize Starship
+    eval "$(starship init zsh)"
+    
+    # Source all zsh.before files
+    for file in ~/.zsh.before/*.zsh; do
+        [ -f "$file" ] && source "$file"
+    done
+    
+    # Source all zsh.after files
+    setopt nullglob
+    for file in ~/.zsh.after/*.zsh; do
+        [ -f "$file" ] && source "$file"
+    done
+    unsetopt nullglob
+    
+    # Remove the hook after loading
+    add-zsh-hook -d precmd load_oh_my_zsh
+}
+
+# Lazy load ASDF
+asdf() {
+    unfunction asdf
+    . $HOME/.asdf/asdf.sh
+    fpath=(${ASDF_DIR}/completions $fpath)
+    autoload -Uz compinit && compinit
+    asdf "$@"
+}
+
+# Lazy load Direnv
+direnv() {
+    unfunction direnv
+    eval "$(direnv hook zsh)"
+    direnv "$@"
+}
+
+# Lazy load Zoxide
+z() {
+    unfunction z
+    eval "$(zoxide init zsh)"
+    z "$@"
+}
+
+# Set up lazy loading for Oh My Zsh
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd load_oh_my_zsh
+
+# Task Master aliases
+alias tm='task-master'
+alias taskmaster='task-master'
+
+# Amazon Q post block
+[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh"
+
+# Fig shell integration (end)
+[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh

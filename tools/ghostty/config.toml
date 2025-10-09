@@ -1,0 +1,253 @@
+# Ghostty Configuration
+# Based on your existing dotfiles setup and common iTerm2 settings
+
+# General Settings
+[general]
+# Use UTF-8 encoding
+encoding = "utf-8"
+
+# Window Settings
+[window]
+# Window size (columns x rows)
+size = "120x30"
+
+# Window padding
+padding = "8"
+
+# Window opacity (0.0 to 1.0)
+opacity = 1.0
+
+# Window decorations
+decorations = true
+
+# Window title
+title = "Ghostty"
+
+# Font Settings
+[font]
+# Font family - using JetBrains Mono from your Brewfile
+family = "JetBrains Mono"
+
+# Font size
+size = 14
+
+# Font weight
+weight = "normal"
+
+# Font style
+style = "normal"
+
+# Enable font ligatures
+ligatures = true
+
+# Color Scheme
+[colors]
+# Background color
+background = "#1e1e1e"
+
+# Foreground color
+foreground = "#d4d4d4"
+
+# Cursor color
+cursor = "#d4d4d4"
+
+# Selection background
+selection = "#264f78"
+
+# ANSI Colors
+black = "#000000"
+red = "#cd3131"
+green = "#0dbc79"
+yellow = "#e5e510"
+blue = "#2472c8"
+magenta = "#bc3fbc"
+cyan = "#11a8cd"
+white = "#e5e5e5"
+
+# Bright colors
+bright_black = "#666666"
+bright_red = "#f14c4c"
+bright_green = "#23d18b"
+bright_yellow = "#f5f543"
+bright_blue = "#3b8eea"
+bright_magenta = "#d670d6"
+bright_cyan = "#29b8db"
+bright_white = "#e5e5e5"
+
+# Cursor Settings
+[cursor]
+# Cursor style: block, underline, beam
+style = "block"
+
+# Cursor blink
+blink = true
+
+# Cursor thickness (for underline/beam)
+thickness = 0.15
+
+# Scrollback Settings
+[scrollback]
+# Scrollback buffer size
+lines = 10000
+
+# Enable scrollback search
+search = true
+
+# Mouse Settings
+[mouse]
+# Enable mouse support
+enabled = true
+
+# Hide mouse cursor when typing
+hide_when_typing = true
+
+# Selection behavior
+selection = "simple"
+
+# Bell Settings
+[bell]
+# Bell sound
+sound = "system"
+
+# Visual bell
+visual = false
+
+# Bell duration (ms)
+duration = 100
+
+# Tab Settings
+[tabs]
+# Tab bar position: top, bottom, hidden
+position = "top"
+
+# Tab bar height
+height = 30
+
+# Tab bar background
+background = "#2d2d2d"
+
+# Tab bar foreground
+foreground = "#d4d4d4"
+
+# Active tab background
+active_background = "#1e1e1e"
+
+# Active tab foreground
+active_foreground = "#ffffff"
+
+# Inactive tab background
+inactive_background = "#2d2d2d"
+
+# Inactive tab foreground
+inactive_foreground = "#888888"
+
+# Key Bindings
+[key_bindings]
+# Copy to clipboard
+copy = "Cmd+C"
+
+# Paste from clipboard
+paste = "Cmd+V"
+
+# New tab
+new_tab = "Cmd+T"
+
+# Close tab
+close_tab = "Cmd+W"
+
+# Next tab
+next_tab = "Cmd+]"
+
+# Previous tab
+prev_tab = "Cmd+["
+
+# Split horizontally
+split_horizontal = "Cmd+D"
+
+# Split vertically
+split_vertical = "Cmd+Shift+D"
+
+# Close pane
+close_pane = "Cmd+Shift+W"
+
+# Next pane
+next_pane = "Cmd+Tab"
+
+# Previous pane
+prev_pane = "Cmd+Shift+Tab"
+
+# Zoom pane
+zoom_pane = "Cmd+Enter"
+
+# Full screen
+fullscreen = "Cmd+Ctrl+F"
+
+# Find
+find = "Cmd+F"
+
+# Clear scrollback
+clear_scrollback = "Cmd+K"
+
+# Increase font size
+increase_font_size = "Cmd+Plus"
+
+# Decrease font size
+decrease_font_size = "Cmd+Minus"
+
+# Reset font size
+reset_font_size = "Cmd+0"
+
+# Toggle full screen
+toggle_fullscreen = "Cmd+Ctrl+F"
+
+# Toggle decorations
+toggle_decorations = "Cmd+Shift+D"
+
+# Toggle opacity
+toggle_opacity = "Cmd+Shift+O"
+
+# Advanced Settings
+[advanced]
+# Enable GPU acceleration
+gpu_acceleration = true
+
+# Enable vsync
+vsync = true
+
+# Enable triple buffering
+triple_buffering = true
+
+# Enable subpixel antialiasing
+subpixel_antialiasing = true
+
+# Enable ligatures
+ligatures = true
+
+# Enable emoji support
+emoji = true
+
+# Enable unicode support
+unicode = true
+
+# Performance settings
+[performance]
+# Render thread count (0 = auto)
+render_threads = 0
+
+# Update frequency (Hz)
+update_frequency = 60
+
+# Input frequency (Hz)
+input_frequency = 60
+
+# Logging
+[logging]
+# Log level: error, warn, info, debug, trace
+level = "warn"
+
+# Log file
+file = "~/.local/share/ghostty/log"
+
+# Enable debug logging
+debug = false
+

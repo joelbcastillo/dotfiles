@@ -1,0 +1,6 @@
+export CLAUDE_API_KEY=$(op read "op://API Keys/Anthropic API Key/credential")
+export GEMINI_API_KEY=$(op read "op://API Keys/Gemini API Key/credential")
+export OPENAI_API_KEY=$(op read "op://API Keys/OpenAI API Key/credential")
+export ANTHROPIC_API_KEY="$CLAUDE_API_KEY"
+export OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
+export GITHUB_SSH_KEY_B64=$(op item get "Github SSH" --vault "Employee" --format json | jq -r '.fields[] | select(.label=="private key").ssh_formats.openssh.value' | base64 -w 0)

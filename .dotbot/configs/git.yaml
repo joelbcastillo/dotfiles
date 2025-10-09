@@ -1,0 +1,5 @@
+- link:
+    ~/.gitconfig: ~/.dotfiles/tools/git/gitconfig
+    ~/.gitconfig.user: ~/.dotfiles/tools/git/gitconfig.user
+    ~/.gitignore_global: ~/.dotfiles/tools/git/gitignore_global
+    ~/Library/Application Support/jesseduffield/lazygit/config.yml: ~/.dotfiles/tools/git/lazygit.yaml

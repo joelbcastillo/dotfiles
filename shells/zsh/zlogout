@@ -1,0 +1,5 @@
+# This file is sourced when logging out
+# Clean up any temporary files or processes here
+
+# Clear the screen
+clear 

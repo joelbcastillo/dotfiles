@@ -1,0 +1,11 @@
+- shell:
+  -
+    command: |
+      if ! command -v direnv >/dev/null 2>&1; then
+        brew install direnv
+      fi
+      if ! command -v zoxide >/dev/null 2>&1; then
+        brew install zoxide
+      fi
+    description: Install utility packages via Homebrew
+      
