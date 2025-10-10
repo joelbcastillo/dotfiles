@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Dynamic private files linker
 # Automatically symlinks files from private repo to dotfiles based on directory structure
@@ -44,7 +44,7 @@ print_message() {
 declare -A DIR_MAPPINGS=(
     ["git"]="tools/git"
     ["ssh"]="tools/ssh"
-    ["1password"]="tools/1password"
+    ["onepassword"]="tools/1password"
     ["aliases"]="shells/zsh/zsh.before"
     ["vscode"]="apps/vscode"
     ["cursor"]="apps/cursor"
@@ -62,6 +62,7 @@ link_directory_files() {
     local prefix=$3  # Optional: prefix for linked files (e.g., "company1-")
 
     if [ ! -d "$source_dir" ]; then
+        echo 0
         return 0
     fi
 
@@ -77,7 +78,7 @@ link_directory_files() {
             local target_file="$target_dir/${prefix}${filename}"
 
             ln -sf "$file" "$target_file"
-            print_message "${GREEN}" "  ✅ Linked ${prefix}${filename}"
+            print_message "${GREEN}" "  ✅ Linked ${prefix}${filename}" >&2
             ((linked_count++))
         fi
     done
@@ -86,7 +87,8 @@ link_directory_files() {
     for subdir in "$source_dir"/*; do
         if [ -d "$subdir" ] && [ ! -L "$subdir" ]; then
             local subdir_name=$(basename "$subdir")
-            link_directory_files "$subdir" "$target_dir/$subdir_name" "$prefix"
+            local subdir_count=$(link_directory_files "$subdir" "$target_dir/$subdir_name" "$prefix")
+            ((linked_count+=subdir_count))
         fi
     done
 

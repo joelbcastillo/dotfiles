@@ -49,7 +49,15 @@
         ln -sf ~/.dotfiles-private/ssh/config ~/.dotfiles/tools/ssh/config
         echo "Linked private SSH config"
       fi
-    description: "Link private SSH config to dotfiles/tools/ssh/"
+      if [ -d ~/.dotfiles-private/ssh/configs ]; then
+        ln -sf ~/.dotfiles-private/ssh/configs ~/.dotfiles/tools/ssh/configs
+        echo "Linked private SSH configs folder"
+      fi
+      if [ -d ~/.dotfiles-private/ssh/keys ]; then
+        ln -sf ~/.dotfiles-private/ssh/keys ~/.dotfiles/tools/ssh/keys
+        echo "Linked private SSH keys folder"
+      fi
+    description: "Link private SSH config, configs, and keys to dotfiles/tools/ssh/"
   
   - command: |
       # Create symlinks for all dotbot configs from private repo
