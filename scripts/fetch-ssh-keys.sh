@@ -25,26 +25,26 @@ fi
 get_ssh_key() {
     local key_name="$1"
     local key_type="$2"  # "private" or "public"
-    
+
     # Check if 1Password CLI is available
     if ! command -v op >/dev/null 2>&1; then
         echo "Error: 1Password CLI (op) is not installed or not in PATH" >&2
         return 1
     fi
-    
+
     # Check if user is signed in
     if ! op account list >/dev/null 2>&1; then
         echo "Error: Not signed in to 1Password CLI. Run 'op signin' first" >&2
         return 1
     fi
-    
+
     # Get vault and account from arguments
     local vault_name="$3"
     local account="$4"
-    
+
     # Switch to the correct account if needed
     local current_account
-    current_account=$(op account get --format json | jq -r '.domain' 2>/dev/null || echo "")
+    current_account=$(op account get --format json | jq -r '.id' 2>/dev/null || echo "")
     if [ "$current_account" != "$account" ]; then
         echo "Switching to 1Password account: $account"
         if ! op signin --account "$account" >/dev/null 2>&1; then
@@ -52,7 +52,7 @@ get_ssh_key() {
             return 1
         fi
     fi
-    
+
     # Fetch the SSH key
     local key_content
     if [ "$key_type" = "private" ]; then
@@ -60,12 +60,12 @@ get_ssh_key() {
     else
         key_content=$(op item get "$key_name" --vault "$vault_name" --fields "public_key" 2>/dev/null || echo "")
     fi
-    
+
     if [ -z "$key_content" ]; then
         echo "Error: Could not fetch $key_type key for '$key_name' from 1Password" >&2
         return 1
     fi
-    
+
     echo "$key_content"
 }
 
@@ -73,9 +73,9 @@ get_ssh_key() {
 setup_ssh_key() {
     local key_name="$1"
     local key_filename="$2"
-    
+
     echo "Setting up $key_name SSH key..."
-    
+
     # Get private key
     local private_key
     private_key=$(get_ssh_key "$key_name" "private" "$VAULT_NAME" "$ACCOUNT")
@@ -83,7 +83,7 @@ setup_ssh_key() {
         echo "Failed to fetch private key for $key_name"
         return 1
     fi
-    
+
     # Get public key
     local public_key
     public_key=$(get_ssh_key "$key_name" "public" "$VAULT_NAME" "$ACCOUNT")
@@ -91,29 +91,29 @@ setup_ssh_key() {
         echo "Failed to fetch public key for $key_name"
         return 1
     fi
-    
+
     # Create private key file
     local private_key_file="$SSH_KEYS_DIR/$key_filename"
     echo "$private_key" > "$private_key_file"
     chmod 600 "$private_key_file"
-    
+
     # Create public key file
     local public_key_file="$SSH_KEYS_DIR/$key_filename.pub"
     echo "$public_key" > "$public_key_file"
     chmod 644 "$public_key_file"
-    
+
     # Create symlinks in ~/.ssh/
     local home_private_link="$HOME_SSH_DIR/$key_filename"
     local home_public_link="$HOME_SSH_DIR/$key_filename.pub"
-    
+
     # Remove existing links if they exist
     [ -L "$home_private_link" ] && rm "$home_private_link"
     [ -L "$home_public_link" ] && rm "$home_public_link"
-    
+
     # Create new symlinks
     ln -s "$private_key_file" "$home_private_link"
     ln -s "$public_key_file" "$home_public_link"
-    
+
     echo "✓ $key_name SSH key setup complete"
 }
 
@@ -166,8 +166,8 @@ main() {
         echo "Processing account: $account_key"
 
         # Get account details
-        local account_domain
-        account_domain=$(jq -r ".accounts.$account_key.domain" "$ACCOUNTS_CONFIG")
+        local account_uuid
+        account_uuid=$(jq -r ".accounts.$account_key.account_uuid" "$ACCOUNTS_CONFIG")
 
         # Get SSH keys for this account
         local ssh_keys_json
@@ -194,7 +194,7 @@ main() {
             # Set global variables for setup_ssh_key function
             KEY_NAME="$key_name"
             VAULT_NAME="$key_vault"
-            ACCOUNT="$account_domain"
+            ACCOUNT="$account_uuid"
 
             if setup_ssh_key "$key_name" "$key_filename"; then
                 ((total_keys++))

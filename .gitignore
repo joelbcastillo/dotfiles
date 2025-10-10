@@ -42,7 +42,7 @@ tools/cursor-agent/config.json
 tools/1password/secret-paths.json
 
 # 1Password config (contains device/account IDs - should be per-user)
-tools/1password/config
+tools/1password/
 !tools/1password/*.template
 
 # Claude AI configuration (personal settings)
@@ -91,3 +91,4 @@ tools/ssh/keys/**/*
 # Application-specific configs
 tools/aws/*/credentials
 apps/vscode/*-settings.json.context/
+.dotfiles.code-workspace

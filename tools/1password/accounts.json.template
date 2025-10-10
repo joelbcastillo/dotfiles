@@ -2,43 +2,41 @@
   "accounts": {
     "personal": {
       "domain": "my.1password.com",
+      "account_uuid": "FKX4T3TGPBHXFCFB637MA5C7EE",
+      "email": "joelbcastillo@gmail.com",
       "default_vault": "Personal",
       "ssh_keys": [
         {
           "name": "SSH Key - Personal",
           "filename": "github",
           "vault": "Personal"
+        },
+        {
+          "name": "TSC Kinsta SSH",
+          "filename": "tsc_kinsta",
+          "vault": "TSC"
         }
       ]
     },
-    "work": {
-      "domain": "company.1password.com",
-      "default_vault": "Employee",
+    "carequant": {
+      "domain": "my.1password.com",
+      "account_uuid": "75O7IXLDSVGUVPXRYCKMQIINE4",
+      "email": "joel.castillo@carequant.health",
+      "default_vault": "CareQuant",
       "ssh_keys": [
         {
           "name": "Github SSH - Work",
           "filename": "github-work",
-          "vault": "Employee"
+          "vault": "CareQuant"
         },
         {
           "name": "AWS SSH - Work",
           "filename": "aws-work",
-          "vault": "Employee"
-        }
-      ]
-    },
-    "client1": {
-      "domain": "client1.1password.com",
-      "default_vault": "Shared",
-      "ssh_keys": [
-        {
-          "name": "Client1 SSH",
-          "filename": "client1",
-          "vault": "Shared"
+          "vault": "CareQuant"
         }
       ]
     }
   },
-  "active_accounts": ["personal", "work"],
+  "active_accounts": ["personal", "carequant"],
   "default_account": "personal"
 }
