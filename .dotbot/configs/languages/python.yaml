@@ -1,23 +1,82 @@
 - shell:
-    - command: |
+    -
+      command: |
+        echo "Setting up Python with asdf..."
         . /opt/homebrew/opt/asdf/libexec/asdf.sh
         asdf plugin add python || true
         asdf plugin update python
-        asdf install python 3.12.2
-        asdf set -u python 3.12.2
-        
-      description: Set up Python with asdf and development tools
+        asdf install python 3.13.8
+        asdf global python 3.13.8
+      description: Set up Python with asdf
 
 - link:
-    ~/.pip/pip.conf: tools/python/pip.conf
-    ~/.pythonrc: tools/python/pythonrc
-    ~/.config/pipx/config.json: tools/pipx/config.json
-    ~/.pylintrc: tools/python/pylintrc
-    ~/.flake8: tools/python/flake8
-    ~/.mypy.ini: tools/python/mypy.ini
-    ~/.isort.cfg: tools/python/isort.cfg
-    ~/.pre-commit-config.yaml: tools/python/pre-commit-config.yaml
-    ~/.poetry/config.toml: tools/python/poetry.toml
+    ~/.pip/pip.conf:
+      path: tools/python/pip.conf
+      relink: true
+      force: true
+    ~/.pythonrc:
+      path: tools/python/pythonrc
+      relink: true
+      force: true
+    ~/.config/pipx/config.json:
+      path: tools/pipx/config.json
+      relink: true
+      force: true
+    ~/.pylintrc:
+      path: tools/python/pylintrc
+      relink: true
+      force: true
+    ~/.flake8:
+      path: tools/python/flake8
+      relink: true
+      force: true
+    ~/.config/flake8:
+      path: tools/python/flake8
+      relink: true
+      force: true
+    ~/.mypy.ini:
+      path: tools/python/mypy.ini
+      relink: true
+      force: true
+    ~/.isort.cfg:
+      path: tools/python/isort.cfg
+      relink: true
+      force: true
+    ~/.config/isort.cfg:
+      path: tools/python/isort
+      relink: true
+      force: true
+    ~/.pre-commit-config.yaml:
+      path: tools/python/pre-commit-config.yaml
+      relink: true
+      force: true
+    ~/.poetry/config.toml:
+      path: tools/python/poetry.toml
+      relink: true
+      force: true
 
 - pipx:
-    file: tools/pipx/requirements.txt 
+    file: tools/pipx/requirements.txt
+    stdout: false
+    stderr: true
+
+- shell:
+    -
+      command: |
+        mkdir -p ~/.zfunc
+        if [ -f ~/.local/bin/poetry ]; then
+          ~/.local/bin/poetry completions zsh > ~/.zfunc/_poetry
+          echo "Poetry Zsh completions installed"
+        else
+          echo "Poetry not found, skipping completions"
+        fi
+      description: Add Poetry Zsh completions
+    -
+      command: |
+        if [ -f ~/.local/bin/poetry ]; then
+          ~/.local/bin/poetry config virtualenvs.in-project true
+          echo "Poetry configured to use in-project virtualenvs"
+        else
+          echo "Poetry not found, skipping configuration"
+        fi
+      description: Configure Poetry to use in-project virtualenvs

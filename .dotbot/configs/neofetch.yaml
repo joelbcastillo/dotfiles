@@ -1,25 +1,19 @@
 - shell:
-  - 
-    command: |
-      echo "Setting up Neofetch configuration..."
-    description: Setting up Neofetch configuration
-
-- shell:
-  - 
-    command: |
-      # Create Neofetch config directory if it doesn't exist
-      mkdir -p ~/.config/neofetch
-    description: Create Neofetch config directory
+    - command: |
+        echo "Setting up Neofetch configuration..."
+      description: Setting up Neofetch configuration
+    - command: |
+        # Create Neofetch config directory if it doesn't exist
+        mkdir -p ~/.config/neofetch
+      description: Create Neofetch config directory
 
 - link:
     ~/.config/neofetch/config.conf:
       path: tools/neofetch/config.conf
       relink: true
       force: true
-    description: Link Neofetch configuration
 
 - shell:
-  - 
-    command: |
-      echo "Neofetch configuration setup completed"
-    description: Complete Neofetch setup
+    - command: |
+        echo "Neofetch configuration setup completed"
+      description: Complete Neofetch setup

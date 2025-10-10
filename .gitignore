@@ -51,10 +51,29 @@ tools/1password/config
 # Backup location files
 .backup_location
 
-# Template files (these are the public versions)
+# Git directory - ignore everything except specific files
+tools/git/*
+!tools/git/gitconfig
 !tools/git/gitconfig.user.template
-!tools/git/gitconfig.work.template
+!tools/git/gitignore_global
+!tools/git/lazygit.yaml
+
+# Zsh before directory - ignore everything except allowed files
+shells/zsh/zsh.before/*
+!shells/zsh/zsh.before/1password.zsh
+!shells/zsh/zsh.before/asdf.zsh
+!shells/zsh/zsh.before/completion.zsh
+!shells/zsh/zsh.before/direnv.zsh
+!shells/zsh/zsh.before/history.zsh
+!shells/zsh/zsh.before/key-bindings.zsh
+!shells/zsh/zsh.before/noglob.zsh
+!shells/zsh/zsh.before/path.zsh
+!shells/zsh/zsh.before/rm.zsh
+!shells/zsh/zsh.before/zmv.zsh
+!shells/zsh/zsh.before/zoxide.zsh
 !shells/zsh/zsh.before/aliases.zsh.template
+
+# Template files (these are the public versions)
 !apps/vscode/settings.json.template
 !apps/cursor/settings.json.template
 !.claude/settings.local.json.template
@@ -71,4 +90,4 @@ tools/ssh/keys/**/*
 
 # Application-specific configs
 tools/aws/*/credentials
-apps/vscode/*-settings.json
+apps/vscode/*-settings.json.context/

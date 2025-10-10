@@ -1,3 +1,9 @@
+# NOTE: This config file is not actively used.
+# Dotfiles are installed using profiles via: ./install profile <name>
+# See .dotbot/profiles/ for available profiles (e.g., 'full', 'ai-tools')
+#
+# This file is kept as a minimal fallback/reference only.
+
 - defaults:
     link:
       relink: true
@@ -5,21 +11,6 @@
       create: true
 
 - clean: ['~']
-
-- import:
-    - configs/git.yaml
-    - configs/oh-my-zsh.yaml
-    - configs/starship.yaml
-    - configs/tmux.yaml
-    - configs/vscode.yaml
-    - configs/cursor.yaml
-    - configs/ghostty.yaml
-    - configs/ssh.yaml
-    - configs/utils.yaml
-    - configs/python.yaml
-    - configs/ripgrep.yaml
-    - configs/aws.yaml
-    - configs/gh.yaml
 
 - shell:
     - [git submodule update --init --recursive, Installing git submodules]

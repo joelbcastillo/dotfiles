@@ -74,7 +74,9 @@ if [ ${#FORMULAE[@]} -gt 0 ]; then
     print_message "$GREEN" "🍺 Installing formulae..."
     for formula in "${FORMULAE[@]}"; do
         print_message "$BLUE" "  Installing: $formula"
-        eval "brew $formula" || print_message "$YELLOW" "  ⚠️  Failed: $formula"
+        # Replace 'brew' with 'brew install'
+        install_cmd="${formula/brew /brew install }"
+        eval "$install_cmd" || print_message "$YELLOW" "  ⚠️  Failed: $formula"
     done
 fi
 

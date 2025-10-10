@@ -23,19 +23,15 @@
   -
     command: |
       # Detect Homebrew location (prioritize user-local)
-      if [ -d "$HOME/.homebrew" ]; then
+      if [ -x "$HOME/.homebrew/bin/brew" ]; then
         BREW_PREFIX="$HOME/.homebrew"
-      elif [ -d "/opt/homebrew" ]; then
+      elif [ -x "/opt/homebrew/bin/brew" ]; then
         BREW_PREFIX="/opt/homebrew"
-      elif [ -d "/usr/local/Homebrew" ]; then
+      elif [ -x "/usr/local/bin/brew" ]; then
         BREW_PREFIX="/usr/local"
       fi
 
       if [ -n "$BREW_PREFIX" ]; then
-        # Remove any existing brew shellenv lines
-        sed -i.bak '/brew shellenv/d' ~/.zprofile 2>/dev/null || true
-        # Add the correct brew shellenv
-        echo "eval \"\$($BREW_PREFIX/bin/brew shellenv)\"" >> ~/.zprofile
         eval "$($BREW_PREFIX/bin/brew shellenv)"
         echo "✅ Configured Homebrew from: $BREW_PREFIX"
       fi

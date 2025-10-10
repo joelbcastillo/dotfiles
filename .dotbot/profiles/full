@@ -1,20 +1,51 @@
-oh-my-zsh
-git
-vscode
-cursor
-ghostty
+# Package Management (must be first - installs all dependencies)
 brew
+
+# Security & Auth (needed early for git signing, SSH, etc.)
+1password
+touchid
+
+# Core Shell Setup (needs brew for oh-my-zsh dependencies)
+zsh
+oh-my-zsh
+starship
+
+# Version Control (needs 1password for signing, shell for configs)
+git
+
+# Version Manager (needs brew)
 asdf
+
+# Languages (need asdf)
+languages/python
+languages/nodejs
+languages/go
+languages/ruby
+languages/rust
+
+# Development Tools (need brew and languages)
 gh
+ripgrep
+tmux
+
+# Cloud & Infrastructure (need 1password for credentials)
 ssh
 aws
-tmux
-python
-ripgrep
+
+# IDEs & Editors (need languages and tools)
+vscode
+cursor
+
+# Terminal (needs shell configs)
+ghostty
+
+# AI Tools (need API keys and credentials)
+api-keys
+ai-tools
+claude
+claude-code
+cursor-agent
+
+# Utilities (can be last)
 utils
-zsh
-starship
-touchid
 neofetch
-raycast
-ai-tools 
