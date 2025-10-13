@@ -1,10 +1,7 @@
-# Essential Extensions
 github.copilot
 github.copilot-chat
 github.github-vscode-theme
 github.vscode-pull-request-github
-
-# Language Support
 golang.go
 ms-python.python
 ms-python.vscode-pylance
@@ -12,34 +9,20 @@ ms-python.isort
 ms-python.debugpy
 shopify.ruby-lsp
 ms-vscode.cpptools
-
-# Infrastructure as Code
 hashicorp.terraform
 hashicorp.hcl
 redhat.vscode-yaml
-
-# Git
 eamodio.gitlens
-
-# Docker
 ms-azuretools.vscode-docker
 docker.docker
-
-# Remote Development
 ms-vscode-remote.remote-containers
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
 ms-vscode-remote.vscode-remote-extensionpack
-
-# Markdown
 yzhang.markdown-all-in-one
 davidanson.vscode-markdownlint
-
-# Shell
 foxundermoon.shell-format
 timonwong.shellcheck
-
-# Utilities
 njpwerner.autodocstring
 pascalreitermann93.vscode-yaml-sort
 codezombiech.gitignore

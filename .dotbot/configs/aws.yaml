@@ -1,0 +1,9 @@
+- shell:
+    - description: Check if AWS CLI is installed
+      command: |
+        if ! command -v aws &> /dev/null; then
+          echo "AWS CLI not found - please install via 'brew install awscli'"
+          exit 0
+        fi
+      stdout: true
+      stderr: true

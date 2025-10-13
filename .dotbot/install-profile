@@ -6,6 +6,8 @@ META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE_DIR="${META_DIR}/profiles"
 
 while IFS= read -r config; do
+    # Skip empty lines and comments
+    [[ -z "$config" || "$config" =~ ^[[:space:]]*# ]] && continue
     CONFIGS+=" ${config}"
 done < "${PROFILE_DIR}/$1"
 
