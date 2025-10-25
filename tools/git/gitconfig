@@ -128,11 +128,11 @@
 [merge]
   summary = true
   verbosity = 1
-  tool = vscode
+  tool = cursor
 [mergetool]
   prompt = false
-[mergetool "vscode"]
-  cmd = code --wait $MERGED  # use fugitive.vim for 3-way merge
+[mergetool "cursor"]
+  cmd = cursor --wait $MERGED
   keepbackup=false
 [apply]
   whitespace = nowarn
@@ -144,7 +144,7 @@
   default = upstream
 [core]
   autocrlf = false
-	editor = code --wait
+	editor = cursor --wait
   excludesfile = ~/.gitignore_global
 [advice]
   statusHints = false
@@ -174,13 +174,13 @@
   # instead of a/b/c/d as prefixes for patches
   mnemonicprefix = true
 	algorithm = patience
-  tool = vscode
-[difftool "vscode"]
-  cmd = code --wait --diff $LOCAL $REMOTE
+  tool = cursor
+[difftool "cursor"]
+  cmd = cursor --wait --diff $LOCAL $REMOTE
 [merge]
-  tool = vscode
-[mergetool "vscode"]
-  cmd = code --wait $MERGED
+  tool = cursor
+[mergetool "cursor"]
+  cmd = cursor --wait $MERGED
 [gpg "ssh"]
 	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
 	allowedSignersFile = ~/.ssh/allowed_signers
