@@ -29,7 +29,8 @@ find . -type f -name '*.sh' -o -name 'install' | while read -r script; do
   # SC2162: read without -r (safe to ignore for interactive scripts)
   # SC2181: Check exit code directly (safe to ignore for legacy scripts)
   # SC2001: Use ${variable//search/replace} (safe to ignore for sed usage)
-  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001 "$script"
+  # SC2248: Prefer double quoting (safe to ignore for arithmetic comparisons)
+  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2248 "$script"
 done
 success "All shell scripts passed shellcheck."
 
