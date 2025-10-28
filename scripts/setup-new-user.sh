@@ -60,3 +60,10 @@ cat > tools/git/gitconfig.user << EOF
 
 [color]
     ui = auto
+EOF
+
+print_message "${GREEN}" "✅ Git configuration updated!"
+print_message "${BLUE}" "📝 Next steps:"
+print_message "${BLUE}" "  1. Run ./install to set up your dotfiles"
+print_message "${BLUE}" "  2. Run scripts/fetch-ssh-keys.sh to fetch SSH keys from 1Password"
+print_message "${BLUE}" "  3. Customize your settings in the config files"
