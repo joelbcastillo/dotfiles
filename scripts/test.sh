@@ -41,7 +41,6 @@ REQUIRED=(
   ".dotbot"
   ".dotbot/profiles"
   "tools/homebrew/Brewfile"
-  "apps/vscode/settings.json"
   "install"
 )
 for path in "${REQUIRED[@]}"; do
@@ -50,6 +49,13 @@ for path in "${REQUIRED[@]}"; do
     exit 1
   fi
 done
+
+# Special check for vscode settings - either settings.json or settings.json.template must exist
+if [ ! -e "apps/vscode/settings.json" ] && [ ! -e "apps/vscode/settings.json.template" ]; then
+  error "Missing required file: apps/vscode/settings.json or apps/vscode/settings.json.template"
+  exit 1
+fi
+
 success "All required files and directories are present."
 
 # 3. Check install script syntax
