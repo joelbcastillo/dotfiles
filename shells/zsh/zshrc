@@ -65,8 +65,14 @@ if command -v starship >/dev/null 2>&1; then
     eval "$(starship init zsh)"
 fi
 
-# Source all zsh.before files
+# Source all zsh.before files (exclude lazy-loaded ones)
 for file in ~/.zsh.before/*.zsh; do
+    # Skip files that are lazy loaded
+    case "$(basename "$file")" in
+        zoxide.zsh|asdf.zsh|direnv.zsh|completion.zsh)
+            continue
+            ;;
+    esac
     [ -f "$file" ] && source "$file"
 done
 
@@ -95,7 +101,9 @@ direnv() {
 
 # Lazy load Zoxide
 z() {
-    unfunction z
+    # Remove alias if it exists, then remove function
+    (( $+aliases[z] )) && unalias z
+    unfunction z 2>/dev/null
     eval "$(zoxide init zsh)"
     z "$@"
 }
