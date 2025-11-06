@@ -34,7 +34,7 @@ plugins=(
 )
 
 # Disable compinit errors for group owned directories
-ZSH_DISABLE_COMPFIX="true"
+export ZSH_DISABLE_COMPFIX="true"
 
 # Load Oh My Zsh
 source $ZSH/oh-my-zsh.sh
@@ -61,7 +61,7 @@ asdf() {
     unfunction asdf
     . $HOME/.asdf/asdf.sh
     fpath=(${ASDF_DIR}/completions $fpath)
-    autoload -Uz compinit && compinit
+    autoload -Uz compinit && compinit -C
     asdf "$@"
 }
 
@@ -135,4 +135,3 @@ alias taskmaster='task-master'
 
 # Fig shell integration (keep at end)
 [ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
-

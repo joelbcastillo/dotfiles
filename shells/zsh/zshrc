@@ -34,7 +34,7 @@ plugins=(
 )
 
 # Disable compinit errors for group owned directories
-ZSH_DISABLE_COMPFIX="true"
+export ZSH_DISABLE_COMPFIX="true"
 
 # Editor configuration
 if [[ -n $SSH_CONNECTION ]]; then
@@ -84,7 +84,7 @@ asdf() {
     unfunction asdf
     . $HOME/.asdf/asdf.sh
     fpath=(${ASDF_DIR}/completions $fpath)
-    autoload -Uz compinit && compinit
+    autoload -Uz compinit && compinit -C
     asdf "$@"
 }
 

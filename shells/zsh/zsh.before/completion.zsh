@@ -1,6 +1,6 @@
 # Completion configuration
 autoload -Uz compinit
-compinit
+compinit -C
 
 # Case insensitive path-completion
 zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
@@ -17,4 +17,4 @@ zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path $ZSH_CACHE_DIR
 
 # Completions for Aliases
-compdef _cd _z_cd 
+compdef _cd _z_cd

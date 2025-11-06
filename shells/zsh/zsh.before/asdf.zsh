@@ -4,4 +4,4 @@
 fpath=(${ASDF_DIR}/completions $fpath)
 
 # # initialise completions with ZSH's compinit
-autoload -Uz compinit && compinit
+autoload -Uz compinit && compinit -C

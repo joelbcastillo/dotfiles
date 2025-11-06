@@ -129,7 +129,7 @@ asdf() {
     unfunction asdf
     . $HOME/.asdf/asdf.sh
     fpath=(${ASDF_DIR}/completions $fpath)
-    autoload -Uz compinit && compinit
+    autoload -Uz compinit && compinit -C
     asdf "$@"
 }
 
@@ -153,27 +153,27 @@ load_oh_my_zsh_features() {
     if [ -f "$HOME/.oh-my-zsh/plugins/git/git.plugin.zsh" ]; then
         source "$HOME/.oh-my-zsh/plugins/git/git.plugin.zsh"
     fi
-    
+
     # Brew plugin features
     if [ -f "$HOME/.oh-my-zsh/plugins/brew/brew.plugin.zsh" ]; then
         source "$HOME/.oh-my-zsh/plugins/brew/brew.plugin.zsh"
     fi
-    
+
     # Zsh autosuggestions
     if [ -f "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
         source "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
     fi
-    
+
     # Zsh syntax highlighting
     if [ -f "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
         source "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
     fi
-    
+
     # Custom functions
     if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
         source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
     fi
-    
+
     # Remove the hook after loading
     add-zsh-hook -d precmd load_oh_my_zsh_features
 }
