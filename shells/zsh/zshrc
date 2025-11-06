@@ -52,6 +52,23 @@ export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agen
 
 # Lazy load Oh My Zsh and heavy components
 load_oh_my_zsh() {
+    # Guard: only run once
+    if [[ -n "$_oh_my_zsh_loaded" ]]; then
+        return
+    fi
+    
+    # Remove the hook immediately to prevent multiple calls
+    autoload -Uz add-zsh-hook
+    add-zsh-hook -d precmd load_oh_my_zsh
+    
+    # Check if Oh My Zsh exists before trying to load it
+    if [[ ! -f "$ZSH/oh-my-zsh.sh" ]]; then
+        return
+    fi
+    
+    # Mark as loaded
+    _oh_my_zsh_loaded=1
+    
     # Load Oh My Zsh
     source $ZSH/oh-my-zsh.sh
 
@@ -61,7 +78,9 @@ load_oh_my_zsh() {
     fi
 
     # Initialize Starship
-    eval "$(starship init zsh)"
+    if command -v starship >/dev/null 2>&1; then
+        eval "$(starship init zsh)"
+    fi
 
     # Source all zsh.before files
     for file in ~/.zsh.before/*.zsh; do
@@ -74,9 +93,6 @@ load_oh_my_zsh() {
         [ -f "$file" ] && source "$file"
     done
     unsetopt nullglob
-
-    # Remove the hook after loading
-    add-zsh-hook -d precmd load_oh_my_zsh
 }
 
 # Lazy load ASDF
