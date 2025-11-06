@@ -54,27 +54,27 @@ export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agen
 load_oh_my_zsh() {
     # Load Oh My Zsh
     source $ZSH/oh-my-zsh.sh
-    
+
     # Source custom functions
     if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
         source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
     fi
-    
+
     # Initialize Starship
     eval "$(starship init zsh)"
-    
+
     # Source all zsh.before files
     for file in ~/.zsh.before/*.zsh; do
         [ -f "$file" ] && source "$file"
     done
-    
+
     # Source all zsh.after files
     setopt nullglob
     for file in ~/.zsh.after/*.zsh; do
         [ -f "$file" ] && source "$file"
     done
     unsetopt nullglob
-    
+
     # Remove the hook after loading
     add-zsh-hook -d precmd load_oh_my_zsh
 }
