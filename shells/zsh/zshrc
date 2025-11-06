@@ -50,50 +50,32 @@ export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agen
 # Amazon Q integration
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.pre.zsh"
 
-# Lazy load Oh My Zsh and heavy components
-load_oh_my_zsh() {
-    # Guard: only run once
-    if [[ -n "$_oh_my_zsh_loaded" ]]; then
-        return
-    fi
-    
-    # Remove the hook immediately to prevent multiple calls
-    autoload -Uz add-zsh-hook
-    add-zsh-hook -d precmd load_oh_my_zsh
-    
-    # Check if Oh My Zsh exists before trying to load it
-    if [[ ! -f "$ZSH/oh-my-zsh.sh" ]]; then
-        return
-    fi
-    
-    # Mark as loaded
-    _oh_my_zsh_loaded=1
-    
-    # Load Oh My Zsh
+# Load Oh My Zsh (load immediately, not lazy - needed for prompt)
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
     source $ZSH/oh-my-zsh.sh
+fi
 
-    # Source custom functions
-    if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
-        source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
-    fi
+# Source custom functions
+if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
+    source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
+fi
 
-    # Initialize Starship
-    if command -v starship >/dev/null 2>&1; then
-        eval "$(starship init zsh)"
-    fi
+# Initialize Starship
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi
 
-    # Source all zsh.before files
-    for file in ~/.zsh.before/*.zsh; do
-        [ -f "$file" ] && source "$file"
-    done
+# Source all zsh.before files
+for file in ~/.zsh.before/*.zsh; do
+    [ -f "$file" ] && source "$file"
+done
 
-    # Source all zsh.after files
-    setopt nullglob
-    for file in ~/.zsh.after/*.zsh; do
-        [ -f "$file" ] && source "$file"
-    done
-    unsetopt nullglob
-}
+# Source all zsh.after files
+setopt nullglob
+for file in ~/.zsh.after/*.zsh; do
+    [ -f "$file" ] && source "$file"
+done
+unsetopt nullglob
 
 # Lazy load ASDF
 asdf() {
@@ -117,10 +99,6 @@ z() {
     eval "$(zoxide init zsh)"
     z "$@"
 }
-
-# Set up lazy loading for Oh My Zsh
-autoload -Uz add-zsh-hook
-add-zsh-hook precmd load_oh_my_zsh
 
 # Task Master aliases
 alias tm='task-master'
