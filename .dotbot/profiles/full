@@ -1,6 +1,9 @@
 # Package Management (must be first - installs all dependencies)
 brew
 
+# Container Runtime (after brew, before dev tools)
+colima
+
 # Security & Auth (needed early for git signing, SSH, etc.)
 1password
 touchid

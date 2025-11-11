@@ -1,0 +1,23 @@
+# Colima Configuration
+# This file documents the default Colima setup for this dotfiles repo
+#
+# Docker Desktop is available as a fallback but Colima is the default
+# for better performance and lower resource usage.
+
+# Default resource allocation
+cpu: 4
+memory: 8
+disk: 60
+
+# VM settings (optimized for Apple Silicon)
+vm_type: vz  # Apple Virtualization Framework
+mount_type: virtiofs  # Better file sharing performance
+
+# Runtime
+runtime: docker  # Compatible with Docker CLI and docker-compose
+
+# Network
+# Default network settings work well for most use cases
+
+# Auto-start on login (optional)
+# To enable: brew services start colima
