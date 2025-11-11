@@ -3,8 +3,8 @@
         . /opt/homebrew/opt/asdf/libexec/asdf.sh
         asdf plugin add rust || true
         asdf plugin update rust
-        asdf install rust 1.85.0
-        asdf set -u rust 1.85.0
+        asdf install rust 1.91.1
+        asdf set -u rust 1.91.1
 
         # Install Rust tools with --locked flag for better compatibility
         cargo install --locked cargo-edit
@@ -26,6 +26,7 @@
         cargo install --locked cross
         cargo install --locked flamegraph
         cargo install --locked rustfmt
+        cargo install --locked toktop
         rustup component add clippy
         rustup component add rust-analyzer
       description: Install Rust and common tools
