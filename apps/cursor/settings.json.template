@@ -107,5 +107,10 @@
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
-  "window.title": "${activeRepositoryBranchName}${separator}${rootName}${separator}${profileName}"
+  "window.title": "${activeRepositoryBranchName}${separator}${rootName}${separator}${profileName}",
+  "yaml.schemas": {
+    "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.10-darwin-arm64/config-yaml-schema.json": [
+      ".continue/**/*.yaml"
+    ]
+  }
 }
