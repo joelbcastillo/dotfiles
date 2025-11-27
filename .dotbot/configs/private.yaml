@@ -12,7 +12,7 @@
         fi
       done
     description: "Link private git files to dotfiles/tools/git/"
-  
+
   - command: |
       # Create symlinks for all files in private aliases directory
       for file in ~/.dotfiles-private/aliases/*; do
@@ -22,7 +22,7 @@
         fi
       done
     description: "Link private aliases to dotfiles/shells/zsh/zsh.before/"
-  
+
   - command: |
       # Create symlinks for all files in private vscode directory
       for file in ~/.dotfiles-private/vscode/*; do
@@ -32,7 +32,7 @@
         fi
       done
     description: "Link private VS Code files to dotfiles/apps/vscode/"
-  
+
   - command: |
       # Create symlinks for all files in private cursor directory
       for file in ~/.dotfiles-private/cursor/*; do
@@ -42,7 +42,7 @@
         fi
       done
     description: "Link private Cursor files to dotfiles/apps/cursor/"
-  
+
   - command: |
       # Create symlinks for SSH configs from private repo
       if [ -f ~/.dotfiles-private/ssh/config ]; then
@@ -58,7 +58,16 @@
         echo "Linked private SSH keys folder"
       fi
     description: "Link private SSH config, configs, and keys to dotfiles/tools/ssh/"
-  
+
+  - command: |
+      # Create symlink for 1Password accounts.json from private repo
+      if [ -f ~/.dotfiles-private/tools/accounts.json ]; then
+        mkdir -p ~/.dotfiles/tools/1password
+        ln -sf ~/.dotfiles-private/tools/accounts.json ~/.dotfiles/tools/1password/accounts.json
+        echo "Linked private 1Password accounts.json"
+      fi
+    description: "Link private 1Password accounts.json to dotfiles/tools/1password/"
+
   - command: |
       # Create symlinks for all dotbot configs from private repo
       # This supports any profile-specific configs (personal, work, client1, etc.)
@@ -72,6 +81,6 @@
         done
       fi
     description: "Link all private dotbot configs to dotfiles/.dotbot/configs/"
-  
+
   - command: echo "Private files symlinked to dotfiles directories successfully"
     description: "Verify private file symlinks to dotfiles"
