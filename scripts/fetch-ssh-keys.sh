@@ -44,13 +44,22 @@ get_ssh_key() {
 
     # Switch to the correct account if needed
     local current_account
-    current_account=$(op account get --format json | jq -r '.id' 2>/dev/null || echo "")
+    current_account=$(op account get --format json 2>/dev/null | jq -r '.id' 2>/dev/null || echo "")
     if [ "$current_account" != "$account" ]; then
-        echo "Switching to 1Password account: $account"
-        if ! op signin --account "$account" >/dev/null 2>&1; then
+        echo "Switching to 1Password account: $account (current: $current_account)"
+        # Try to switch using account UUID first
+        if ! op signin --account "$account" 2>&1; then
             echo "Error: Could not switch to account $account. Please run 'op signin --account $account' first" >&2
             return 1
         fi
+        # Verify the switch worked
+        local new_account
+        new_account=$(op account get --format json 2>/dev/null | jq -r '.id' 2>/dev/null || echo "")
+        if [ "$new_account" != "$account" ]; then
+            echo "Error: Account switch failed. Expected $account but got $new_account" >&2
+            return 1
+        fi
+        echo "Successfully switched to account: $account"
     fi
 
     # Fetch the SSH key
@@ -184,7 +193,7 @@ main() {
         SSH_KEYS_DIR="$account_keys_dir"
 
         # Process each SSH key
-        echo "$ssh_keys_json" | while read -r key_config; do
+        while IFS= read -r key_config; do
             local key_name=$(echo "$key_config" | jq -r '.name')
             local key_filename=$(echo "$key_config" | jq -r '.filename')
             local key_vault=$(echo "$key_config" | jq -r '.vault')
@@ -198,8 +207,10 @@ main() {
 
             if setup_ssh_key "$key_name" "$key_filename"; then
                 ((total_keys++))
+            else
+                echo "  ⚠ Failed to setup $key_name" >&2
             fi
-        done
+        done <<< "$ssh_keys_json"
     done
 
     echo ""
