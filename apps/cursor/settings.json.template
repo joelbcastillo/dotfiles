@@ -109,8 +109,9 @@
   },
   "window.title": "${activeRepositoryBranchName}${separator}${rootName}${separator}${profileName}",
   "yaml.schemas": {
-    "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.10-darwin-arm64/config-yaml-schema.json": [
+    "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.11-darwin-arm64/config-yaml-schema.json": [
       ".continue/**/*.yaml"
     ]
-  }
+  },
+  "claudeCode.preferredLocation": "panel"
 }

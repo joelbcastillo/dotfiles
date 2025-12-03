@@ -69,7 +69,7 @@ fi
 for file in ~/.zsh.before/*.zsh; do
     # Skip files that are lazy loaded
     case "$(basename "$file")" in
-        zoxide.zsh|asdf.zsh|direnv.zsh|completion.zsh)
+        zoxide.zsh|direnv.zsh|completion.zsh)
             continue
             ;;
     esac

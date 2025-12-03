@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Read(//Users/*/.local/bin/**)",
-      "Bash(echo $PATH)"
+      "Bash(echo $PATH)",
+      "WebFetch(domain:a.co)",
+      "WebFetch(domain:www.amazon.com)"
     ],
     "deny": [],
     "ask": []

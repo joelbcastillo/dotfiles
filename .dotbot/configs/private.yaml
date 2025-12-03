@@ -3,84 +3,90 @@
 # to the locations where the original dotbot configs expect them
 
 - shell:
-  - command: |
-      # Create symlinks for all files in private git directory
-      for file in ~/.dotfiles-private/git/*; do
-        if [ -f "$file" ]; then
-          filename=$(basename "$file")
-          ln -sf "$file" ~/.dotfiles/tools/git/"$filename"
-        fi
-      done
-    description: "Link private git files to dotfiles/tools/git/"
-
-  - command: |
-      # Create symlinks for all files in private aliases directory
-      for file in ~/.dotfiles-private/aliases/*; do
-        if [ -f "$file" ]; then
-          filename=$(basename "$file")
-          ln -sf "$file" ~/.dotfiles/shells/zsh/zsh.before/"$filename"
-        fi
-      done
-    description: "Link private aliases to dotfiles/shells/zsh/zsh.before/"
-
-  - command: |
-      # Create symlinks for all files in private vscode directory
-      for file in ~/.dotfiles-private/vscode/*; do
-        if [ -f "$file" ]; then
-          filename=$(basename "$file")
-          ln -sf "$file" ~/.dotfiles/apps/vscode/"$filename"
-        fi
-      done
-    description: "Link private VS Code files to dotfiles/apps/vscode/"
-
-  - command: |
-      # Create symlinks for all files in private cursor directory
-      for file in ~/.dotfiles-private/cursor/*; do
-        if [ -f "$file" ]; then
-          filename=$(basename "$file")
-          ln -sf "$file" ~/.dotfiles/apps/cursor/"$filename"
-        fi
-      done
-    description: "Link private Cursor files to dotfiles/apps/cursor/"
-
-  - command: |
-      # Create symlinks for SSH configs from private repo
-      if [ -f ~/.dotfiles-private/ssh/config ]; then
-        ln -sf ~/.dotfiles-private/ssh/config ~/.dotfiles/tools/ssh/config
-        echo "Linked private SSH config"
-      fi
-      if [ -d ~/.dotfiles-private/ssh/configs ]; then
-        ln -sf ~/.dotfiles-private/ssh/configs ~/.dotfiles/tools/ssh/configs
-        echo "Linked private SSH configs folder"
-      fi
-      if [ -d ~/.dotfiles-private/ssh/keys ]; then
-        ln -sf ~/.dotfiles-private/ssh/keys ~/.dotfiles/tools/ssh/keys
-        echo "Linked private SSH keys folder"
-      fi
-    description: "Link private SSH config, configs, and keys to dotfiles/tools/ssh/"
-
-  - command: |
-      # Create symlink for 1Password accounts.json from private repo
-      if [ -f ~/.dotfiles-private/tools/accounts.json ]; then
-        mkdir -p ~/.dotfiles/tools/1password
-        ln -sf ~/.dotfiles-private/tools/accounts.json ~/.dotfiles/tools/1password/accounts.json
-        echo "Linked private 1Password accounts.json"
-      fi
-    description: "Link private 1Password accounts.json to dotfiles/tools/1password/"
-
-  - command: |
-      # Create symlinks for all dotbot configs from private repo
-      # This supports any profile-specific configs (personal, work, client1, etc.)
-      if [ -d ~/.dotfiles-private/dotbot ]; then
-        for config in ~/.dotfiles-private/dotbot/*.yaml; do
-          if [ -f "$config" ]; then
-            config_name=$(basename "$config")
-            ln -sf "$config" ~/.dotfiles/.dotbot/configs/"$config_name"
-            echo "Linked private $config_name config"
+    - command: |
+        # Create symlinks for all files in private git directory
+        for file in ~/.dotfiles-private/git/*; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            ln -sf "$file" ~/.dotfiles/tools/git/"$filename"
           fi
         done
-      fi
-    description: "Link all private dotbot configs to dotfiles/.dotbot/configs/"
+      description: "Link private git files to dotfiles/tools/git/"
 
-  - command: echo "Private files symlinked to dotfiles directories successfully"
-    description: "Verify private file symlinks to dotfiles"
+    - command: |
+        # Create symlinks for all files in private aliases directory
+        for file in ~/.dotfiles-private/aliases/*; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            ln -sf "$file" ~/.dotfiles/shells/zsh/zsh.before/"$filename"
+          fi
+        done
+      description: "Link private aliases to dotfiles/shells/zsh/zsh.before/"
+
+    - command: |
+        # Create symlinks for all files in private vscode directory
+        for file in ~/.dotfiles-private/vscode/*; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            ln -sf "$file" ~/.dotfiles/apps/vscode/"$filename"
+          fi
+        done
+      description: "Link private VS Code files to dotfiles/apps/vscode/"
+
+    - command: |
+        # Create symlinks for all files in private cursor directory
+        for file in ~/.dotfiles-private/cursor/*; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            ln -sf "$file" ~/.dotfiles/apps/cursor/"$filename"
+          fi
+        done
+      description: "Link private Cursor files to dotfiles/apps/cursor/"
+
+    - command: |
+        # Create symlinks for SSH configs from private repo
+        if [ -f ~/.dotfiles-private/ssh/config ]; then
+          ln -sf ~/.dotfiles-private/ssh/config ~/.dotfiles/tools/ssh/config
+          echo "Linked private SSH config"
+        fi
+        if [ -d ~/.dotfiles-private/ssh/configs ]; then
+          ln -sf ~/.dotfiles-private/ssh/configs ~/.dotfiles/tools/ssh/configs
+          echo "Linked private SSH configs folder"
+        fi
+        if [ -d ~/.dotfiles-private/ssh/keys ]; then
+          ln -sf ~/.dotfiles-private/ssh/keys ~/.dotfiles/tools/ssh/keys
+          echo "Linked private SSH keys folder"
+        fi
+      description: "Link private SSH config, configs, and keys to dotfiles/tools/ssh/"
+
+    - command: |
+        # Create symlinks for all secure_profiles from private repo
+        # Ensure target directory exists
+        mkdir -p ~/.dotfiles/shells/oh-my-zsh/custom/secure_profiles
+        if [ -d ~/.dotfiles-private/shells/secure_profiles ]; then
+          for profile in ~/.dotfiles-private/shells/secure_profiles/*; do
+            if [ -f "$profile" ]; then
+              profile_name=$(basename "$profile")
+              ln -sf "$profile" ~/.dotfiles/shells/oh-my-zsh/custom/secure_profiles/"$profile_name"
+              echo "Linked secure profile $profile_name"
+            fi
+          done
+        fi
+      description: "Link private secure_profiles to dotfiles/shells/oh-my-zsh/custom/secure_profiles/"
+
+    - command: |
+        # Create symlinks for all dotbot configs from private repo
+        # This supports any profile-specific configs (personal, work, client1, etc.)
+        if [ -d ~/.dotfiles-private/dotbot ]; then
+          for config in ~/.dotfiles-private/dotbot/*.yaml; do
+            if [ -f "$config" ]; then
+              config_name=$(basename "$config")
+              ln -sf "$config" ~/.dotfiles/.dotbot/configs/"$config_name"
+              echo "Linked private $config_name config"
+            fi
+          done
+        fi
+      description: "Link all private dotbot configs to dotfiles/.dotbot/configs/"
+
+    - command: echo "Private files symlinked to dotfiles directories successfully"
+      description: "Verify private file symlinks to dotfiles"
