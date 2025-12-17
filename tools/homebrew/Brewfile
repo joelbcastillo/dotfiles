@@ -1,5 +1,6 @@
 tap "airbytehq/tap"
 tap "github/gh"
+brew "act"
 brew "asdf"
 brew "python@3.13"
 brew "awscli"

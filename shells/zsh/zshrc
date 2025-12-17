@@ -100,9 +100,9 @@ direnv() {
 }
 
 # Lazy load Zoxide
+# Remove alias if it exists before defining function
+(( $+aliases[z] )) && unalias z
 z() {
-    # Remove alias if it exists, then remove function
-    (( $+aliases[z] )) && unalias z
     unfunction z 2>/dev/null
     eval "$(zoxide init zsh)"
     z "$@"

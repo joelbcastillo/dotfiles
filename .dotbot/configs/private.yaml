@@ -88,5 +88,19 @@
         fi
       description: "Link all private dotbot configs to dotfiles/.dotbot/configs/"
 
+    - command: |
+        # Create symlinks for all Claude tools from private repo
+        if [ -d ~/.dotfiles-private/tools/claude ]; then
+          mkdir -p ~/.dotfiles/tools/claude
+          for file in ~/.dotfiles-private/tools/claude/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              ln -sf "$file" ~/.dotfiles/tools/claude/"$filename"
+              echo "Linked private Claude tool $filename"
+            fi
+          done
+        fi
+      description: "Link private Claude tools to dotfiles/tools/claude/"
+
     - command: echo "Private files symlinked to dotfiles directories successfully"
       description: "Verify private file symlinks to dotfiles"
