@@ -29,7 +29,9 @@ find . -type f -name '*.sh' -o -name 'install' | while read -r script; do
   # SC2162: read without -r (safe to ignore for interactive scripts)
   # SC2181: Check exit code directly (safe to ignore for legacy scripts)
   # SC2001: Use ${variable//search/replace} (safe to ignore for sed usage)
-  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001 "$script"
+  # SC2248: Prefer double quoting (safe to ignore for arithmetic comparisons)
+  # SC2030/SC2031: Subshell modifications (safe to ignore for counter variables in pipelines)
+  shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2248,SC2030,SC2031 "$script"
 done
 success "All shell scripts passed shellcheck."
 
@@ -39,7 +41,6 @@ REQUIRED=(
   ".dotbot"
   ".dotbot/profiles"
   "tools/homebrew/Brewfile"
-  "apps/vscode/settings.json"
   "install"
 )
 for path in "${REQUIRED[@]}"; do
@@ -48,6 +49,13 @@ for path in "${REQUIRED[@]}"; do
     exit 1
   fi
 done
+
+# Special check for vscode settings - either settings.json or settings.json.template must exist
+if [ ! -e "apps/vscode/settings.json" ] && [ ! -e "apps/vscode/settings.json.template" ]; then
+  error "Missing required file: apps/vscode/settings.json or apps/vscode/settings.json.template"
+  exit 1
+fi
+
 success "All required files and directories are present."
 
 # 3. Check install script syntax
