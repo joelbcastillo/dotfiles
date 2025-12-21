@@ -153,6 +153,7 @@ function test_aws_functions() {
     
     # Test awsprofile
     awsprofile test_profile
+    # shellcheck disable=SC2154
     assert_equals "test_profile" "$AWS_PROFILE" "awsprofile should set AWS_PROFILE"
 }
 
