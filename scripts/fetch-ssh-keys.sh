@@ -54,11 +54,23 @@ get_ssh_key() {
     fi
 
     # Fetch the SSH key
+    # Support item_id if provided (for duplicate names), otherwise use key_name
+    local item_identifier="$5"  # Optional item_id parameter
     local key_content
-    if [ "$key_type" = "private" ]; then
-        key_content=$(op item get "$key_name" --vault "$vault_name" --fields "private_key" 2>/dev/null || echo "")
+    if [ -n "$item_identifier" ]; then
+        # Use item ID if provided
+        if [ "$key_type" = "private" ]; then
+            key_content=$(op item get "$item_identifier" --vault "$vault_name" --fields "private_key" 2>/dev/null || echo "")
+        else
+            key_content=$(op item get "$item_identifier" --vault "$vault_name" --fields "public_key" 2>/dev/null || echo "")
+        fi
     else
-        key_content=$(op item get "$key_name" --vault "$vault_name" --fields "public_key" 2>/dev/null || echo "")
+        # Use key name (original behavior)
+        if [ "$key_type" = "private" ]; then
+            key_content=$(op item get "$key_name" --vault "$vault_name" --fields "private_key" 2>/dev/null || echo "")
+        else
+            key_content=$(op item get "$key_name" --vault "$vault_name" --fields "public_key" 2>/dev/null || echo "")
+        fi
     fi
 
     if [ -z "$key_content" ]; then
@@ -73,12 +85,13 @@ get_ssh_key() {
 setup_ssh_key() {
     local key_name="$1"
     local key_filename="$2"
+    local item_id="$3"  # Optional item ID for duplicate names
 
     echo "Setting up $key_name SSH key..."
 
     # Get private key
     local private_key
-    private_key=$(get_ssh_key "$key_name" "private" "$VAULT_NAME" "$ACCOUNT")
+    private_key=$(get_ssh_key "$key_name" "private" "$VAULT_NAME" "$ACCOUNT" "$item_id")
     if [ $? -ne 0 ]; then
         echo "Failed to fetch private key for $key_name"
         return 1
@@ -86,7 +99,7 @@ setup_ssh_key() {
 
     # Get public key
     local public_key
-    public_key=$(get_ssh_key "$key_name" "public" "$VAULT_NAME" "$ACCOUNT")
+    public_key=$(get_ssh_key "$key_name" "public" "$VAULT_NAME" "$ACCOUNT" "$item_id")
     if [ $? -ne 0 ]; then
         echo "Failed to fetch public key for $key_name"
         return 1
@@ -209,6 +222,7 @@ main() {
             local key_name=$(echo "$key_config" | jq -r '.name')
             local key_filename=$(echo "$key_config" | jq -r '.filename')
             local key_vault=$(echo "$key_config" | jq -r '.vault')
+            local item_id=$(echo "$key_config" | jq -r '.item_id // empty')
 
             echo "  Setting up: $key_name → ~/.ssh/$key_filename"
 
@@ -217,7 +231,7 @@ main() {
             VAULT_NAME="$key_vault"
             ACCOUNT="$account_uuid"
 
-            if setup_ssh_key "$key_name" "$key_filename"; then
+            if setup_ssh_key "$key_name" "$key_filename" "$item_id"; then
                 ((total_keys++))
             fi
         done
