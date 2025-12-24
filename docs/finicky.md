@@ -15,8 +15,8 @@ A template file is available in the public repository at `tools/finicky/finicky.
 ## Key Features
 
 ### Default Browser
-- **Safari**: Set as the default browser for all other links
-- You can change this to Chrome, Firefox, or any other browser
+- **Google Chrome**: Set as the default browser for all other links
+- You can change this to Safari, Firefox, or any other browser
 
 ### Microsoft Teams & Outlook Routing
 - **Source Detection**: Detects when links are clicked from:
@@ -30,6 +30,8 @@ A template file is available in the public repository at `tools/finicky/finicky.
   - `*.sharepoint.com`
   - `*.office.com` and `*.office365.com`
   - `*.microsoft.com`
+  - `*.teams.cdn.office.net` (Microsoft Safe Links)
+  - `*.safelinks.protection.outlook.com` (Microsoft Safe Links)
 
 - **Edge Profile**: Opens links in Microsoft Edge with a specific profile directory
   - Default: `Profile 1` (you need to update this to match your profile)
@@ -77,14 +79,19 @@ The profile directory name is `Profile 1` in this case.
    cp ~/.dotfiles/tools/finicky/finicky.js.template ~/.dotfiles-private/tools/finicky/finicky.js
    ```
 
-2. Edit `~/.dotfiles-private/tools/finicky/finicky.js` and update the `--profile-directory` argument:
+2. Edit `~/.dotfiles-private/tools/finicky/finicky.js` and update the `JOSHUA_PROJECT_PROFILE` constant:
 
 ```javascript
-browser: {
-  name: "Microsoft Edge",
-  args: [
-    "--profile-directory=Profile 1"  // Replace with your actual profile name
-  ]
+// Edge profile configuration
+const JOSHUA_PROJECT_PROFILE = 'Profile 1'; // Replace with your actual profile name
+
+// The browser function includes the URL in args since Finicky doesn't auto-append when using custom args
+browser: url => {
+  const urlString = url instanceof URL ? url.href : String(url);
+  return {
+    name: 'Microsoft Edge',
+    args: [`--profile-directory=${JOSHUA_PROJECT_PROFILE}`, urlString],
+  };
 }
 ```
 
@@ -126,9 +133,12 @@ module.exports = {
     "https://teams.microsoft.com/*",
     "https://your-custom-domain.com/*",  // Add custom patterns
   ],
-  browser: {
-    name: "Microsoft Edge",
-    args: ["--profile-directory=Profile 1"]
+  browser: url => {
+    const urlString = url instanceof URL ? url.href : String(url);
+    return {
+      name: "Microsoft Edge",
+      args: [`--profile-directory=Profile 1`, urlString]
+    };
   }
 }
 ```
@@ -148,21 +158,29 @@ module.exports = {
 {
   match: ({ url }) => {
     // Work URLs go to work profile
-    return /work-domain\.com/.test(url);
+    const urlString = url instanceof URL ? url.href : String(url);
+    return /work-domain\.com/.test(urlString);
   },
-  browser: {
-    name: "Microsoft Edge",
-    args: ["--profile-directory=Profile 1"]  // Work profile
+  browser: url => {
+    const urlString = url instanceof URL ? url.href : String(url);
+    return {
+      name: "Microsoft Edge",
+      args: ["--profile-directory=Profile 1", urlString]  // Work profile
+    };
   }
 },
 {
   match: ({ url }) => {
     // Personal URLs go to personal profile
-    return /personal-domain\.com/.test(url);
+    const urlString = url instanceof URL ? url.href : String(url);
+    return /personal-domain\.com/.test(urlString);
   },
-  browser: {
-    name: "Microsoft Edge",
-    args: ["--profile-directory=Default"]  // Personal profile
+  browser: url => {
+    const urlString = url instanceof URL ? url.href : String(url);
+    return {
+      name: "Microsoft Edge",
+      args: ["--profile-directory=Default", urlString]  // Personal profile
+    };
   }
 }
 ```
@@ -190,7 +208,7 @@ module.exports = {
 
 ### Edge Opens with Wrong Profile
 
-- Update the `--profile-directory` argument in `~/.dotfiles-private/tools/finicky/finicky.js`
+- Update the `JOSHUA_PROJECT_PROFILE` constant in `~/.dotfiles-private/tools/finicky/finicky.js`
 - Make sure you're using the correct profile directory name
 - Run `./install config finicky` to update the symlink
 - Restart Finicky after making changes
