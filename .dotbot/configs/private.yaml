@@ -102,5 +102,19 @@
         fi
       description: "Link private Claude tools to dotfiles/tools/claude/"
 
+    - command: |
+        # Create symlinks for Finicky configuration from private repo
+        if [ -d ~/.dotfiles-private/tools/finicky ]; then
+          mkdir -p ~/.dotfiles/tools/finicky
+          for file in ~/.dotfiles-private/tools/finicky/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              ln -sf "$file" ~/.dotfiles/tools/finicky/"$filename"
+              echo "Linked private Finicky config $filename"
+            fi
+          done
+        fi
+      description: "Link private Finicky configuration to dotfiles/tools/finicky/"
+
     - command: echo "Private files symlinked to dotfiles directories successfully"
       description: "Verify private file symlinks to dotfiles"

@@ -1,0 +1,20 @@
+- shell:
+    - command: |
+        echo "Setting up Finicky configuration..."
+      description: Setting up Finicky configuration
+
+- link:
+    ~/.finicky.js:
+      path: tools/finicky/finicky.js
+      relink: true
+      force: true
+
+- shell:
+    - command: |
+        echo "Finicky configuration setup completed"
+        echo "⚠️  Remember to:"
+        echo "   1. Update the Edge profile directory in ~/.dotfiles-private/tools/finicky/finicky.js"
+        echo "   2. Find your profile by opening Edge and going to edge://version/"
+        echo "   3. Run './install config finicky' again after updating the private config"
+        echo "   4. Restart Finicky or your Mac for changes to take effect"
+      description: Complete Finicky setup with reminders

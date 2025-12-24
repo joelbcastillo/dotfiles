@@ -161,6 +161,18 @@ set -g mouse on
 
 ## System Tools
 
+### Finicky
+
+**Location**: `tools/finicky/` (template in public repo, actual config in `~/.dotfiles-private/tools/finicky/`)
+
+**finicky.js** (`~/.finicky.js` - symlinked from private repo):
+- Routes Microsoft Teams and Outlook links to Microsoft Edge with domain account profile
+- **Configuration is stored in private repository** at `~/.dotfiles-private/tools/finicky/finicky.js`
+- Template available at `tools/finicky/finicky.js.template` in public repo
+- Edit the private config to change Edge profile directory or add more routing rules
+- **Important**: Update `--profile-directory` with your actual Edge profile name (find it at `edge://version/`)
+- See [Finicky Documentation](finicky.md) for detailed setup and customization
+
 ### Htop
 
 **Location**: `tools/htop/`
@@ -244,4 +256,4 @@ To customize any of these configurations:
    - Keep sensitive data out of version control
    - Document custom changes
    - Test configurations on a clean system
-   - Use environment variables for sensitive values 
+   - Use environment variables for sensitive values

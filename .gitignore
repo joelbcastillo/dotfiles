@@ -80,6 +80,7 @@ shells/zsh/zsh.before/*
 !tools/claude/config.json.template
 !tools/cursor-agent/config.json.template
 !tools/1password/secret-paths.json.template
+!tools/finicky/finicky.js.template
 
 # SSH - Ignore everything except templates and docs
 tools/ssh/config
@@ -87,6 +88,9 @@ tools/ssh/keys/**/*
 !tools/ssh/keys/**/.gitkeep
 !tools/ssh/**/*.template
 !tools/ssh/**/*.md
+
+# Finicky - Ignore actual config (symlinked from private repo), allow template
+tools/finicky/finicky.js
 
 # Application-specific configs
 tools/aws/*/credentials

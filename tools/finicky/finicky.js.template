@@ -1,0 +1,75 @@
+/**
+ * Finicky Configuration Template
+ *
+ * Routes URLs to appropriate browsers based on source application and URL patterns.
+ *
+ * Primary use case: Open links from Microsoft Teams and Outlook in Microsoft Edge
+ * with the domain account profile.
+ *
+ * To find your Edge profile directory:
+ * 1. Open Microsoft Edge with your domain account profile
+ * 2. Navigate to edge://version/ in the address bar
+ * 3. Look for "Profile Path" - the directory name (e.g., "Profile 1", "Default", "Profile 2")
+ * 4. Update the profileDirectory value below
+ *
+ * IMPORTANT: Copy this file to ~/.dotfiles-private/tools/finicky/finicky.js
+ * and update the profile directory name with your actual Edge profile.
+ */
+
+module.exports = {
+  // Default browser for all other links
+  defaultBrowser: "Safari",
+
+  handlers: [
+    {
+      // Match URLs from Microsoft Teams and Outlook
+      // This includes Office 365, SharePoint, and other Microsoft services
+      match: ({ sourceBundleIdentifier, url }) => {
+        // Check if the link is coming from Microsoft Teams or Outlook
+        const isFromMicrosoftApp =
+          sourceBundleIdentifier === "com.microsoft.teams" ||
+          sourceBundleIdentifier === "com.microsoft.Outlook" ||
+          sourceBundleIdentifier === "com.microsoft.Office365ServiceV2";
+
+        // Match Microsoft Office URLs
+        const isMicrosoftUrl =
+          /^https?:\/\/(teams\.microsoft\.com|outlook\.(office|live)\.com|.*\.sharepoint\.com|.*\.office\.com|.*\.office365\.com|.*\.microsoft\.com)/.test(url);
+
+        return isFromMicrosoftApp || isMicrosoftUrl;
+      },
+      browser: {
+        name: "Microsoft Edge",
+        // TODO: Replace "Profile 1" with your actual Edge profile directory name
+        // Find it by opening Edge, going to edge://version/, and checking "Profile Path"
+        args: [
+          "--profile-directory=Profile 1"
+        ]
+      }
+    },
+    {
+      // Additional handler for Microsoft URLs even if not from Teams/Outlook
+      // This catches direct clicks on Microsoft links
+      match: [
+        "https://teams.microsoft.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.live.com/*",
+        "https://*.sharepoint.com/*",
+        "https://*.office.com/*",
+        "https://*.office365.com/*",
+        "https://*.microsoft.com/*"
+      ],
+      browser: {
+        name: "Microsoft Edge",
+        args: [
+          "--profile-directory=Profile 1"
+        ]
+      }
+    }
+  ],
+
+  // Optional: Log all URL routing decisions for debugging
+  // Uncomment the following to enable logging
+  // options: {
+  //   logRequests: true
+  // }
+};
