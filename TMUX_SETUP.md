@@ -18,7 +18,7 @@ Your config is live and ready to use. To verify:
 ```bash
 # Reload config
 tmux source-file ~/.tmux.conf
-# or press: C-a r
+# or press: C-b r
 
 # Start a session
 tmux new-session -s work
@@ -35,51 +35,51 @@ tmux attach-session -s work
 ### Core Navigation
 | Action | Keys | Notes |
 |--------|------|-------|
-| New window | `C-a c` | Opens in current path |
-| New named window | `C-a n` | Prompts for name |
-| Rename window | `C-a N` | Rename active window |
-| Next window | `C-a C-l` | Move right (repeatable) |
-| Previous window | `C-a C-h` | Move left (repeatable) |
-| Last window | `C-a C-a` | Toggle to previous window |
-| List windows | `C-a w` | Shows all windows |
+| New window | `C-b c` | Opens in current path |
+| New named window | `C-b n` | Prompts for name |
+| Rename window | `C-b N` | Rename active window |
+| Next window | `C-b C-l` | Move right (repeatable) |
+| Previous window | `C-b C-h` | Move left (repeatable) |
+| Last window | `C-b C-b` | Toggle to previous window |
+| List windows | `C-b w` | Shows all windows |
 
 ### Pane Management
 | Action | Keys | Notes |
 |--------|------|-------|
-| Split vertical | `C-a v` | 50/50 split |
-| Split horizontal | `C-a s` | 50/50 split |
-| Split vertical (alt) | `C-a \|` | Full height |
-| Split horizontal (alt) | `C-a -` | Full width |
-| Move left | `C-a h` | Vim-style navigation |
-| Move down | `C-a j` | Vim-style navigation |
-| Move up | `C-a k` | Vim-style navigation |
-| Move right | `C-a l` | Vim-style navigation |
-| Resize left | `C-a H` | 5px (repeatable) |
-| Resize down | `C-a J` | 5px (repeatable) |
-| Resize up | `C-a K` | 5px (repeatable) |
-| Resize right | `C-a L` | 5px (repeatable) |
-| Kill pane | `C-a x` | Close pane |
-| Break pane | `C-a C-b` | Move pane to new window |
-| Join panes | `C-a C-j` | Merge panes |
+| Split vertical | `C-b v` | 50/50 split |
+| Split horizontal | `C-b s` | 50/50 split |
+| Split vertical (alt) | `C-b \|` | Full height |
+| Split horizontal (alt) | `C-b -` | Full width |
+| Move left | `C-b h` | Vim-style navigation |
+| Move down | `C-b j` | Vim-style navigation |
+| Move up | `C-b k` | Vim-style navigation |
+| Move right | `C-b l` | Vim-style navigation |
+| Resize left | `C-b H` | 5px (repeatable) |
+| Resize down | `C-b J` | 5px (repeatable) |
+| Resize up | `C-b K` | 5px (repeatable) |
+| Resize right | `C-b L` | 5px (repeatable) |
+| Kill pane | `C-b x` | Close pane |
+| Break pane | `C-b b` | Move pane to new window |
+| Join panes | `C-b C-j` | Merge panes |
 
 ### Copy Mode & Selection
 | Action | Keys | Notes |
 |--------|------|-------|
-| Enter copy mode | `C-a [` | Browse scrollback |
+| Enter copy mode | `C-b [` | Browse scrollback |
 | Begin selection | `v` (in copy mode) | Start text selection |
 | Copy selection | `y` (in copy mode) | Copy to clipboard |
-| Search history | `C-a /` | Search scrollback |
+| Search history | `C-b /` | Search scrollback |
 | Exit copy mode | `q` | Leave copy mode |
 
 ### Session & Config
 | Action | Keys | Notes |
 |--------|------|-------|
-| Detach session | `C-a d` | Backgrounded |
+| Detach session | `C-b d` | Backgrounded |
 | List sessions | `tmux ls` | Command line |
-| Select session | `C-a s` | Interactive picker |
-| Reload config | `C-a r` | Live reload |
-| Sync panes | `C-a e` | Toggle input sync |
-| Unsync panes | `C-a E` | Disable input sync |
+| Select session | `C-b s` | Interactive picker |
+| Reload config | `C-b r` | Live reload |
+| Sync panes | `C-b e` | Toggle input sync |
+| Unsync panes | `C-b E` | Disable input sync |
 
 ---
 
@@ -153,10 +153,10 @@ C-a s  # Opens session picker
 tmux new-session -s myproject
 
 # Create windows for different tasks
-C-a c  # main work window
-C-a n  # name it
-C-a c  # testing window
-C-a n  # name it
+C-b c  # main work window
+C-b n  # name it
+C-b c  # testing window
+C-b n  # name it
 
 # Later, attach
 tmux attach-session -s myproject
@@ -166,37 +166,37 @@ tmux attach-session -s myproject
 ```bash
 # Session 1: Analyzer
 tmux new-session -s analyzer
-C-a c
-C-a N  # "research"
+C-b c
+C-b N  # "research"
 
 # Session 2: Implementer
 tmux new-session -s implementer
-C-a c
-C-a N  # "code"
+C-b c
+C-b N  # "code"
 
 # Session 3: Tests
 tmux new-session -s tests
-C-a c
-C-a N  # "testing"
+C-b c
+C-b N  # "testing"
 
 # Switch between them
-C-a s  # Picker shows all sessions
+C-b s  # Picker shows all sessions
 ```
 
 ### Side-by-Side Development
 ```bash
 # Open window
-C-a c
+C-b c
 
 # Split into two panes
-C-a v
+C-b v
 
 # Left pane: code editor
 # Right pane: Claude Code running
-C-a h  # Move to left pane
+C-b h  # Move to left pane
 vim file.py
 
-C-a l  # Move to right pane
+C-b l  # Move to right pane
 claude-code implement
 ```
 
@@ -205,13 +205,13 @@ Test across multiple panes simultaneously:
 
 ```bash
 # Enable sync
-C-a e
+C-b e
 
 # Type command (goes to all panes)
 npm test
 
 # Disable sync
-C-a E
+C-b E
 ```
 
 ---
@@ -437,6 +437,6 @@ Your original config had good foundations. Improvements made:
 2. **Test keybindings:** Try splitting panes, switching windows
 3. **Create workflow:** Set up sessions/windows for your projects
 4. **Customize:** Add overrides to `~/.tmux.conf.user` as needed
-5. **Install plugins:** If first time, press `C-a I` to install TPM plugins
+5. **Install plugins:** If first time, press `C-b I` to install TPM plugins
 
-Enjoy your optimized tmux setup!
+Enjoy your optimized tmux setup with C-b prefix!

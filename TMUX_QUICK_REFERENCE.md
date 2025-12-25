@@ -2,53 +2,53 @@
 
 ## Essential Commands
 
-**Prefix:** All commands start with `C-a` (Ctrl+A)
+**Prefix:** All commands start with `C-b` (Ctrl+B)
 
 ### Windows
 ```
-C-a c          Create new window
-C-a n          Create new named window
-C-a N          Rename current window
-C-a C-h        Previous window
-C-a C-l        Next window
-C-a C-a        Last window
-C-a w          List all windows
+C-b c          Create new window
+C-b n          Create new named window
+C-b N          Rename current window
+C-b C-h        Previous window
+C-b C-l        Next window
+C-b C-b        Last window
+C-b w          List all windows
 ```
 
 ### Panes
 ```
-C-a v          Split vertical (50/50)
-C-a s          Split horizontal (50/50)
-C-a h/j/k/l    Navigate left/down/up/right
-C-a H/J/K/L    Resize pane (repeatable)
-C-a x          Kill current pane
-C-a C-b        Break pane to new window
-C-a C-j        Join panes
+C-b v          Split vertical (50/50)
+C-b s          Split horizontal (50/50)
+C-b h/j/k/l    Navigate left/down/up/right
+C-b H/J/K/L    Resize pane (repeatable)
+C-b x          Kill current pane
+C-b b          Break pane to new window
+C-b C-j        Join panes
 ```
 
 ### Copy Mode
 ```
-C-a [          Enter copy mode
+C-b [          Enter copy mode
 v              Begin selection
 y              Copy selection
-C-a ]          Paste
-C-a /          Search history
+C-b ]          Paste
+C-b /          Search history
 q              Exit copy mode
 ```
 
 ### Sessions
 ```
-C-a d          Detach session
-C-a s          Select session
+C-b d          Detach session
+C-b s          Select session
 tmux ls        List all sessions
 tmux attach -t name    Reattach to session
 ```
 
 ### Misc
 ```
-C-a e/E        Toggle pane sync on/off
-C-a r          Reload config
-C-a :          Open tmux command prompt
+C-b e/E        Toggle pane sync on/off
+C-b r          Reload config
+C-b :          Open tmux command prompt
 ```
 
 ---
@@ -58,19 +58,19 @@ C-a :          Open tmux command prompt
 ### New Project Session
 ```bash
 tmux new-session -s myproject
-C-a c          # Create code window
-C-a N          # Name it "code"
-C-a c          # Create test window
-C-a N          # Name it "tests"
-C-a C-h        # Switch to code
+C-b c          # Create code window
+C-b N          # Name it "code"
+C-b c          # Create test window
+C-b N          # Name it "tests"
+C-b C-h        # Switch to code
 ```
 
 ### Split Pane Layout
 ```
-C-a v          # Split left/right
-C-a s          # Split current in half
-C-a h/l        # Switch between panes
-C-a H/L        # Resize horizontally
+C-b v          # Split left/right
+C-b s          # Split current in half
+C-b h/l        # Switch between panes
+C-b H/L        # Resize horizontally
 ```
 
 ### Multi-Agent Work
@@ -82,18 +82,18 @@ tmux new-session -s agent1
 tmux new-session -s agent2
 
 # Switch between
-C-a s          # Shows list, select with arrows, Enter
+C-b s          # Shows list, select with arrows, Enter
 ```
 
 ### Copy Long Output
 ```
-C-a [          # Enter copy mode
+C-b [          # Enter copy mode
 gg             # Go to top (vim-like)
 Shift+G        # Go to bottom
 v              # Start selection
 G              # Select to end
 y              # Copy
-C-a ]          # Paste elsewhere
+C-b ]          # Paste elsewhere
 ```
 
 ---
@@ -121,13 +121,13 @@ C-a ]          # Paste elsewhere
 
 ## Pro Tips
 
-1. **Naming windows** - Use descriptive names with `C-a N` for quick identification
+1. **Naming windows** - Use descriptive names with `C-b N` for quick identification
 2. **Keyboard over mouse** - Much faster once muscle memory builds
 3. **Vi keys** - All navigation uses vim keys (h/j/k/l)
-4. **Pane sync** - Use `C-a e` to send same input to all panes simultaneously
-5. **Copy/paste** - `C-a [` to enter copy mode, `v` to select, `y` to copy, `C-a ]` to paste
-6. **Persist sessions** - Detach with `C-a d`, reattach with `tmux attach`
-7. **Search output** - `C-a /` in copy mode to search scrollback
+4. **Pane sync** - Use `C-b e` to send same input to all panes simultaneously
+5. **Copy/paste** - `C-b [` to enter copy mode, `v` to select, `y` to copy, `C-b ]` to paste
+6. **Persist sessions** - Detach with `C-b d`, reattach with `tmux attach`
+7. **Search output** - `C-b /` in copy mode to search scrollback
 
 ---
 
@@ -190,5 +190,6 @@ tmux kill-server
 - ✓ Mouse support enabled
 - ✓ Vim-aware pane navigation
 - ✓ Activity monitoring for background windows
+- ✓ C-b prefix for comfortable key access
 
 Ready to use - no additional setup needed!
