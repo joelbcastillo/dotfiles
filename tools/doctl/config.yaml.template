@@ -1,0 +1,13 @@
+# DigitalOcean CLI (doctl) Configuration
+# This file uses 1Password secrets that will be resolved during setup
+# The token will be automatically fetched from 1Password
+
+# DigitalOcean API token
+# This will be resolved from 1Password secret: digitalocean_token
+access-token: 1password://digitalocean_token
+
+# Optional: Default output format (text, json)
+# output: "text"
+
+# Optional: Default context (if you have multiple contexts)
+# context: "default"
