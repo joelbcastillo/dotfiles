@@ -1,0 +1,126 @@
+════════════════════════════════════════════════════════════════════════════════
+                         MCP INTEGRATION FINAL MANIFEST
+════════════════════════════════════════════════════════════════════════════════
+
+LOCATION
+────────────────────────────────────────────────────────────────────────────────
+Directory: /Users/joel.castillo.cq/conductor/workspaces/.dotfiles/sun-valley/
+
+
+FILES DELIVERED
+────────────────────────────────────────────────────────────────────────────────
+
+CORE IMPLEMENTATION:
+  • mcp-profile-functions.zsh (6.8 KB)
+    └─ Complete MCP profile manager function
+    └─ Ready to copy into: ~/.dotfiles/shells/oh-my-zsh/custom/functions.zsh
+
+DOCUMENTATION (CONSOLIDATED & STYLED):
+  • START_HERE.md (6.5 KB)
+    └─ Comprehensive integration guide matching your dotfiles doc style
+    └─ Covers installation, usage, secrets, troubleshooting, and references
+    └─ Read this first for everything you need
+
+MCP CONFIG TEMPLATES (in /tmp/attachments/):
+────────────────────────────────────────────────────────────────────────────────
+  • .mcp.notion-only.json    ← Lightweight (just Notion)
+  • .mcp.docs-focus.json     ← Docs work (Notion + Google Drive)
+  • .mcp.project-focus.json  ← Projects (Notion + Linear)
+  • .mcp.all-tools.json      ← Full power (all tools enabled)
+
+
+DOCUMENTATION CONSOLIDATION
+────────────────────────────────────────────────────────────────────────────────
+
+Previous version had 4 documentation files with overlapping content:
+  ✓ QUICK_START.md (removed - content in START_HERE.md)
+  ✓ INTEGRATION_SUMMARY.md (removed - content in START_HERE.md)
+  ✓ DOTFILES_INTEGRATION_GUIDE.md (removed - content in START_HERE.md)
+  ✓ MCP_INTEGRATION_MANIFEST.txt (previous version removed)
+
+New approach:
+  ✓ Single comprehensive START_HERE.md following your dotfiles documentation style
+  ✓ Matches structure of mcp.md, mcp-api-keys.md, and tool-configurations.md
+  ✓ Organized by: Overview → Installation → Usage → Secrets → Integration → Troubleshooting
+  ✓ Includes command reference, file organization, and cross-references
+
+
+DOCUMENTATION STYLE ALIGNMENT
+────────────────────────────────────────────────────────────────────────────────
+
+The new START_HERE.md matches your dotfiles docs:
+  ✓ Clear structure: Overview → Sections → Advanced → Troubleshooting
+  ✓ Practical focus: How to do things, step-by-step instructions
+  ✓ Reference tables: Quick lookup for profiles and commands
+  ✓ Security-first: 1Password integration, secret management
+  ✓ Cross-references: Links to related docs in ~/.dotfiles/docs/
+
+
+BRANCH INFORMATION
+────────────────────────────────────────────────────────────────────────────────
+Branch Name: joelbcastillo/dotfiles-mcp-integration
+Status: Ready for immediate integration
+
+
+INTEGRATION OVERVIEW
+────────────────────────────────────────────────────────────────────────────────
+
+WHAT IT DOES:
+  • Global MCP profile manager for Claude Code
+  • Switch between tool configurations: notion-only, docs-focus, project-focus, all-tools
+  • Auto-detects projects with .mcp.json
+  • Loads secrets from your 1Password setup
+  • Works from any directory in a project
+
+COMMANDS AVAILABLE:
+  mcp-switch <profile>    # Switch profiles and load secrets
+  mcp-profile show       # Show currently active tools
+  mcp-profile list       # List available profiles
+  mcp-profile status     # Check if secrets are loaded
+  mcp-profile help       # Show help
+
+HOW IT INTEGRATES:
+  • Adds directly to: ~/.dotfiles/shells/oh-my-zsh/custom/functions.zsh
+  • Hooks into your _secure_run pattern (for 1Password)
+  • Uses your existing 1Password CLI setup
+  • No changes to .zshrc needed
+  • No new files or directories required
+
+
+SETUP CHECKLIST
+────────────────────────────────────────────────────────────────────────────────
+
+Immediate:
+  ☐ Read START_HERE.md
+  ☐ Copy mcp-profile-functions.zsh content to functions.zsh
+  ☐ Run: exec zsh
+  ☐ Test: mcp-profile help
+
+Per Project:
+  ☐ Copy .mcp.*.json templates from /tmp/attachments/
+  ☐ Test: mcp-profile list
+  ☐ Test: mcp-switch docs-focus
+  ☐ Test: mcp-profile show
+
+Ongoing:
+  ☐ Add templates to all Conductor workspaces
+  ☐ Create optional: secure_profiles/mcp-secrets in dotfiles
+  ☐ Commit to dotfiles repo
+
+
+KEY FEATURES
+────────────────────────────────────────────────────────────────────────────────
+  ✓ Global - Works in any project
+  ✓ Auto-detect - Finds .mcp.json in parent directories
+  ✓ 1Password integration - Uses existing setup
+  ✓ Safe - Backs up previous configs before switching
+  ✓ Simple - Copy/paste function, no external dependencies
+  ✓ Non-invasive - Hooks into existing patterns
+  ✓ Graceful - Works even if optional tools missing
+  ✓ Style-aligned - Documentation matches your dotfiles docs
+
+
+STATUS: ✅ COMPLETE AND READY FOR INTEGRATION
+════════════════════════════════════════════════════════════════════════════════
+
+Next: Read START_HERE.md
