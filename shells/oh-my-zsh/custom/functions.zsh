@@ -550,4 +550,28 @@ EOF
 
     # Use the user's preferred editor, default to 'code'
     ${EDITOR:-code} "$profile_path"
-} 
+}
+
+# MCP Functions
+
+# Check or install MCP configuration
+# Usage: mcp-check              # Check all MCP configs
+#        mcp-check -i           # Install all missing MCP configs
+#        mcp-check -t project   # Check project-level .mcp.json in current dir
+#        mcp-check -t project -i  # Install .mcp.json in current dir
+function mcp-check() {
+    ~/.dotfiles/scripts/check-mcp-installed.sh "$@"
+}
+
+# Quick install MCP in current project directory
+# Usage: mcp-init               # Install .mcp.json in current directory
+#        mcp-init /path/to/dir  # Install .mcp.json in specified directory
+function mcp-init() {
+    local target_dir="${1:-.}"
+    ~/.dotfiles/scripts/check-mcp-installed.sh -t project -i -d "$target_dir"
+}
+
+# Source MCP Profile Manager functions
+if [ -f "$DOTFILES/mcp-profile-functions.zsh" ]; then
+    source "$DOTFILES/mcp-profile-functions.zsh"
+fi
