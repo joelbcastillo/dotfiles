@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "NotionMCP": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer 1password://notion_api_key\", \"Notion-Version\": \"2022-06-28\"}"
+      }
+    },
+    "GoogleDriveMCP": {
+      "command": "npx",
+      "args": ["-y", "@piotr-agier/google-drive-mcp"],
+      "env": {
+        "GOOGLE_DRIVE_CREDENTIALS": "1password://google_drive_credentials"
+      }
+    },
+    "LinearMCP": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"],
+      "env": {
+        "LINEAR_API_KEY": "1password://linear_api_key"
+      }
+    },
+    "OutlookMCP": {
+      "command": "/Users/USERNAME/.bun/bin/bun",
+      "args": ["run", "/Users/USERNAME/.repos/github.com/syedazharmbnr1/claude-outlook-mcp/index.ts"],
+      "env": {}
+    }
+  }
+}

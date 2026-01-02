@@ -568,7 +568,31 @@ function mcp-check() {
 #        mcp-init /path/to/dir  # Install .mcp.json in specified directory
 function mcp-init() {
     local target_dir="${1:-.}"
+
+    # Install the main .mcp.json
     ~/.dotfiles/scripts/check-mcp-installed.sh -t project -i -d "$target_dir"
+
+    # Copy profile templates for mcp-switch support
+    local mcp_templates_dir="$HOME/.dotfiles/tools/mcp"
+    if [[ -d "$mcp_templates_dir" ]]; then
+        echo ""
+        echo "Installing MCP profile templates..."
+        for template in "$mcp_templates_dir"/.mcp.*.json; do
+            if [[ -f "$template" ]]; then
+                local filename=$(basename "$template")
+                cp "$template" "${target_dir}/${filename}"
+                # Replace USERNAME placeholder
+                sed -i '' "s|/Users/USERNAME|$HOME|g" "${target_dir}/${filename}"
+                echo "  Installed: $filename"
+            fi
+        done
+        echo ""
+        echo "Available profiles: mcp-switch <profile>"
+        echo "  - notion-only    (Notion only)"
+        echo "  - docs-focus     (Notion + Google Drive)"
+        echo "  - project-focus  (Notion + Linear)"
+        echo "  - all-tools      (All MCP servers)"
+    fi
 }
 
 # Source MCP Profile Manager functions
