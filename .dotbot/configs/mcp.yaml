@@ -1,0 +1,76 @@
+- shell:
+    - command: |
+        echo "Setting up MCP (Model Context Protocol) servers..."
+      description: Setting up MCP servers
+
+- shell:
+    - command: |
+        # Ensure Bun is available for OutlookMCP
+        # Bun should be installed via bun.yaml config, but we check here too
+        if ! command -v bun >/dev/null 2>&1; then
+          if [ -f "$HOME/.bun/bin/bun" ]; then
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+          else
+            echo "Warning: Bun not found. OutlookMCP requires Bun."
+            echo "Install Bun by running: ./install config bun"
+            echo "Or manually: curl -fsSL https://bun.sh/install | bash"
+          fi
+        fi
+      description: Check Bun availability for OutlookMCP
+
+- shell:
+    - command: |
+        # Use the check-mcp-installed script to install MCP configurations
+        # This script handles:
+        # - Creating config directories
+        # - Installing OutlookMCP dependencies
+        # - Copying templates and resolving 1Password secrets
+        # - Setting up Claude CLI MCP servers
+        ~/.dotfiles/scripts/check-mcp-installed.sh --install --force
+      description: Install MCP configuration for all targets
+
+- shell:
+    - command: |
+        echo ""
+        echo "MCP setup completed"
+        echo "Configured MCP servers:"
+        echo "  - NotionMCP"
+        echo "  - GoogleDriveMCP"
+        echo "  - LinearMCP"
+        echo "  - OutlookMCP"
+        echo ""
+        echo "Configured for:"
+        echo "  - Claude Desktop"
+        echo "  - Cursor"
+        echo "  - VS Code"
+        echo "  - BoltAI"
+        if command -v claude >/dev/null 2>&1; then
+          echo "  - Claude CLI"
+        fi
+        echo ""
+        echo "Note: You may need to restart applications for changes to take effect"
+        echo ""
+        echo "Required 1Password secrets:"
+        echo "  - notion_api_key"
+        echo "  - google_drive_credentials"
+        echo "  - linear_api_key"
+        echo ""
+        echo "OutlookMCP does not require credentials - it uses AppleScript with your existing Outlook login"
+        echo "Make sure Microsoft Outlook for Mac is installed and you're logged in"
+        echo ""
+        echo "To check MCP installation status:"
+        echo "  ~/.dotfiles/scripts/check-mcp-installed.sh"
+        echo ""
+        echo "To reinstall MCP configurations:"
+        echo "  ~/.dotfiles/scripts/check-mcp-installed.sh --install --force"
+        echo ""
+        echo "To install MCP in a project directory:"
+        echo "  ~/.dotfiles/scripts/check-mcp-installed.sh -t project -i"
+        echo "  ~/.dotfiles/scripts/check-mcp-installed.sh -t project -i -d /path/to/project"
+        echo ""
+        echo "To add other MCP servers to Claude CLI, use:"
+        echo "  claude mcp add <name> --transport <stdio|http|sse> -- <command> [args...]"
+        echo "Or import from Claude Desktop:"
+        echo "  claude mcp add-from-claude-desktop"
+      description: Complete MCP setup
