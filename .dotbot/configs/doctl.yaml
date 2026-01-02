@@ -1,0 +1,82 @@
+- shell:
+  - command: |
+      echo "Setting up doctl (DigitalOcean CLI) configuration..."
+    description: Setting up doctl configuration
+
+- shell:
+  - command: |
+      # Check if doctl is installed
+      if ! command -v doctl >/dev/null 2>&1; then
+        echo "doctl is not installed. Installing via Homebrew..."
+        if command -v brew >/dev/null 2>&1; then
+          brew install doctl
+        else
+          echo "Error: Homebrew not found. Please install doctl manually:"
+          echo "  brew install doctl"
+          echo "  or visit: https://docs.digitalocean.com/reference/doctl/how-to/install/"
+          exit 1
+        fi
+      else
+        echo "doctl is already installed: $(which doctl)"
+        doctl version
+      fi
+    description: Install doctl CLI if not present
+
+- shell:
+  - command: |
+      # Create doctl config directory
+      mkdir -p ~/.config/doctl
+    description: Create doctl config directory
+
+- shell:
+  - command: |
+      # Copy template and resolve 1Password secrets
+      TEMPLATE_PATH="$HOME/.dotfiles/tools/doctl/config.yaml.template"
+      CONFIG_PATH="$HOME/.config/doctl/config.yaml"
+
+      # Remove existing config if it's a symlink (from previous installs)
+      if [ -L "$CONFIG_PATH" ]; then
+        rm -f "$CONFIG_PATH"
+      fi
+
+      # Copy template
+      if [ -f "$TEMPLATE_PATH" ]; then
+        cp "$TEMPLATE_PATH" "$CONFIG_PATH"
+        echo "Copied doctl config template to $CONFIG_PATH"
+      else
+        echo "Warning: Template not found at $TEMPLATE_PATH"
+        exit 1
+      fi
+
+      # Resolve 1Password secrets if 1Password CLI is available
+      if command -v op >/dev/null 2>&1 && op account list >/dev/null 2>&1; then
+        echo "Resolving 1Password secrets in doctl config..."
+        if [ -f "$HOME/.dotfiles/scripts/resolve-1password-secrets.sh" ]; then
+          "$HOME/.dotfiles/scripts/resolve-1password-secrets.sh" "$CONFIG_PATH"
+          echo "1Password secrets resolved successfully"
+        else
+          echo "Warning: resolve-1password-secrets.sh not found. Config will contain placeholder values."
+        fi
+      else
+        echo "Warning: 1Password CLI not available or not signed in."
+        echo "Config file created with placeholder values. Run 'op signin' and re-run this setup to resolve secrets."
+      fi
+
+      # Set correct permissions (600) for security
+      chmod 600 "$CONFIG_PATH"
+      echo "doctl config created at $CONFIG_PATH with secure permissions"
+    description: Create doctl config with resolved 1Password secrets
+
+- shell:
+  - command: |
+      echo "doctl configuration setup completed"
+      echo ""
+      echo "To use doctl:"
+      echo "  1. Ensure you're signed in to 1Password: op signin"
+      echo "  2. Verify your DigitalOcean token is in 1Password:"
+      echo "     Item: 'Digital Ocean - joel@jbc.dev' in 'Cloud' vault"
+      echo "  3. Test doctl: doctl account get"
+      echo ""
+      echo "Note: The token is stored in ~/.config/doctl/config.yaml"
+      echo "      If you need to refresh it, re-run: ./install profile doctl"
+    description: Complete doctl setup
