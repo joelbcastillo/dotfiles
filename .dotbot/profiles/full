@@ -34,6 +34,7 @@ tmux
 # Cloud & Infrastructure (need 1password for credentials)
 ssh
 aws
+doctl
 
 # IDEs & Editors (need languages and tools)
 vscode
