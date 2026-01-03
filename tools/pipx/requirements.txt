@@ -9,3 +9,4 @@ pipenv-poetry-migrate
 poetry
 cfn-lint
 policy-sentry
+notebooklm-mcp-server

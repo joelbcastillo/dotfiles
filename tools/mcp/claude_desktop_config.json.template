@@ -1,4 +1,5 @@
 {
+  "globalShortcut": "Alt+Ctrl+Space",
   "mcpServers": {
     "notion": {
       "command": "op",
@@ -13,9 +14,24 @@
         "NOTION_API_KEY": "op://je45orsqeqmplaeemrshp3kiea/namjmkrvi7y3rlv6glujnol54i/credential"
       }
     },
+    "google-drive": {
+      "command": "npx",
+      "args": ["-y", "@piotr-agier/google-drive-mcp"],
+      "env": {
+        "GOOGLE_DRIVE_OAUTH_CREDENTIALS": "~/.config/google-drive-mcp/gcp-oauth.keys.json"
+      }
+    },
     "linear": {
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"]
+    },
+    "outlook": {
+      "command": "/Users/USERNAME/.bun/bin/bun",
+      "args": ["run", "/Users/USERNAME/.repos/github.com/syedazharmbnr1/claude-outlook-mcp/index.ts"]
+    },
+    "notebooklm": {
+      "command": "/Users/USERNAME/.local/bin/notebooklm-mcp",
+      "args": []
     }
   }
 }

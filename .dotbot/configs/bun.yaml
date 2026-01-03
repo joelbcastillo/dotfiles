@@ -1,0 +1,45 @@
+- shell:
+    - command: |
+        echo "Setting up Bun JavaScript runtime..."
+      description: Setting up Bun
+
+- shell:
+    - command: |
+        # Install Bun using the official install script if not already installed
+        if ! command -v bun >/dev/null 2>&1; then
+          echo "Installing Bun..."
+          curl -fsSL https://bun.sh/install | bash
+
+          # Bun install script automatically adds to PATH in ~/.zshrc
+          # The existing zshrc already has bun configuration, so we just need to source it
+          # Also add to current session for immediate use
+          export BUN_INSTALL="$HOME/.bun"
+          export PATH="$BUN_INSTALL/bin:$PATH"
+        else
+          echo "Bun is already installed: $(bun --version)"
+        fi
+      description: Install Bun JavaScript runtime
+
+- shell:
+    - command: |
+        # Verify Bun installation
+        if command -v bun >/dev/null 2>&1; then
+          echo "✅ Bun installed successfully: $(bun --version)"
+        else
+          # Try to source from .bun directory
+          if [ -f "$HOME/.bun/bin/bun" ]; then
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+            if command -v bun >/dev/null 2>&1; then
+              echo "✅ Bun installed successfully: $(bun --version)"
+            else
+              echo "⚠️  Bun installed but not in PATH. Please restart your shell or run:"
+              echo "   export BUN_INSTALL=\"\$HOME/.bun\""
+              echo "   export PATH=\"\$BUN_INSTALL/bin:\$PATH\""
+            fi
+          else
+            echo "❌ Bun installation failed. Please install manually:"
+            echo "   curl -fsSL https://bun.sh/install | bash"
+          fi
+        fi
+      description: Verify Bun installation
