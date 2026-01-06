@@ -150,6 +150,12 @@ setup_private_files() {
     for private_subdir in "${PRIVATE_SUBDIRS[@]}"; do
         local source_dir="$PRIVATE_DIR/$private_subdir"
         local target_dir_mapping=$(get_target_dir "$private_subdir")
+        
+        # Skip if no mapping exists for this subdirectory
+        if [ -z "$target_dir_mapping" ]; then
+            continue
+        fi
+        
         local target_dir="$DOTFILES_DIR/$target_dir_mapping"
 
         if [ -d "$source_dir" ]; then
@@ -170,6 +176,12 @@ setup_private_files() {
         for private_subdir in "${PRIVATE_SUBDIRS[@]}"; do
             local source_dir="$PRIVATE_DIR/$ACTIVE_PROFILE/$private_subdir"
             local target_dir_mapping=$(get_target_dir "$private_subdir")
+            
+            # Skip if no mapping exists for this subdirectory
+            if [ -z "$target_dir_mapping" ]; then
+                continue
+            fi
+            
             local target_dir="$DOTFILES_DIR/$target_dir_mapping"
 
             if [ -d "$source_dir" ]; then
