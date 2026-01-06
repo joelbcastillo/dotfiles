@@ -41,18 +41,37 @@ print_message() {
 }
 
 # Mapping of private repo directories to dotfiles directories
-declare -A DIR_MAPPINGS=(
-    ["git"]="tools/git"
-    ["ssh"]="tools/ssh"
-    ["onepassword"]="tools/1password"
-    ["aliases"]="shells/zsh/zsh.before"
-    ["vscode"]="apps/vscode"
-    ["cursor"]="apps/cursor"
-    ["aws"]="tools/aws"
-    ["gcp"]="tools/gcp"
-    ["azure"]="tools/azure"
-    ["docker"]="tools/docker"
-    ["kubernetes"]="tools/kubernetes"
+# Compatible with Bash 3.2 (macOS default)
+get_target_dir() {
+    case "$1" in
+        git) echo "tools/git" ;;
+        ssh) echo "tools/ssh" ;;
+        onepassword) echo "tools/1password" ;;
+        aliases) echo "shells/zsh/zsh.before" ;;
+        vscode) echo "apps/vscode" ;;
+        cursor) echo "apps/cursor" ;;
+        aws) echo "tools/aws" ;;
+        gcp) echo "tools/gcp" ;;
+        azure) echo "tools/azure" ;;
+        docker) echo "tools/docker" ;;
+        kubernetes) echo "tools/kubernetes" ;;
+        *) echo "" ;;
+    esac
+}
+
+# List of all private subdirectories to check
+PRIVATE_SUBDIRS=(
+    "git"
+    "ssh"
+    "onepassword"
+    "aliases"
+    "vscode"
+    "cursor"
+    "aws"
+    "gcp"
+    "azure"
+    "docker"
+    "kubernetes"
 )
 
 # Link files from a directory with optional prefix
@@ -128,12 +147,13 @@ setup_private_files() {
     local total_linked=0
 
     # First, link base directories (common configs)
-    for private_subdir in "${!DIR_MAPPINGS[@]}"; do
+    for private_subdir in "${PRIVATE_SUBDIRS[@]}"; do
         local source_dir="$PRIVATE_DIR/$private_subdir"
-        local target_dir="$DOTFILES_DIR/${DIR_MAPPINGS[$private_subdir]}"
+        local target_dir_mapping=$(get_target_dir "$private_subdir")
+        local target_dir="$DOTFILES_DIR/$target_dir_mapping"
 
         if [ -d "$source_dir" ]; then
-            print_message "${BLUE}" "Linking $private_subdir/ → ${DIR_MAPPINGS[$private_subdir]}/"
+            print_message "${BLUE}" "Linking $private_subdir/ → $target_dir_mapping/"
             local count=$(link_directory_files "$source_dir" "$target_dir" "")
             ((total_linked+=count))
 
@@ -147,12 +167,13 @@ setup_private_files() {
     if [ -n "$ACTIVE_PROFILE" ] && [ -d "$PRIVATE_DIR/$ACTIVE_PROFILE" ]; then
         print_message "${BLUE}" "Linking profile-specific files for: $ACTIVE_PROFILE"
 
-        for private_subdir in "${!DIR_MAPPINGS[@]}"; do
+        for private_subdir in "${PRIVATE_SUBDIRS[@]}"; do
             local source_dir="$PRIVATE_DIR/$ACTIVE_PROFILE/$private_subdir"
-            local target_dir="$DOTFILES_DIR/${DIR_MAPPINGS[$private_subdir]}"
+            local target_dir_mapping=$(get_target_dir "$private_subdir")
+            local target_dir="$DOTFILES_DIR/$target_dir_mapping"
 
             if [ -d "$source_dir" ]; then
-                print_message "${BLUE}" "Linking $ACTIVE_PROFILE/$private_subdir/ → ${DIR_MAPPINGS[$private_subdir]}/ (with ${ACTIVE_PROFILE}- prefix)"
+                print_message "${BLUE}" "Linking $ACTIVE_PROFILE/$private_subdir/ → $target_dir_mapping/ (with ${ACTIVE_PROFILE}- prefix)"
                 local count=$(link_directory_files "$source_dir" "$target_dir" "${ACTIVE_PROFILE}-")
                 ((total_linked+=count))
             fi
