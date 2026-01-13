@@ -624,6 +624,12 @@ main() {
         return 0
       fi
       ;;
+
+    *)
+      log_error "Unknown config type: $CONFIG_TYPE"
+      log_info "Valid types: claude-desktop, cursor, vscode, boltai, project, claude-cli, all"
+      return 1
+      ;;
   esac
 
   return $exit_code
