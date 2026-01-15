@@ -251,16 +251,16 @@ function asdf-upgrade() {
         current_versions[$plugin]="$current"
         latest_versions[$plugin]="$latest"
 
-        local status=""
+        local plugin_status=""
         if [[ -z "$latest" ]]; then
-            status="${YELLOW}unknown${NC}"
+            plugin_status="${YELLOW}unknown${NC}"
         elif [[ "$current" == "$latest" ]]; then
-            status="${GREEN}up-to-date${NC}"
+            plugin_status="${GREEN}up-to-date${NC}"
         else
-            status="${CYAN}update available${NC}"
+            plugin_status="${CYAN}update available${NC}"
         fi
 
-        printf "%-15s %-15s %-15s %b\n" "$plugin" "${current:-none}" "${latest:-?}" "$status"
+        printf "%-15s %-15s %-15s %b\n" "$plugin" "${current:-none}" "${latest:-?}" "$plugin_status"
     done
     echo ""
 
