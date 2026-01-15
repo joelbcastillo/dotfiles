@@ -168,6 +168,7 @@ alias szcode='_z_open "_secure_run ai code"'
 
 # ASDF
 alias asdfup='asdf-upgrade'
+alias xattr='/usr/bin/xattr'  # Bypass asdf shim to use system xattr
 
 # Add your personal aliases here
 # alias myalias='my command'
