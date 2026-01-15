@@ -116,5 +116,19 @@
         fi
       description: "Link private Finicky configuration to dotfiles/tools/finicky/"
 
+    - command: |
+        # Create symlinks for sshop configuration from private repo
+        if [ -d ~/.dotfiles-private/sshop ]; then
+          mkdir -p ~/.dotfiles/tools/sshop
+          for file in ~/.dotfiles-private/sshop/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              ln -sf "$file" ~/.dotfiles/tools/sshop/"$filename"
+              echo "Linked private sshop config $filename"
+            fi
+          done
+        fi
+      description: "Link private sshop configuration to dotfiles/tools/sshop/"
+
     - command: echo "Private files symlinked to dotfiles directories successfully"
       description: "Verify private file symlinks to dotfiles"

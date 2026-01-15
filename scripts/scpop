@@ -1,0 +1,343 @@
+#!/bin/bash
+#
+# scpop - 1Password SCP Connection Manager
+# Select a server from 1Password and scp files to/from it
+#
+# Usage (follows standard scp SOURCE → DESTINATION order):
+#   scpop <local> [remote]     # Upload to selected server
+#   scpop -d <remote> [local]  # Download from selected server
+#   scpop -l                   # List servers
+#   scpop -r                   # Refresh cache
+#   scpop -h                   # Help
+#
+# Dependencies: op, jq, fzf, sshop (for shared functions)
+
+set -e
+
+# === Configuration ===
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_FILE="$DOTFILES_DIR/tools/sshop/config.json"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/sshop"
+CACHE_FILE="$CACHE_DIR/servers.json"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# === Helper Functions ===
+log_info()    { echo -e "${BLUE}[INFO]${NC} $1" >&2; }
+log_success() { echo -e "${GREEN}[OK]${NC} $1" >&2; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+check_dependencies() {
+    local missing=()
+    command -v jq >/dev/null 2>&1 || missing+=("jq")
+    command -v fzf >/dev/null 2>&1 || missing+=("fzf")
+    command -v scp >/dev/null 2>&1 || missing+=("scp")
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        log_error "Missing dependencies: ${missing[*]}"
+        return 1
+    fi
+
+    # Check for sshop (we reuse its cache)
+    if [ ! -x "$DOTFILES_DIR/scripts/sshop" ]; then
+        log_error "sshop script not found at $DOTFILES_DIR/scripts/sshop"
+        return 1
+    fi
+}
+
+ensure_cache() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        log_info "No server cache found. Running sshop -r to populate..."
+        "$DOTFILES_DIR/scripts/sshop" -r
+    fi
+}
+
+# === Tailscale Detection ===
+is_on_tailnet() {
+    if command -v tailscale >/dev/null 2>&1; then
+        tailscale status --peers=false >/dev/null 2>&1
+        return $?
+    fi
+    return 1
+}
+
+# === Server Selection ===
+resolve_hostname() {
+    local server_json="$1"
+    local on_tailnet="$2"
+
+    local hostname tailscale_hostname tailscale_ip
+    hostname=$(echo "$server_json" | jq -r '.hostname // empty')
+    tailscale_hostname=$(echo "$server_json" | jq -r '.tailscale_hostname // empty')
+    tailscale_ip=$(echo "$server_json" | jq -r '.tailscale_ip // empty')
+
+    if [ "$on_tailnet" = "true" ]; then
+        if [ -n "$tailscale_hostname" ] && [ "$tailscale_hostname" != "null" ]; then
+            echo "$tailscale_hostname"
+            return
+        fi
+        if [ -n "$tailscale_ip" ] && [ "$tailscale_ip" != "null" ]; then
+            echo "$tailscale_ip"
+            return
+        fi
+    fi
+
+    echo "$hostname"
+}
+
+format_server_for_fzf() {
+    local server_json="$1"
+    local on_tailnet="$2"
+
+    local title hostname username port tailscale_hostname
+    title=$(echo "$server_json" | jq -r '.title')
+    hostname=$(echo "$server_json" | jq -r '.hostname')
+    username=$(echo "$server_json" | jq -r '.username')
+    port=$(echo "$server_json" | jq -r '.port // "22"')
+    tailscale_hostname=$(echo "$server_json" | jq -r '.tailscale_hostname // empty')
+
+    local display_host="$hostname"
+    local indicator=""
+    if [ "$on_tailnet" = "true" ] && [ -n "$tailscale_hostname" ] && [ "$tailscale_hostname" != "null" ]; then
+        display_host="$tailscale_hostname"
+        indicator=" [TS]"
+    fi
+
+    if [ "$port" = "22" ]; then
+        printf "%s\t%s@%s%s" "$title" "$username" "$display_host" "$indicator"
+    else
+        printf "%s\t%s@%s:%s%s" "$title" "$username" "$display_host" "$port" "$indicator"
+    fi
+}
+
+run_fzf_selection() {
+    local query="$1"
+    local servers
+    servers=$(cat "$CACHE_FILE")
+
+    local on_tailnet="false"
+    if is_on_tailnet; then
+        on_tailnet="true"
+    fi
+
+    local fzf_input=""
+    local idx=0
+
+    while IFS= read -r server; do
+        [ -z "$server" ] && continue
+        local line
+        line=$(format_server_for_fzf "$server" "$on_tailnet")
+        fzf_input+="${idx}:${line}"$'\n'
+        ((idx++)) || true
+    done < <(echo "$servers" | jq -c '.[]')
+
+    if [ -z "$fzf_input" ]; then
+        log_error "No servers found. Run 'sshop -r' to refresh cache."
+        return 1
+    fi
+
+    local fzf_args=(
+        --height "60%"
+        --reverse
+        --header "SCP - Select destination server"
+        --prompt "scp > "
+        --delimiter ':'
+        --with-nth '2..'
+        --tabstop=4
+    )
+
+    [ -n "$query" ] && fzf_args+=(--query "$query")
+
+    local selection
+    selection=$(echo -n "$fzf_input" | fzf "${fzf_args[@]}") || return 1
+
+    if [ -n "$selection" ]; then
+        local selected_idx
+        selected_idx=$(echo "$selection" | cut -d: -f1)
+        echo "$servers" | jq -c ".[$selected_idx]"
+    fi
+}
+
+# === SCP Execution ===
+do_scp() {
+    local server_json="$1"
+    local local_path="$2"
+    local remote_path="$3"
+    local direction="$4"  # "upload" or "download"
+
+    local title username port jump_host
+    title=$(echo "$server_json" | jq -r '.title')
+    username=$(echo "$server_json" | jq -r '.username // env.USER')
+    port=$(echo "$server_json" | jq -r '.port // "22"')
+    jump_host=$(echo "$server_json" | jq -r '.jump_host // empty')
+
+    local on_tailnet="false"
+    if is_on_tailnet; then
+        on_tailnet="true"
+    fi
+
+    local target_host
+    target_host=$(resolve_hostname "$server_json" "$on_tailnet")
+
+    local scp_args=()
+
+    # Add port if non-standard
+    [ "$port" != "22" ] && scp_args+=("-P" "$port")
+
+    # Add jump host if specified
+    [ -n "$jump_host" ] && [ "$jump_host" != "null" ] && scp_args+=("-o" "ProxyJump=$jump_host")
+
+    # Build source and destination
+    local remote_spec="${username}@${target_host}:${remote_path}"
+
+    if [ "$direction" = "upload" ]; then
+        log_info "Uploading to $title ($target_host)..."
+        scp_args+=("$local_path" "$remote_spec")
+    else
+        log_info "Downloading from $title ($target_host)..."
+        scp_args+=("$remote_spec" "$local_path")
+    fi
+
+    # Execute
+    exec scp "${scp_args[@]}"
+}
+
+# === CLI Commands ===
+show_help() {
+    cat << 'EOF'
+scpop - 1Password SCP Connection Manager
+
+Usage:
+    scpop <source> [destination]          Upload: local file → remote server
+    scpop -d <source> [destination]       Download: remote file → local
+
+    Arguments follow standard scp order: SOURCE then DESTINATION
+
+Arguments:
+    Upload mode (default):
+      source       Local file/directory to upload
+      destination  Remote path (defaults to ~/)
+
+    Download mode (-d):
+      source       Remote file/directory to download
+      destination  Local path (defaults to ./)
+
+Options:
+    -d, --download  Download mode (remote → local)
+    -l, --list      List available servers
+    -r, --refresh   Refresh server cache
+    -h, --help      Show this help
+
+Examples:
+    scpop ./file.txt                      # Upload ./file.txt to ~/ on server
+    scpop ./file.txt /tmp/                # Upload ./file.txt to /tmp/ on server
+    scpop -d /var/log/app.log ./          # Download /var/log/app.log to ./
+    scpop -d /etc/nginx/nginx.conf        # Download to current directory
+    scpop -r && scpop ./deploy.sh         # Refresh cache then upload
+EOF
+}
+
+list_servers() {
+    "$DOTFILES_DIR/scripts/sshop" -l
+}
+
+refresh_cache() {
+    "$DOTFILES_DIR/scripts/sshop" -r
+}
+
+# === Main Entry Point ===
+main() {
+    check_dependencies || exit 1
+
+    local direction="upload"
+    local local_path=""
+    local remote_path=""
+
+    # Parse arguments
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -l|--list)
+                list_servers
+                exit 0
+                ;;
+            -r|--refresh)
+                refresh_cache
+                exit 0
+                ;;
+            -d|--download)
+                direction="download"
+                shift
+                ;;
+            -*)
+                log_error "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                if [ -z "$local_path" ]; then
+                    if [ "$direction" = "download" ]; then
+                        remote_path="$1"
+                    else
+                        local_path="$1"
+                    fi
+                elif [ -z "$remote_path" ]; then
+                    if [ "$direction" = "download" ]; then
+                        local_path="$1"
+                    else
+                        remote_path="$1"
+                    fi
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    # Validate arguments
+    if [ "$direction" = "upload" ]; then
+        if [ -z "$local_path" ]; then
+            log_error "Missing local path"
+            echo ""
+            show_help
+            exit 1
+        fi
+        if [ ! -e "$local_path" ]; then
+            log_error "Local path does not exist: $local_path"
+            exit 1
+        fi
+        [ -z "$remote_path" ] && remote_path="~/"
+    else
+        if [ -z "$remote_path" ]; then
+            log_error "Missing remote path for download"
+            echo ""
+            show_help
+            exit 1
+        fi
+        [ -z "$local_path" ] && local_path="./"
+    fi
+
+    ensure_cache
+
+    # Select server
+    local selected_server
+    selected_server=$(run_fzf_selection "")
+
+    if [ -n "$selected_server" ]; then
+        do_scp "$selected_server" "$local_path" "$remote_path" "$direction"
+    else
+        log_info "No server selected"
+        exit 1
+    fi
+}
+
+main "$@"
