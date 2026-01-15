@@ -166,5 +166,8 @@ alias znvim='_z_open "nvim"'
 alias szcursor='_z_open "_secure_run ai cursor"'
 alias szcode='_z_open "_secure_run ai code"'
 
+# ASDF
+alias asdfup='asdf-upgrade'
+
 # Add your personal aliases here
 # alias myalias='my command'
