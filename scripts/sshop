@@ -1,0 +1,570 @@
+#!/bin/bash
+#
+# sshop - 1Password SSH Connection Manager
+# Auto-discovers SSH servers from 1Password vaults and connects via fzf selection
+#
+# Usage:
+#   sshop              # Interactive fzf selection
+#   sshop <query>      # Fuzzy search with query
+#   sshop -l           # List all servers (no connect)
+#   sshop -r           # Refresh cache
+#   sshop -c           # Show configuration
+#   sshop -h           # Help
+#
+# Dependencies: op, jq, fzf
+
+set -e
+
+# === Configuration ===
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Config file (symlinked from private dotfiles via dotbot)
+CONFIG_FILE="$DOTFILES_DIR/tools/sshop/config.json"
+
+# Accounts config (reuse existing pattern)
+if [ -f "$HOME/.dotfiles-private/tools/accounts.json" ]; then
+    ACCOUNTS_CONFIG="$HOME/.dotfiles-private/tools/accounts.json"
+elif [ -f "$DOTFILES_DIR/tools/1password/accounts.json" ]; then
+    ACCOUNTS_CONFIG="$DOTFILES_DIR/tools/1password/accounts.json"
+else
+    ACCOUNTS_CONFIG=""
+fi
+
+# Cache
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/sshop"
+CACHE_FILE="$CACHE_DIR/servers.json"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# === Helper Functions ===
+log_info()    { echo -e "${BLUE}[INFO]${NC} $1" >&2; }
+log_success() { echo -e "${GREEN}[OK]${NC} $1" >&2; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+check_dependencies() {
+    local missing=()
+    command -v op >/dev/null 2>&1 || missing+=("op (1Password CLI)")
+    command -v jq >/dev/null 2>&1 || missing+=("jq")
+    command -v fzf >/dev/null 2>&1 || missing+=("fzf")
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        log_error "Missing dependencies: ${missing[*]}"
+        return 1
+    fi
+}
+
+ensure_config() {
+    mkdir -p "$CACHE_DIR"
+
+    if [ ! -f "$CONFIG_FILE" ]; then
+        log_error "No sshop config found at: $CONFIG_FILE"
+        log_error ""
+        log_error "To set up:"
+        log_error "  1. Create ~/.dotfiles-private/sshop/config.json with your vault IDs"
+        log_error "  2. Run dotbot to create the symlink"
+        log_error ""
+        log_error "See tools/sshop/config.json.template for the format."
+        return 1
+    fi
+}
+
+# === 1Password Account Management (reused from fetch-1password-secrets.sh) ===
+get_account_uuid() {
+    local account_key="$1"
+    local config_file=""
+
+    if [ -f "$HOME/.dotfiles-private/tools/accounts.json" ]; then
+        config_file="$HOME/.dotfiles-private/tools/accounts.json"
+    elif [ -f "$DOTFILES_DIR/tools/1password/accounts.json" ]; then
+        config_file="$DOTFILES_DIR/tools/1password/accounts.json"
+    fi
+
+    if [ -z "$config_file" ] || [ ! -f "$config_file" ]; then
+        return 1
+    fi
+
+    local account_uuid
+    account_uuid=$(jq -r ".accounts.$account_key.account_uuid // empty" "$config_file" 2>/dev/null)
+
+    if [ -n "$account_uuid" ] && [ "$account_uuid" != "null" ]; then
+        echo "$account_uuid"
+        return 0
+    fi
+
+    local domain
+    domain=$(jq -r ".accounts.$account_key.domain // empty" "$config_file" 2>/dev/null)
+    if [ -n "$domain" ] && [ "$domain" != "null" ]; then
+        echo "$domain"
+        return 0
+    fi
+
+    return 1
+}
+
+switch_account() {
+    local account_identifier="$1"
+    [ -z "$account_identifier" ] && return 0
+
+    if ! command -v op >/dev/null 2>&1; then
+        return 1
+    fi
+
+    if ! op account list >/dev/null 2>&1; then
+        return 1
+    fi
+
+    local current_account_id
+    current_account_id=$(op account get --format json 2>/dev/null | jq -r '.id // empty' || echo "")
+
+    [ "$current_account_id" = "$account_identifier" ] && return 0
+
+    op signin --account "$account_identifier" >/dev/null 2>&1
+}
+
+# === Tailscale Detection ===
+is_on_tailnet() {
+    # Check if tailscale is running and we have connectivity
+    if command -v tailscale >/dev/null 2>&1; then
+        tailscale status --peers=false >/dev/null 2>&1
+        return $?
+    fi
+    return 1
+}
+
+# === 1Password Server Discovery ===
+fetch_servers_from_vault() {
+    local vault_id="$1"
+    local categories="$2"
+    local account_uuid="$3"
+
+    switch_account "$account_uuid"
+
+    # Get all items from the vault
+    local items
+    items=$(op item list --vault "$vault_id" --format json 2>/dev/null || echo "[]")
+
+    # Filter by category and get full details for items with hostname field
+    echo "$items" | jq -c '.[]' | while read -r item; do
+        local item_id item_category
+        item_id=$(echo "$item" | jq -r '.id')
+        item_category=$(echo "$item" | jq -r '.category')
+
+        # Check if category matches (case-insensitive)
+        local category_match=false
+        local item_category_lower="${item_category,,}"
+        for cat in $(echo "$categories" | tr ',' ' '); do
+            local cat_lower="${cat,,}"
+            if [ "$item_category_lower" = "$cat_lower" ]; then
+                category_match=true
+                break
+            fi
+        done
+
+        if [ "$category_match" = true ]; then
+            # Get full item details
+            local full_item
+            full_item=$(op item get "$item_id" --format json 2>/dev/null || echo "{}")
+
+            # Check if it has a hostname field
+            local hostname
+            hostname=$(echo "$full_item" | jq -r '.fields[]? | select(.label == "hostname") | .value // empty' 2>/dev/null)
+
+            if [ -n "$hostname" ]; then
+                echo "$full_item"
+            fi
+        fi
+    done
+}
+
+parse_server_item() {
+    local item_json="$1"
+    local vault_id="$2"
+    local account_key="$3"
+
+    # Extract fields using jq
+    echo "$item_json" | jq -c --arg vault "$vault_id" --arg account "$account_key" '
+        # Helper to get field value by label
+        def get_field($label):
+            (.fields // []) | map(select(.label == $label)) | .[0].value // null;
+
+        {
+            id: .id,
+            title: .title,
+            vault: $vault,
+            account: $account,
+            hostname: get_field("hostname"),
+            tailscale_hostname: get_field("tailscale_hostname"),
+            tailscale_ip: get_field("tailscale_ip"),
+            digital_ocean_hostname: get_field("digital_ocean_hostname"),
+            digital_ocean_ip: get_field("digital_ocean_ip"),
+            username: (get_field("username") // env.USER // "root"),
+            port: (get_field("port") // "22"),
+            jump_host: get_field("jump_host")
+        } | select(.hostname != null)
+    '
+}
+
+# === Cache Management ===
+is_cache_valid() {
+    [ ! -f "$CACHE_FILE" ] && return 1
+
+    local cache_ttl
+    cache_ttl=$(jq -r '.defaults.cache_ttl_seconds // 300' "$CONFIG_FILE" 2>/dev/null || echo "300")
+
+    local cache_mtime current_time cache_age
+    if [ "$(uname)" = "Darwin" ]; then
+        cache_mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null || echo 0)
+    else
+        cache_mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
+    fi
+    current_time=$(date +%s)
+    cache_age=$((current_time - cache_mtime))
+
+    [ "$cache_age" -lt "$cache_ttl" ]
+}
+
+refresh_cache() {
+    log_info "Refreshing server cache from 1Password..."
+
+    # Check if user is signed in to 1Password
+    if ! op account list >/dev/null 2>&1; then
+        log_error "Not signed in to 1Password CLI. Run 'op signin' first."
+        return 1
+    fi
+
+    # Use temp file to collect servers (avoids subshell variable scoping issues)
+    local temp_servers
+    temp_servers=$(mktemp)
+    trap "rm -f \"$temp_servers\"" RETURN
+
+    # Iterate through configured vaults
+    local vault_configs
+    vault_configs=$(jq -c '.vaults | to_entries[]' "$CONFIG_FILE" 2>/dev/null)
+
+    while IFS= read -r vault_config; do
+        [ -z "$vault_config" ] && continue
+
+        local account_key vault_ids categories
+        account_key=$(echo "$vault_config" | jq -r '.value.account')
+        vault_ids=$(echo "$vault_config" | jq -r '.value.vault_ids | join(",")')
+        categories=$(echo "$vault_config" | jq -r '.value.categories | join(",")')
+
+        local account_uuid
+        account_uuid=$(get_account_uuid "$account_key") || {
+            log_warn "Could not resolve account: $account_key"
+            continue
+        }
+
+        # Process each vault
+        IFS=',' read -ra vaults <<< "$vault_ids"
+        for vault_id in "${vaults[@]}"; do
+            log_info "Scanning vault: $vault_id (account: $account_key)"
+
+            while IFS= read -r full_item; do
+                [ -z "$full_item" ] && continue
+
+                local parsed
+                parsed=$(parse_server_item "$full_item" "$vault_id" "$account_key")
+
+                if [ -n "$parsed" ] && [ "$parsed" != "null" ]; then
+                    echo "$parsed" >> "$temp_servers"
+                fi
+            done < <(fetch_servers_from_vault "$vault_id" "$categories" "$account_uuid")
+        done
+    done <<< "$vault_configs"
+
+    # Convert collected servers to JSON array and save cache
+    local servers_array
+    if [ -s "$temp_servers" ]; then
+        servers_array=$(jq -s '.' "$temp_servers")
+    else
+        servers_array="[]"
+    fi
+    echo "$servers_array" > "$CACHE_FILE"
+
+    local count
+    count=$(echo "$servers_array" | jq 'length')
+    log_success "Cached $count servers"
+}
+
+get_servers() {
+    if ! is_cache_valid; then
+        refresh_cache
+    fi
+    cat "$CACHE_FILE"
+}
+
+# === Connection Logic ===
+resolve_hostname() {
+    local server_json="$1"
+    local on_tailnet="$2"
+
+    local hostname tailscale_hostname tailscale_ip
+    hostname=$(echo "$server_json" | jq -r '.hostname // empty')
+    tailscale_hostname=$(echo "$server_json" | jq -r '.tailscale_hostname // empty')
+    tailscale_ip=$(echo "$server_json" | jq -r '.tailscale_ip // empty')
+
+    # If on tailnet and tailscale hostname is available, prefer it
+    if [ "$on_tailnet" = "true" ]; then
+        if [ -n "$tailscale_hostname" ] && [ "$tailscale_hostname" != "null" ]; then
+            echo "$tailscale_hostname"
+            return
+        fi
+        if [ -n "$tailscale_ip" ] && [ "$tailscale_ip" != "null" ]; then
+            echo "$tailscale_ip"
+            return
+        fi
+    fi
+
+    # Fallback to primary hostname
+    echo "$hostname"
+}
+
+connect_to_server() {
+    local server_json="$1"
+
+    local title username port jump_host
+    title=$(echo "$server_json" | jq -r '.title')
+    username=$(echo "$server_json" | jq -r '.username // env.USER')
+    port=$(echo "$server_json" | jq -r '.port // "22"')
+    jump_host=$(echo "$server_json" | jq -r '.jump_host // empty')
+
+    # Determine if we're on tailnet
+    local on_tailnet="false"
+    if is_on_tailnet; then
+        on_tailnet="true"
+    fi
+
+    # Resolve the best hostname to use
+    local target_host
+    target_host=$(resolve_hostname "$server_json" "$on_tailnet")
+
+    log_info "Connecting to $title ($target_host) as $username..."
+
+    # Build SSH command
+    local ssh_args=()
+
+    # Add port if non-standard
+    [ "$port" != "22" ] && ssh_args+=("-p" "$port")
+
+    # Add jump host if specified
+    [ -n "$jump_host" ] && [ "$jump_host" != "null" ] && ssh_args+=("-J" "$jump_host")
+
+    # Add connection timeout
+    local timeout
+    timeout=$(jq -r '.defaults.connect_timeout // 10' "$CONFIG_FILE" 2>/dev/null || echo "10")
+    ssh_args+=("-o" "ConnectTimeout=$timeout")
+
+    # Add destination
+    ssh_args+=("${username}@${target_host}")
+
+    # Execute SSH
+    exec ssh "${ssh_args[@]}"
+}
+
+# === UI / FZF Integration ===
+format_server_for_fzf() {
+    local server_json="$1"
+    local on_tailnet="$2"
+
+    local title hostname username port tailscale_hostname
+    title=$(echo "$server_json" | jq -r '.title')
+    hostname=$(echo "$server_json" | jq -r '.hostname')
+    username=$(echo "$server_json" | jq -r '.username')
+    port=$(echo "$server_json" | jq -r '.port // "22"')
+    tailscale_hostname=$(echo "$server_json" | jq -r '.tailscale_hostname // empty')
+
+    # Show which host will be used
+    local display_host="$hostname"
+    local indicator=""
+    if [ "$on_tailnet" = "true" ] && [ -n "$tailscale_hostname" ] && [ "$tailscale_hostname" != "null" ]; then
+        display_host="$tailscale_hostname"
+        indicator=" [TS]"
+    fi
+
+    if [ "$port" = "22" ]; then
+        printf "%s\t%s@%s%s" "$title" "$username" "$display_host" "$indicator"
+    else
+        printf "%s\t%s@%s:%s%s" "$title" "$username" "$display_host" "$port" "$indicator"
+    fi
+}
+
+run_fzf_selection() {
+    local query="$1"
+    local servers
+    servers=$(get_servers)
+
+    local fzf_height
+    fzf_height=$(jq -r '.ui.fzf_height // "60%"' "$CONFIG_FILE" 2>/dev/null || echo "60%")
+
+    # Determine if we're on tailnet (do this once)
+    local on_tailnet="false"
+    if is_on_tailnet; then
+        on_tailnet="true"
+    fi
+
+    # Build fzf input: index:display_line
+    local fzf_input=""
+    local idx=0
+
+    while IFS= read -r server; do
+        [ -z "$server" ] && continue
+        local line
+        line=$(format_server_for_fzf "$server" "$on_tailnet")
+        fzf_input+="${idx}:${line}"$'\n'
+        ((idx++)) || true
+    done < <(echo "$servers" | jq -c '.[]')
+
+    if [ -z "$fzf_input" ]; then
+        log_error "No servers found. Run 'sshop -r' to refresh cache."
+        return 1
+    fi
+
+    # Run fzf
+    local fzf_args=(
+        --height "$fzf_height"
+        --reverse
+        --header "SSH Connection Manager ($([ "$on_tailnet" = "true" ] && echo "on tailnet" || echo "off tailnet")) - Ctrl-R to refresh"
+        --prompt "ssh > "
+        --delimiter ':'
+        --with-nth '2..'
+        --tabstop=4
+    )
+
+    [ -n "$query" ] && fzf_args+=(--query "$query")
+
+    # Add preview
+    local preview_enabled
+    preview_enabled=$(jq -r '.ui.preview_enabled // true' "$CONFIG_FILE" 2>/dev/null || echo "true")
+
+    if [ "$preview_enabled" = "true" ]; then
+        # Create temp file for server data
+        local temp_servers
+        temp_servers=$(mktemp)
+        echo "$servers" > "$temp_servers"
+        # Use RETURN trap to clean up when function exits (doesn't override global EXIT traps)
+        trap "rm -f \"$temp_servers\"" RETURN
+
+        # Preview command: extract index from selection and look up server details
+        # Using shell command to properly handle fzf's {1} placeholder
+        fzf_args+=(
+            --preview "idx=\$(echo {} | cut -d: -f1); jq -r \".[\$idx] | \\\"Title: \\\" + .title, \\\"Host: \\\" + .hostname, (if .tailscale_hostname then \\\"Tailscale: \\\" + .tailscale_hostname else empty end), \\\"User: \\\" + .username, \\\"Port: \\\" + .port\" \"$temp_servers\""
+            --preview-window "right:40%:wrap"
+        )
+    fi
+
+    local selection
+    selection=$(echo -n "$fzf_input" | fzf "${fzf_args[@]}") || return 1
+
+    if [ -n "$selection" ]; then
+        local selected_idx
+        selected_idx=$(echo "$selection" | cut -d: -f1)
+        echo "$servers" | jq -c ".[$selected_idx]"
+    fi
+}
+
+# === CLI Commands ===
+show_help() {
+    cat << 'EOF'
+sshop - 1Password SSH Connection Manager
+
+Usage:
+    sshop              Interactive fzf selection
+    sshop <query>      Fuzzy search with initial query
+    sshop -l           List all servers (no connect)
+    sshop -r           Refresh cache
+    sshop -c           Show configuration
+    sshop -h           Show this help
+
+Configuration:
+    Config file:  ~/.dotfiles-private/sshop/config.json
+    Cache file:   ~/.cache/sshop/servers.json
+
+1Password Item Setup:
+    Create SSH_KEY items with custom fields:
+    - hostname (required): Primary hostname
+    - tailscale_hostname: Preferred when on tailnet
+    - tailscale_ip: Fallback for tailnet
+    - username: SSH user (defaults to $USER)
+    - port: SSH port (defaults to 22)
+    - jump_host: ProxyJump hostname
+
+Examples:
+    sshop                 # Select server interactively
+    sshop prod            # Search for servers matching "prod"
+    sshop -r && sshop     # Refresh cache then connect
+EOF
+}
+
+list_servers() {
+    local servers
+    servers=$(get_servers)
+
+    local on_tailnet="false"
+    if is_on_tailnet; then
+        on_tailnet="true"
+    fi
+
+    echo -e "${CYAN}Available SSH Servers:${NC}"
+    echo -e "${CYAN}($([ "$on_tailnet" = "true" ] && echo "on tailnet - will use tailscale hostnames" || echo "off tailnet"))${NC}"
+    echo ""
+
+    echo "$servers" | jq -r --arg on_ts "$on_tailnet" '.[] |
+        if $on_ts == "true" and .tailscale_hostname then
+            "  \(.title) → \(.username)@\(.tailscale_hostname):\(.port) [TS]"
+        else
+            "  \(.title) → \(.username)@\(.hostname):\(.port)"
+        end'
+}
+
+show_config() {
+    if [ -z "$CONFIG_FILE" ] || [ ! -f "$CONFIG_FILE" ]; then
+        log_error "No config file found"
+        return 1
+    fi
+
+    echo -e "${CYAN}Config file: $CONFIG_FILE${NC}"
+    echo ""
+    cat "$CONFIG_FILE"
+}
+
+# === Main Entry Point ===
+main() {
+    check_dependencies || exit 1
+    ensure_config || exit 1
+
+    case "${1:-}" in
+        -h|--help)
+            show_help
+            ;;
+        -l|--list)
+            list_servers
+            ;;
+        -r|--refresh)
+            refresh_cache
+            ;;
+        -c|--config)
+            show_config
+            ;;
+        *)
+            local query="${1:-}"
+            local selected_server
+            selected_server=$(run_fzf_selection "$query")
+
+            if [ -n "$selected_server" ]; then
+                connect_to_server "$selected_server"
+            else
+                log_info "No server selected"
+            fi
+            ;;
+    esac
+}
+
+main "$@"
