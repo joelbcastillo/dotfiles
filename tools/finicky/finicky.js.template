@@ -34,9 +34,9 @@ module.exports = {
         // URL is a URL instance in Finicky v4
         const urlString = url instanceof URL ? url.href : String(url);
 
-        // Match Microsoft Office URLs (including Safe Links)
+        // Match Microsoft Office URLs (including Safe Links), Azure, and login URLs
         const isMicrosoftUrl =
-          /^https?:\/\/(teams\.microsoft\.com|outlook\.(office|live)\.com|.*\.sharepoint\.com|.*\.office\.com|.*\.office365\.com|.*\.microsoft\.com|.*\.teams\.cdn\.office\.net|.*\.safelinks\.protection\.outlook\.com)/.test(urlString);
+          /^https?:\/\/(teams\.microsoft\.com|outlook\.(office|live)\.com|.*\.sharepoint\.com|.*\.office\.com|.*\.office365\.com|.*\.microsoft\.com|.*\.teams\.cdn\.office\.net|.*\.safelinks\.protection\.outlook\.com|.*\.azure\.com|.*\.microsoftonline\.com|.*\.windows\.net|.*\.azure\.net|.*\.visualstudio\.com|.*\.azureedge\.net|.*\.live\.com)/.test(urlString);
 
         return isFromMicrosoftApp || isMicrosoftUrl;
       },
@@ -57,6 +57,14 @@ module.exports = {
         "https://*.microsoft.com/*",
         "https://*.teams.cdn.office.net/*",
         "https://*.safelinks.protection.outlook.com/*",
+        // Azure and Microsoft login URLs
+        "https://*.azure.com/*",
+        "https://*.microsoftonline.com/*",
+        "https://*.windows.net/*",
+        "https://*.azure.net/*",
+        "https://*.visualstudio.com/*",
+        "https://*.azureedge.net/*",
+        "https://*.live.com/*",
       ],
       // Use EdgeProfile app which properly handles open -na for profile support
       browser: "EdgeProfile",
