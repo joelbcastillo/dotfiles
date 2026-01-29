@@ -62,7 +62,7 @@ For interactive use on your laptop:
    # Since ANTHROPIC_API_KEY is not set by default, Claude Code will use your subscription
    claude "your prompt"
    ```
-   
+
    **Note**: If you need to temporarily use an API key for a specific tool, use:
    ```bash
    use-api-key    # Set API key temporarily
@@ -268,11 +268,11 @@ If Claude Code gives authentication errors:
    # Setup token (for Claude Code)
    SETUP_TOKEN=$(~/.dotfiles/scripts/get-claude-setup-token.sh)
    echo "Setup token: ${SETUP_TOKEN:0:20}..."
-   
+
    # API key (for Conductor)
    API_KEY=$(~/.dotfiles/scripts/get-claude-api-key.sh api)
    echo "API key: ${API_KEY:0:20}..."
-   
+
    # They should be different!
    if [ "$SETUP_TOKEN" = "$API_KEY" ]; then
      echo "ERROR: Setup token and API key are the same!"

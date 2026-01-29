@@ -113,7 +113,7 @@ alias tm='task-master'
 alias taskmaster='task-master'
 
 # Claude Code Authentication - Using Subscription
-# 
+#
 # Both Claude Code and Conductor use subscription authentication by default.
 # This means you need to be logged in via 'claude login' for interactive use.
 #
@@ -143,6 +143,13 @@ use-subscription() {
 
 # Alias to check authentication status
 alias claude-auth='~/.dotfiles/scripts/check-claude-auth.sh'
+
+# Override any broken claude alias to point to the correct binary
+if [ -f /opt/homebrew/bin/claude ]; then
+    alias claude='/opt/homebrew/bin/claude'
+elif [ -f ~/.local/bin/claude ]; then
+    alias claude='~/.local/bin/claude'
+fi
 
 # Amazon Q post block
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh"
