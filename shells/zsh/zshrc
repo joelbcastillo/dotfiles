@@ -144,11 +144,11 @@ use-subscription() {
 # Alias to check authentication status
 alias claude-auth='~/.dotfiles/scripts/check-claude-auth.sh'
 
-# Override any broken claude alias to point to the correct binary
+# Claude alias with secure profile (loads GitHub token, NOT API keys to preserve subscription)
 if [ -f /opt/homebrew/bin/claude ]; then
-    alias claude='/opt/homebrew/bin/claude'
+    alias claude='_secure_run claude /opt/homebrew/bin/claude'
 elif [ -f ~/.local/bin/claude ]; then
-    alias claude='~/.local/bin/claude'
+    alias claude='_secure_run claude ~/.local/bin/claude'
 fi
 
 # Amazon Q post block
