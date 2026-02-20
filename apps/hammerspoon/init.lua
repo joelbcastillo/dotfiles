@@ -19,7 +19,7 @@ local function activateProfile(profileName, profile)
   local missingApps = helpers.findMissingApps(appNames)
 
   local function proceed()
-    spaces.applyFullscreen(profile, function()
+    spaces.applyProfile(profile, function()
       helpers.notify("Profile '" .. profileName .. "' applied")
     end)
   end

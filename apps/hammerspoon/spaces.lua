@@ -1,5 +1,6 @@
 local helpers = require("helpers")
 local windows = require("windows")
+local reorder = require("reorder")
 
 local M = {}
 
@@ -128,6 +129,25 @@ function M.applyFullscreen(profile, onComplete)
       helpers.notify("Fullscreen complete")
       if onComplete then onComplete() end
     end)
+  end)
+end
+
+-- Full orchestration: fullscreen + optional reorder
+function M.applyProfile(profile, onComplete)
+  M.applyFullscreen(profile, function()
+    -- Build desired order from profile
+    local desiredOrder = {}
+    for _, screenConfig in pairs(profile.screens) do
+      for _, space in ipairs(screenConfig.spaces) do
+        if space.app ~= "desktop" then
+          table.insert(desiredOrder, space.app)
+        end
+      end
+    end
+
+    reorder.safeReorder(desiredOrder)
+
+    if onComplete then onComplete() end
   end)
 end
 
