@@ -11,8 +11,16 @@ local spaces = require("spaces")
 local watcher = require("watcher")
 local server = require("server")
 
+-- Guard against concurrent activations
+local activating = false
+
 -- The main profile activation handler
 local function activateProfile(profileName, profile)
+  if activating then
+    helpers.notify("Activation already in progress, ignoring")
+    return
+  end
+  activating = true
   helpers.notify("Activating profile: " .. profileName)
 
   local appNames = helpers.getProfileApps(profile)
@@ -20,6 +28,7 @@ local function activateProfile(profileName, profile)
 
   local function proceed()
     spaces.applyProfile(profile, function()
+      activating = false
       helpers.notify("Profile '" .. profileName .. "' applied")
     end)
   end

@@ -137,8 +137,13 @@ function M.applyProfile(profile, onComplete)
   M.applyFullscreen(profile, function()
     -- Build desired order from profile
     local desiredOrder = {}
-    for _, screenConfig in pairs(profile.screens) do
-      for _, space in ipairs(screenConfig.spaces) do
+    local screenNames = {}
+    for screenName in pairs(profile.screens) do
+      table.insert(screenNames, screenName)
+    end
+    table.sort(screenNames)
+    for _, screenName in ipairs(screenNames) do
+      for _, space in ipairs(profile.screens[screenName].spaces) do
         if space.app ~= "desktop" then
           table.insert(desiredOrder, space.app)
         end
