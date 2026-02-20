@@ -4,11 +4,14 @@ local windows = require("windows")
 local M = {}
 
 M.FULLSCREEN_DELAY = 0.8
+M.MOVE_SETTLE_DELAY = 0.3
 
 function M.fullscreenWindow(win)
   if not win then return false end
   if win:isFullScreen() then return true end
   win:setFullScreen(true)
+  -- Note: setFullScreen is async; caller relies on queue delay
+  -- for the animation to complete. Actual success is not verified here.
   return true
 end
 
@@ -35,7 +38,8 @@ function M.processSpaceEntry(entry, targetScreen, queue)
 
   local count = 0
   for _, win in ipairs(wins) do
-    if win:isFullScreen() and win:screen():name() == targetScreen:name() then
+    local winScreen = win:screen()
+    if win:isFullScreen() and winScreen and winScreen:name() == targetScreen:name() then
       -- Already correct
     else
       if win:isFullScreen() then
@@ -53,7 +57,14 @@ end
 function M.buildFullscreenQueue(profile)
   local queue = {}
 
-  for screenName, screenConfig in pairs(profile.screens) do
+  local screenNames = {}
+  for screenName in pairs(profile.screens) do
+    table.insert(screenNames, screenName)
+  end
+  table.sort(screenNames)
+
+  for _, screenName in ipairs(screenNames) do
+    local screenConfig = profile.screens[screenName]
     local targetScreen
     if screenName == "any" then
       targetScreen = hs.screen.mainScreen()
@@ -110,7 +121,7 @@ end
 function M.applyFullscreen(profile, onComplete)
   windows.assignAllWindows(profile)
 
-  hs.timer.doAfter(0.3, function()
+  hs.timer.doAfter(M.MOVE_SETTLE_DELAY, function()
     local queue = M.buildFullscreenQueue(profile)
     helpers.notify("Fullscreening " .. #queue .. " windows...")
     M.executeFullscreenQueue(queue, function()

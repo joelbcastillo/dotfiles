@@ -59,7 +59,14 @@ end
 -- Assign all windows for an entire profile to their correct screens
 function M.assignAllWindows(profile)
   local allResults = {}
-  for screenName, screenConfig in pairs(profile.screens) do
+  local screenNames = {}
+  for screenName in pairs(profile.screens) do
+    table.insert(screenNames, screenName)
+  end
+  table.sort(screenNames)
+
+  for _, screenName in ipairs(screenNames) do
+    local screenConfig = profile.screens[screenName]
     local results = M.assignWindowsToScreen(screenName, screenConfig)
     for _, r in ipairs(results) do
       table.insert(allResults, r)

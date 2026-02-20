@@ -127,7 +127,9 @@ function M.promptMissingApps(missingApps, callback)
       callback({})
       return
     end
-    if choice.launchAll then
+    if choice.skipAll then
+      callback({})
+    elseif choice.launchAll then
       callback(missingApps)
     else
       callback({ choice.appName })
@@ -142,7 +144,7 @@ function M.promptMissingApps(missingApps, callback)
   table.insert(choices, {
     text = "Skip All",
     subText = "Continue without launching missing apps",
-    appName = nil,
+    skipAll = true,
   })
 
   chooser:choices(choices)
