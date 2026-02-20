@@ -3,6 +3,14 @@
 
 hs.window.animationDuration = 0
 
-local configDir = hs.configdir
+local helpers = require("helpers")
 
-hs.notify.show("Hammerspoon", "", "Config loaded")
+-- Test: load profiles on startup
+local profiles = helpers.loadProfiles()
+if profiles then
+  local count = 0
+  for _ in pairs(profiles) do count = count + 1 end
+  helpers.notify("Loaded " .. count .. " profiles")
+else
+  helpers.notify("ERROR: No profiles loaded")
+end
