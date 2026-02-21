@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "outlook-mac": {
+      "command": "npx",
+      "args": ["-y", "@jbctechsolutions/mcp-outlook-mac"],
+      "description": "Access Outlook for Mac data (emails, calendar, contacts, tasks)"
+    }
+  }
+}
