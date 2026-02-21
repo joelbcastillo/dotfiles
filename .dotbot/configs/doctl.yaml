@@ -74,9 +74,9 @@
       echo "To use doctl:"
       echo "  1. Ensure you're signed in to 1Password: op signin"
       echo "  2. Verify your DigitalOcean token is in 1Password:"
-      echo "     Item: 'Digital Ocean - joel@jbc.dev' in 'Cloud' vault"
+      echo "     Ensure your DigitalOcean API token item exists in your 1Password 'Cloud' vault"
       echo "  3. Test doctl: doctl account get"
       echo ""
       echo "Note: The token is stored in ~/.config/doctl/config.yaml"
-      echo "      If you need to refresh it, re-run: ./install profile doctl"
+      echo "      If you need to refresh it, re-run: ./install config doctl"
     description: Complete doctl setup
