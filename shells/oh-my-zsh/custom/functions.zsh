@@ -125,6 +125,250 @@ function update-dev() {
     echo "Development tools updated!"
 }
 
+# ASDF Upgrade Helper
+# Updates all asdf-managed tools to their latest versions with interactive selection
+# Usage: asdf-upgrade [-i|--interactive] [-d|--dry-run] [-s|--skip PLUGIN] [-h|--help] [PLUGIN...]
+function asdf-upgrade() {
+    # Colors (respect terminal capabilities)
+    local RED GREEN YELLOW BLUE CYAN NC
+    if [[ -t 1 ]]; then
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[1;33m'
+        BLUE='\033[0;34m'
+        CYAN='\033[0;36m'
+        NC='\033[0m'
+    else
+        RED='' GREEN='' YELLOW='' BLUE='' CYAN='' NC=''
+    fi
+
+    # Helper functions
+    _asdf_log_info()    { echo -e "${BLUE}[INFO]${NC} $1" }
+    _asdf_log_success() { echo -e "${GREEN}[OK]${NC} $1" }
+    _asdf_log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1" >&2 }
+    _asdf_log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2 }
+
+    # Default options
+    local interactive=false
+    local dry_run=false
+    local -a skip_plugins=()
+    local -a target_plugins=()
+
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -i|--interactive) interactive=true; shift ;;
+            -d|--dry-run)     dry_run=true; shift ;;
+            -s|--skip)        skip_plugins+=("$2"); shift 2 ;;
+            -a|--all)         shift ;;  # Default behavior
+            -h|--help)
+                echo "Usage: asdf-upgrade [OPTIONS] [PLUGIN...]"
+                echo ""
+                echo "Update asdf-managed tools to their latest versions."
+                echo ""
+                echo "Options:"
+                echo "  -i, --interactive  Select global versions interactively with fzf"
+                echo "  -d, --dry-run      Show what would be done without making changes"
+                echo "  -s, --skip PLUGIN  Skip specific plugin (can be used multiple times)"
+                echo "  -a, --all          Update all plugins (default if no plugins specified)"
+                echo "  -h, --help         Show this help message"
+                echo ""
+                echo "Arguments:"
+                echo "  PLUGIN...          Specific plugins to update (optional)"
+                echo ""
+                echo "Examples:"
+                echo "  asdf-upgrade              # Update all, set latest as global"
+                echo "  asdf-upgrade -i           # Update all, interactively choose versions"
+                echo "  asdf-upgrade nodejs       # Update nodejs only"
+                echo "  asdf-upgrade -s rust      # Update all except rust"
+                return 0 ;;
+            -*)
+                _asdf_log_error "Unknown option: $1"
+                return 1 ;;
+            *)
+                target_plugins+=("$1"); shift ;;
+        esac
+    done
+
+    # Ensure asdf is available
+    if ! command -v asdf &>/dev/null; then
+        if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+            source "$HOME/.asdf/asdf.sh"
+        else
+            _asdf_log_error "asdf not found. Please install asdf first."
+            return 1
+        fi
+    fi
+
+    # Check for fzf if interactive mode
+    if [[ "$interactive" == true ]] && ! command -v fzf &>/dev/null; then
+        _asdf_log_warn "fzf not found. Falling back to non-interactive mode."
+        interactive=false
+    fi
+
+    # Get list of plugins to process
+    local -a plugins
+    if [[ ${#target_plugins[@]} -gt 0 ]]; then
+        plugins=("${target_plugins[@]}")
+    else
+        plugins=($(asdf plugin list 2>/dev/null))
+    fi
+
+    # Filter out skipped plugins
+    local -a filtered_plugins=()
+    for plugin in "${plugins[@]}"; do
+        local skip=false
+        for skip_plugin in "${skip_plugins[@]}"; do
+            if [[ "$plugin" == "$skip_plugin" ]]; then
+                skip=true
+                break
+            fi
+        done
+        if [[ "$skip" == false ]]; then
+            filtered_plugins+=("$plugin")
+        fi
+    done
+    plugins=("${filtered_plugins[@]}")
+
+    if [[ ${#plugins[@]} -eq 0 ]]; then
+        _asdf_log_warn "No plugins to update."
+        return 0
+    fi
+
+    # Display header
+    echo ""
+    _asdf_log_info "ASDF Upgrade - Checking ${#plugins[@]} plugin(s)..."
+    echo ""
+
+    # Gather information and display summary
+    local -A current_versions latest_versions
+    printf "%-15s %-15s %-15s %s\n" "PLUGIN" "CURRENT" "LATEST" "STATUS"
+    printf "%-15s %-15s %-15s %s\n" "------" "-------" "------" "------"
+
+    for plugin in "${plugins[@]}"; do
+        local current=$(asdf current "$plugin" 2>/dev/null | awk '{print $2}')
+        local latest=$(asdf latest "$plugin" 2>/dev/null)
+        current_versions[$plugin]="$current"
+        latest_versions[$plugin]="$latest"
+
+        local plugin_status=""
+        if [[ -z "$latest" ]]; then
+            plugin_status="${YELLOW}unknown${NC}"
+        elif [[ "$current" == "$latest" ]]; then
+            plugin_status="${GREEN}up-to-date${NC}"
+        else
+            plugin_status="${CYAN}update available${NC}"
+        fi
+
+        printf "%-15s %-15s %-15s %b\n" "$plugin" "${current:-none}" "${latest:-?}" "$plugin_status"
+    done
+    echo ""
+
+    # Dry run stops here
+    if [[ "$dry_run" == true ]]; then
+        _asdf_log_info "Dry run complete. No changes made."
+        return 0
+    fi
+
+    # Install latest versions
+    _asdf_log_info "Installing latest versions..."
+    local -a failed_installs=()
+    local -a successful_installs=()
+
+    for plugin in "${plugins[@]}"; do
+        local latest="${latest_versions[$plugin]}"
+        if [[ -z "$latest" ]]; then
+            _asdf_log_warn "Could not determine latest version for $plugin, skipping."
+            continue
+        fi
+
+        # Check if latest is already installed
+        if asdf list "$plugin" 2>/dev/null | grep -q "^[* ]*$latest$"; then
+            _asdf_log_info "$plugin $latest already installed"
+            successful_installs+=("$plugin:$latest")
+            continue
+        fi
+
+        _asdf_log_info "Installing $plugin $latest..."
+        if asdf install "$plugin" "$latest" 2>&1; then
+            _asdf_log_success "Installed $plugin $latest"
+            successful_installs+=("$plugin:$latest")
+        else
+            _asdf_log_error "Failed to install $plugin $latest"
+            failed_installs+=("$plugin")
+        fi
+    done
+
+    echo ""
+
+    # Interactive version selection
+    if [[ "$interactive" == true ]]; then
+        _asdf_log_info "Interactive version selection..."
+        echo ""
+
+        for plugin in "${plugins[@]}"; do
+            local current="${current_versions[$plugin]}"
+            local versions=$(asdf list "$plugin" 2>/dev/null | sed 's/^[ *]*//')
+
+            if [[ -z "$versions" ]]; then
+                _asdf_log_warn "No versions installed for $plugin"
+                continue
+            fi
+
+            # Build fzf list with labels
+            local fzf_list=""
+            while IFS= read -r version; do
+                local label=""
+                [[ "$version" == "${latest_versions[$plugin]}" ]] && label=" [latest]"
+                [[ "$version" == "$current" ]] && label="${label} [current]"
+                fzf_list+="${version}${label}"$'\n'
+            done <<< "$versions"
+            fzf_list+="[skip - keep current]"
+
+            local selected=$(echo "$fzf_list" | fzf \
+                --height 40% \
+                --reverse \
+                --header="Select global version for $plugin (current: ${current:-none})" \
+                --prompt="$plugin > ")
+
+            # Extract version (remove labels)
+            selected=$(echo "$selected" | awk '{print $1}')
+
+            if [[ -n "$selected" && "$selected" != "[skip" ]]; then
+                _asdf_log_info "Setting $plugin global to $selected"
+                asdf global "$plugin" "$selected"
+                _asdf_log_success "$plugin global set to $selected"
+            else
+                _asdf_log_info "Keeping $plugin at ${current:-none}"
+            fi
+        done
+    else
+        # Non-interactive: set latest as global for each
+        _asdf_log_info "Setting latest versions as global..."
+        for plugin in "${plugins[@]}"; do
+            local latest="${latest_versions[$plugin]}"
+            if [[ -n "$latest" ]] && asdf list "$plugin" 2>/dev/null | grep -q "^[* ]*$latest$"; then
+                asdf global "$plugin" "$latest"
+                _asdf_log_success "$plugin global set to $latest"
+            fi
+        done
+    fi
+
+    # Final summary
+    echo ""
+    _asdf_log_success "ASDF upgrade complete!"
+
+    if [[ ${#failed_installs[@]} -gt 0 ]]; then
+        echo ""
+        _asdf_log_warn "Failed to install: ${failed_installs[*]}"
+        _asdf_log_info "Try running manually: asdf install <plugin> latest"
+    fi
+
+    echo ""
+    _asdf_log_info "Current global versions:"
+    asdf current 2>/dev/null | column -t
+}
+
 # Git Functions
 
 # Create a new branch and switch to it
@@ -550,4 +794,52 @@ EOF
 
     # Use the user's preferred editor, default to 'code'
     ${EDITOR:-code} "$profile_path"
-} 
+}
+
+# MCP Functions
+
+# Check or install MCP configuration
+# Usage: mcp-check              # Check all MCP configs
+#        mcp-check -i           # Install all missing MCP configs
+#        mcp-check -t project   # Check project-level .mcp.json in current dir
+#        mcp-check -t project -i  # Install .mcp.json in current dir
+function mcp-check() {
+    ~/.dotfiles/scripts/check-mcp-installed.sh "$@"
+}
+
+# Quick install MCP in current project directory
+# Usage: mcp-init               # Install .mcp.json in current directory
+#        mcp-init /path/to/dir  # Install .mcp.json in specified directory
+function mcp-init() {
+    local target_dir="${1:-.}"
+
+    # Install the main .mcp.json
+    ~/.dotfiles/scripts/check-mcp-installed.sh -t project -i -d "$target_dir"
+
+    # Copy profile templates for mcp-switch support
+    local mcp_templates_dir="$HOME/.dotfiles/tools/mcp"
+    if [[ -d "$mcp_templates_dir" ]]; then
+        echo ""
+        echo "Installing MCP profile templates..."
+        for template in "$mcp_templates_dir"/.mcp.*.json; do
+            if [[ -f "$template" ]]; then
+                local filename=$(basename "$template")
+                cp "$template" "${target_dir}/${filename}"
+                # Replace USERNAME placeholder
+                sed -i '' "s|/Users/USERNAME|$HOME|g" "${target_dir}/${filename}"
+                echo "  Installed: $filename"
+            fi
+        done
+        echo ""
+        echo "Available profiles: mcp-switch <profile>"
+        echo "  - notion-only    (Notion only)"
+        echo "  - docs-focus     (Notion + Google Drive)"
+        echo "  - project-focus  (Notion + Linear)"
+        echo "  - all-tools      (All MCP servers)"
+    fi
+}
+
+# Source MCP Profile Manager functions
+if [ -f "$DOTFILES/mcp-profile-functions.zsh" ]; then
+    source "$DOTFILES/mcp-profile-functions.zsh"
+fi

@@ -1,0 +1,18 @@
+{
+  "vaults": {
+    "personal": {
+      "account": "personal",
+      "vault_ids": ["<your-vault-id>"],
+      "categories": ["SSH_KEY"]
+    }
+  },
+  "defaults": {
+    "port": 22,
+    "cache_ttl_seconds": 300,
+    "connect_timeout": 10
+  },
+  "ui": {
+    "fzf_height": "60%",
+    "preview_enabled": true
+  }
+}

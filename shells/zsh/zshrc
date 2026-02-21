@@ -112,6 +112,45 @@ z() {
 alias tm='task-master'
 alias taskmaster='task-master'
 
+# Claude Code Authentication - Using Subscription
+#
+# Both Claude Code and Conductor use subscription authentication by default.
+# This means you need to be logged in via 'claude login' for interactive use.
+#
+# To check authentication status: claude /status
+#
+# If you need to use API key (pay-as-you-go) for specific tools, you can:
+#   export ANTHROPIC_API_KEY="$($DOTFILES/scripts/get-claude-api-key.sh api)"
+#
+# To unset API key and use subscription: unset ANTHROPIC_API_KEY
+
+# Function to temporarily use API key (if needed for specific tools)
+use-api-key() {
+    if command -v op >/dev/null 2>&1; then
+        export ANTHROPIC_API_KEY="$($DOTFILES/scripts/get-claude-api-key.sh api 2>/dev/null)"
+        echo "API key set (pay-as-you-go billing)"
+    else
+        echo "Error: 1Password CLI not available"
+    fi
+}
+
+# Function to use subscription (unset API key)
+use-subscription() {
+    unset ANTHROPIC_API_KEY
+    echo "Using subscription authentication"
+    claude /status
+}
+
+# Alias to check authentication status
+alias claude-auth='~/.dotfiles/scripts/check-claude-auth.sh'
+
+# Claude alias with secure profile (loads GitHub token, NOT API keys to preserve subscription)
+if [ -f /opt/homebrew/bin/claude ]; then
+    alias claude='_secure_run claude /opt/homebrew/bin/claude'
+elif [ -f ~/.local/bin/claude ]; then
+    alias claude='_secure_run claude ~/.local/bin/claude'
+fi
+
 # Amazon Q post block
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zshrc.post.zsh"
 

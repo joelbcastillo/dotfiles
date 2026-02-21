@@ -1,11 +1,11 @@
 - shell:
-  - 
+  -
     command: |
       echo "Setting up Claude Code..."
     description: Setting up Claude Code
 
 - shell:
-  - 
+  -
     command: |
       # Create Claude config directory if it doesn't exist
       mkdir -p ~/.config/claude
@@ -19,7 +19,7 @@
     description: Link Claude configuration template
 
 - shell:
-  - 
+  -
     command: |
       # Resolve 1password:// references in config
       if command -v op >/dev/null 2>&1; then
@@ -30,7 +30,39 @@
     description: Resolve secrets in Claude config
 
 - shell:
-  - 
+  -
+    command: |
+      # Setup Claude Code (validates setup token, but doesn't set apiKeyHelper to avoid login conflicts)
+      if command -v op >/dev/null 2>&1; then
+        ~/.dotfiles/scripts/setup-claude-code.sh || true
+      else
+        echo "Warning: 1Password CLI not available, skipping Claude Code token setup"
+        echo "Run ~/.dotfiles/scripts/setup-claude-code.sh manually after signing in to 1Password"
+      fi
+    description: Setup Claude Code (validates setup token for Conductor/clawdbot)
+
+- shell:
+  -
+    command: |
+      # Setup Conductor's bundled Claude Code binary to use subscription
+      if [ -d "$HOME/Library/Application Support/com.conductor.app" ]; then
+        if command -v op >/dev/null 2>&1; then
+          ~/.dotfiles/scripts/setup-conductor-auth.sh || true
+        else
+          echo "Warning: 1Password CLI not available, skipping Conductor auth setup"
+          echo "Run ~/.dotfiles/scripts/setup-conductor-auth.sh manually after signing in to 1Password"
+        fi
+      else
+        echo "Conductor not installed, skipping Conductor auth setup"
+      fi
+    description: Setup Conductor's bundled Claude Code with subscription
+
+- shell:
+  -
     command: |
       echo "Claude Code setup completed"
+      echo ""
+      echo "Next steps:"
+      echo "  1. Run: claude login (for interactive subscription use)"
+      echo "  2. Conductor is configured to use subscription automatically"
     description: Complete Claude Code setup

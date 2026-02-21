@@ -166,5 +166,9 @@ alias znvim='_z_open "nvim"'
 alias szcursor='_z_open "_secure_run ai cursor"'
 alias szcode='_z_open "_secure_run ai code"'
 
+# ASDF
+alias asdfup='asdf-upgrade'
+alias xattr='/usr/bin/xattr'  # Bypass asdf shim to use system xattr
+
 # Add your personal aliases here
 # alias myalias='my command'

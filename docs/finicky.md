@@ -14,6 +14,14 @@ A template file is available in the public repository at `tools/finicky/finicky.
 
 ## Key Features
 
+### API Version
+This configuration uses the **Finicky v4 API** where:
+- The first argument to `match`/`browser` functions is the URL instance (a standard [URL object](https://developer.mozilla.org/en-US/docs/Web/API/URL))
+- The second argument contains context (`sourceBundleIdentifier`, `opener`, etc.)
+- When using custom `args` in the browser config, you must explicitly include the URL
+
+See [Finicky v4 Migration Guide](https://github.com/johnste/finicky/discussions/378) for details.
+
 ### Default Browser
 - **Google Chrome**: Set as the default browser for all other links
 - You can change this to Safari, Firefox, or any other browser
@@ -34,7 +42,13 @@ A template file is available in the public repository at `tools/finicky/finicky.
   - `*.safelinks.protection.outlook.com` (Microsoft Safe Links)
 
 - **Edge Profile**: Opens links in Microsoft Edge with a specific profile directory
-  - Default: `Profile 1` (you need to update this to match your profile)
+  - Uses the EdgeProfile helper app to work around macOS limitations (see below)
+
+### EdgeProfile Helper App
+
+On macOS, Microsoft Edge ignores the `--profile-directory` command-line argument when the browser is already running—it just activates the existing window without opening the URL. To work around this, we use a small AppleScript wrapper app called **EdgeProfile** that uses `open -na` to force Edge to respect the profile argument.
+
+The EdgeProfile app source is at `tools/finicky/EdgeProfile.applescript`.
 
 ## Installation
 
@@ -49,14 +63,24 @@ Or install manually:
 brew install --cask finicky
 ```
 
-### Step 2: Set Up Configuration
-```bash
-# First, ensure private files are set up
-./install private
+### Step 2: Build the EdgeProfile Helper App
 
-# Then install Finicky configuration
-./install config finicky
-```
+The EdgeProfile app is required to properly open URLs in Edge with a specific profile on macOS.
+
+1. First, find your Edge profile directory name (see Step 3 below)
+
+2. Edit the profile name in the AppleScript source:
+   ```bash
+   # Edit tools/finicky/EdgeProfile.applescript
+   # Change the line: property profileDir : "Profile 1"
+   # to use your actual profile directory name
+   ```
+
+3. Compile the AppleScript into an app:
+   ```bash
+   mkdir -p ~/Applications
+   osacompile -o ~/Applications/EdgeProfile.app ~/.dotfiles/tools/finicky/EdgeProfile.applescript
+   ```
 
 ### Step 3: Find Your Edge Profile Directory
 
@@ -71,29 +95,25 @@ Profile Path: /Users/yourname/Library/Application Support/Microsoft Edge/Profile
 ```
 The profile directory name is `Profile 1` in this case.
 
-### Step 4: Configure Your Profile
+### Step 4: Set Up Finicky Configuration
 
-1. If you haven't already, copy the template to your private repository:
+1. Ensure private files are set up:
+   ```bash
+   ./install private
+   ```
+
+2. Copy the template to your private repository:
    ```bash
    mkdir -p ~/.dotfiles-private/tools/finicky
    cp ~/.dotfiles/tools/finicky/finicky.js.template ~/.dotfiles-private/tools/finicky/finicky.js
    ```
 
-2. Edit `~/.dotfiles-private/tools/finicky/finicky.js` and update the `JOSHUA_PROJECT_PROFILE` constant:
+3. Install the Finicky configuration symlink:
+   ```bash
+   ./install config finicky
+   ```
 
-```javascript
-// Edge profile configuration
-const JOSHUA_PROJECT_PROFILE = 'Profile 1'; // Replace with your actual profile name
-
-// The browser function includes the URL in args since Finicky doesn't auto-append when using custom args
-browser: url => {
-  const urlString = url instanceof URL ? url.href : String(url);
-  return {
-    name: 'Microsoft Edge',
-    args: [`--profile-directory=${JOSHUA_PROJECT_PROFILE}`, urlString],
-  };
-}
-```
+The template uses `browser: "EdgeProfile"` which references the helper app you built in Step 2. The Edge profile is configured in the AppleScript, not in the Finicky config.
 
 ### Step 5: Enable Finicky
 
@@ -133,20 +153,15 @@ module.exports = {
     "https://teams.microsoft.com/*",
     "https://your-custom-domain.com/*",  // Add custom patterns
   ],
-  browser: url => {
-    const urlString = url instanceof URL ? url.href : String(url);
-    return {
-      name: "Microsoft Edge",
-      args: [`--profile-directory=Profile 1`, urlString]
-    };
-  }
+  browser: "EdgeProfile"  // Uses the EdgeProfile helper app
 }
 ```
 
 #### Route Specific Apps to Different Browsers
 ```javascript
 {
-  match: ({ sourceBundleIdentifier }) => {
+  // Finicky v4 API: url is first arg, context (sourceBundleIdentifier) is second arg
+  match: (url, { sourceBundleIdentifier }) => {
     return sourceBundleIdentifier === "com.slack.Slack";
   },
   browser: "Google Chrome"  // Open Slack links in Chrome
@@ -154,36 +169,32 @@ module.exports = {
 ```
 
 #### Use Multiple Edge Profiles
-```javascript
-{
-  match: ({ url }) => {
-    // Work URLs go to work profile
-    const urlString = url instanceof URL ? url.href : String(url);
-    return /work-domain\.com/.test(urlString);
-  },
-  browser: url => {
-    const urlString = url instanceof URL ? url.href : String(url);
-    return {
-      name: "Microsoft Edge",
-      args: ["--profile-directory=Profile 1", urlString]  // Work profile
-    };
-  }
-},
-{
-  match: ({ url }) => {
-    // Personal URLs go to personal profile
-    const urlString = url instanceof URL ? url.href : String(url);
-    return /personal-domain\.com/.test(urlString);
-  },
-  browser: url => {
-    const urlString = url instanceof URL ? url.href : String(url);
-    return {
-      name: "Microsoft Edge",
-      args: ["--profile-directory=Default", urlString]  // Personal profile
-    };
-  }
-}
-```
+
+To use multiple Edge profiles, create separate EdgeProfile apps for each profile:
+
+1. Copy and modify the AppleScript for each profile:
+   ```bash
+   # Create EdgeProfileWork.applescript with profileDir: "Profile 1"
+   # Create EdgeProfilePersonal.applescript with profileDir: "Default"
+   ```
+
+2. Compile each into a separate app:
+   ```bash
+   osacompile -o ~/Applications/EdgeProfileWork.app EdgeProfileWork.applescript
+   osacompile -o ~/Applications/EdgeProfilePersonal.app EdgeProfilePersonal.applescript
+   ```
+
+3. Use them in your Finicky config:
+   ```javascript
+   {
+     match: (url) => /work-domain\.com/.test(url.href),
+     browser: "EdgeProfileWork"
+   },
+   {
+     match: (url) => /personal-domain\.com/.test(url.href),
+     browser: "EdgeProfilePersonal"
+   }
+   ```
 
 ## Troubleshooting
 
@@ -208,10 +219,30 @@ module.exports = {
 
 ### Edge Opens with Wrong Profile
 
-- Update the `JOSHUA_PROJECT_PROFILE` constant in `~/.dotfiles-private/tools/finicky/finicky.js`
-- Make sure you're using the correct profile directory name
-- Run `./install config finicky` to update the symlink
+- Update the `profileDir` property in `~/.dotfiles/tools/finicky/EdgeProfile.applescript`
+- Recompile the app: `osacompile -o ~/Applications/EdgeProfile.app ~/.dotfiles/tools/finicky/EdgeProfile.applescript`
 - Restart Finicky after making changes
+
+### Edge Activates But URL Doesn't Open
+
+This usually means the EdgeProfile helper app isn't installed or configured correctly:
+
+1. Verify the app exists: `ls ~/Applications/EdgeProfile.app`
+2. Test it manually: `open -a ~/Applications/EdgeProfile.app "https://example.com"`
+3. If it doesn't work, recompile: `osacompile -o ~/Applications/EdgeProfile.app ~/.dotfiles/tools/finicky/EdgeProfile.applescript`
+
+### "Accessing legacy property 'url'" Warning
+
+If you see this warning in Finicky logs:
+```
+[WARN] Accessing legacy property "url" that is no longer supported
+```
+
+Your config is using the **old Finicky v3 API**. In v4, the function signature changed:
+- **Old (v3)**: `match: ({ sourceBundleIdentifier, url }) => { ... }`
+- **New (v4)**: `match: (url, { sourceBundleIdentifier }) => { ... }`
+
+Update your config to use the v4 API as shown in the template.
 
 ### Links Still Open in Default Browser
 

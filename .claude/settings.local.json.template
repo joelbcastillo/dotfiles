@@ -4,7 +4,9 @@
       "Read(//Users/*/.local/bin/**)",
       "Bash(echo $PATH)",
       "WebFetch(domain:a.co)",
-      "WebFetch(domain:www.amazon.com)"
+      "WebFetch(domain:www.amazon.com)",
+      "mcp__plugin_Notion_notion__notion-search",
+      "mcp__plugin_Notion_notion__notion-fetch"
     ],
     "deny": [],
     "ask": []

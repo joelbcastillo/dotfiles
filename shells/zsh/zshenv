@@ -30,4 +30,32 @@ fi
 
 # Set umask for group-writable files (for group-based Homebrew)
 # This doesn't hurt for user-local installations
-umask 0002 
+umask 0002
+
+# GitHub PAT for MCP servers (Cursor, Claude Code, etc.)
+# Uses 1Password CLI with caching to avoid slowdowns
+if command -v op >/dev/null 2>&1 && [ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then
+    # Cache file for the token (valid for current session)
+    _gh_token_cache="$HOME/.cache/github_pat_token"
+    _gh_token_ttl=3600  # 1 hour cache
+
+    # Check if cache exists and is fresh
+    if [ -f "$_gh_token_cache" ] && [ -n "$(find "$_gh_token_cache" -mmin -60 2>/dev/null)" ]; then
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat "$_gh_token_cache")"
+        export GITHUB_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
+        export GH_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
+    elif op account list >/dev/null 2>&1; then
+        # Fetch from 1Password and cache
+        mkdir -p "$HOME/.cache"
+        _token="$(op read --account jbctechsolutions.1password.com "op://Local Dev/GitHub PAT - Claude Code/credential" 2>/dev/null)"
+        if [ -n "$_token" ]; then
+            echo "$_token" > "$_gh_token_cache"
+            chmod 600 "$_gh_token_cache"
+            export GITHUB_PERSONAL_ACCESS_TOKEN="$_token"
+            export GITHUB_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
+            export GH_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
+        fi
+        unset _token
+    fi
+    unset _gh_token_cache _gh_token_ttl
+fi
