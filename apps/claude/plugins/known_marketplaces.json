@@ -1,0 +1,20 @@
+{
+  "jbc-tech-solutions-marketplace": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/jbctechsolutions/jbctech-claude-marketplace.git"
+    }
+  },
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    }
+  },
+  "voltagent-subagents": {
+    "source": {
+      "source": "github",
+      "repo": "VoltAgent/awesome-claude-code-subagents"
+    }
+  }
+}

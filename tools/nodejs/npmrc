@@ -5,4 +5,5 @@ audit=true
 fund=false
 engine-strict=true
 progress=false
-loglevel=error 
+loglevel=error
+//registry.npmjs.org/:_authToken=op://External APIs/npm/credential

@@ -1,34 +1,37 @@
 - shell:
-  - 
-    command: |
-      echo "Setting up Claude CLI..."
-    description: Setting up Claude CLI
+    - command: |
+        echo "Setting up Claude Code..."
+        mkdir -p ~/.claude/plugins/local
+      description: Create Claude config directories
+
+- link:
+    ~/.claude/settings.json:
+      path: apps/claude/settings.json
+      relink: true
+      force: true
+    ~/.claude/scripts:
+      path: apps/claude/scripts
+      relink: true
+      force: true
+    ~/.claude/plugins/known_marketplaces.json:
+      path: apps/claude/plugins/known_marketplaces.json
+      relink: true
+      force: true
+    ~/.claude/plugins/local/outlook-mcp:
+      path: apps/claude/plugins/local/outlook-mcp
+      relink: true
+      force: true
 
 - shell:
-  - 
-    command: |
-      # Create Claude config directory if it doesn't exist
-      mkdir -p ~/.claude
-    description: Create Claude config directory
-
-# Note: Claude CLI doesn't require a settings.local.json file
-# The CLI works with default settings or environment variables
-
-- shell:
-  -
-    command: |
-      # Check if Claude CLI is installed
-      if ! command -v claude >/dev/null 2>&1; then
-        echo "Warning: Claude CLI not found. Please install it:"
-        echo "  brew install claude"
-        echo "  # or download from: https://claude.ai/download"
-      else
-        echo "Claude CLI found at: $(which claude)"
-      fi
-    description: Check Claude CLI installation
+    - command: |
+        if ! command -v claude >/dev/null 2>&1; then
+          echo "Warning: Claude Code not found. Install with: brew install claude-code"
+        else
+          echo "Claude Code found at: $(which claude)"
+        fi
+      description: Check Claude Code installation
 
 - shell:
-  - 
-    command: |
-      echo "Claude setup completed"
-    description: Complete Claude setup
+    - command: |
+        echo "Claude setup completed"
+      description: Complete Claude setup

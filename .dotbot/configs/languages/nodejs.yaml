@@ -24,9 +24,24 @@
       description: Set up Node.js with asdf and global tools
 
 - link:
-    ~/.npmrc: tools/nodejs/npmrc
     ~/.nvmrc: tools/nodejs/nvmrc
     ~/.eslintrc: tools/nodejs/eslintrc
     ~/.prettierrc: tools/nodejs/prettierrc
     ~/.yarnrc: tools/nodejs/yarnrc
-    ~/.pnpmrc: tools/nodejs/pnpmrc 
+    ~/.pnpmrc: tools/nodejs/pnpmrc
+
+- shell:
+    - command: |
+        if command -v op >/dev/null 2>&1; then
+          if op inject -i ~/.dotfiles/tools/nodejs/npmrc -o ~/.npmrc 2>/dev/null; then
+            chmod 600 ~/.npmrc
+            echo "npmrc injected with 1Password secrets"
+          else
+            echo "Warning: 1Password injection failed (not signed in?), linking template"
+            ln -sf ~/.dotfiles/tools/nodejs/npmrc ~/.npmrc
+          fi
+        else
+          echo "Warning: 1Password CLI not available, linking npmrc template as-is"
+          ln -sf ~/.dotfiles/tools/nodejs/npmrc ~/.npmrc
+        fi
+      description: Inject npm auth token from 1Password
