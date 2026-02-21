@@ -1,0 +1,54 @@
+{
+  "profiles": {
+    "single-screen": {
+      "match": { "screens": 1 },
+      "screens": {
+        "any": {
+          "spaces": [
+            { "app": "Spotify" },
+            { "app": "Messages" },
+            { "app": "WhatsApp" },
+            { "app": "Microsoft Outlook" },
+            { "app": "Microsoft Teams" },
+            { "app": "Slack" },
+            { "app": "Microsoft Edge", "multiWindow": true },
+            { "app": "Google Chrome", "multiWindow": true },
+            { "app": "Claude" },
+            { "app": "Notion" },
+            { "app": "desktop" },
+            { "app": "Ghostty" },
+            { "app": "Conductor" },
+            { "app": "Nimbalyst", "multiWindow": true }
+          ]
+        }
+      }
+    },
+    "work-dual": {
+      "match": { "screens": ["Color LCD", "LG HDR WQHD"] },
+      "screens": {
+        "Color LCD": {
+          "spaces": [
+            { "app": "Microsoft Outlook" },
+            { "app": "Microsoft Teams" },
+            { "app": "Slack" },
+            { "app": "Messages" },
+            { "app": "WhatsApp" },
+            { "app": "Spotify" }
+          ]
+        },
+        "LG HDR WQHD": {
+          "spaces": [
+            { "app": "Microsoft Edge", "multiWindow": true },
+            { "app": "Google Chrome", "multiWindow": true },
+            { "app": "Claude" },
+            { "app": "Notion" },
+            { "app": "desktop" },
+            { "app": "Ghostty" },
+            { "app": "Conductor" },
+            { "app": "Nimbalyst", "multiWindow": true }
+          ]
+        }
+      }
+    }
+  }
+}

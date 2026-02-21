@@ -42,6 +42,7 @@ cursor
 
 # Terminal (needs shell configs)
 ghostty
+hammerspoon
 
 # AI Tools (need API keys and credentials)
 api-keys
