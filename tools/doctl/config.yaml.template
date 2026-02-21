@@ -4,7 +4,7 @@
 
 # DigitalOcean API token
 # This will be resolved from 1Password secret: digitalocean_token
-access-token: 1password://digitalocean_token
+access-token: "1password://digitalocean_token"
 
 # Optional: Default output format (text, json)
 # output: "text"
