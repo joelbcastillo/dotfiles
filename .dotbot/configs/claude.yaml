@@ -9,11 +9,6 @@
       path: apps/claude/settings.json
       relink: true
       force: true
-    ~/.claude/settings.local.json:
-      path: .claude/settings.local.json
-      relink: true
-      force: true
-      if: '[ -f ~/.dotfiles/.claude/settings.local.json ]'
     ~/.claude/scripts:
       path: apps/claude/scripts
       relink: true

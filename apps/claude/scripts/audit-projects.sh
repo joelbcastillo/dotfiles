@@ -48,7 +48,7 @@ detect_project_type() {
         reasoning="Docker configuration found"
     fi
 
-    if [ -f "$dir/.github/workflows/"*.yml ] 2>/dev/null; then
+    if compgen -G "$dir/.github/workflows/"'*.yml' > /dev/null 2>&1; then
         suggestions+=("1")  # Software Dev
         reasoning="GitHub Actions workflows present"
     fi

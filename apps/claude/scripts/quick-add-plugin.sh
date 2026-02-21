@@ -62,17 +62,16 @@ EOF
         return
     fi
 
-    # Add plugin (simple approach - append before closing brace)
-    # This is a simplified version - for production, use proper JSON parsing
-    if grep -q '"enabledPlugins": {}' "$CONFIG_FILE"; then
-        # Empty enabledPlugins object
-        sed -i '' "s/\"enabledPlugins\": {}/\"enabledPlugins\": {\n    \"$plugin_name\": true\n  }/" "$CONFIG_FILE"
-    else
-        # Add to existing plugins
-        sed -i '' "/\"enabledPlugins\": {/a\\
-    \"$plugin_name\": true,
-" "$CONFIG_FILE"
-    fi
+    # Use python3 (universally available on macOS) for safe JSON editing
+    python3 -c "
+import json, sys
+with open('$CONFIG_FILE', 'r') as f:
+    config = json.load(f)
+config.setdefault('enabledPlugins', {})['$plugin_name'] = True
+with open('$CONFIG_FILE', 'w') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+" 2>/dev/null
 
     echo -e "${GREEN}✓${NC} Added $plugin_name"
 }
