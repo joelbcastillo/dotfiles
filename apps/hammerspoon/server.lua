@@ -36,12 +36,14 @@ function M._handleRequest(method, path, headers, body)
     local profileName = extractProfileName(path)
     if profileName then
       if M.watcher then
-        local ok = M.watcher.activateProfile(profileName)
-        if ok then
-          return json({ status = "activated", profile = profileName })
-        else
+        local exists, activated = M.watcher.activateProfile(profileName)
+        if not exists then
           return json({ error = "Unknown profile: " .. profileName }, 404)
         end
+        if activated == false then
+          return json({ status = "busy", profile = profileName }, 202)
+        end
+        return json({ status = "activated", profile = profileName })
       else
         return json({ error = "Watcher not initialized" }, 500)
       end

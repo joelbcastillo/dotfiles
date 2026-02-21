@@ -22,6 +22,10 @@ if [ -z "$PROFILE" ] || [ "$PROFILE" = "list" ]; then
     exit 1
   fi
   echo "$PROFILES" | python3 -c "import sys,json; [print(p) for p in json.load(sys.stdin)['profiles']]"
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to parse profiles response"
+    exit 1
+  fi
   exit 0
 fi
 
@@ -35,6 +39,9 @@ STATUS=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); p
 
 if [ "$STATUS" = "activated" ]; then
   echo "Activated profile: ${PROFILE}"
+elif [ "$STATUS" = "busy" ]; then
+  echo "Profile activation in progress, try again shortly"
+  exit 1
 else
   ERROR=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('error','Unknown error'))" 2>/dev/null)
   echo "Error: ${ERROR}"

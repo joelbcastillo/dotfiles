@@ -15,10 +15,11 @@ local server = require("server")
 local activating = false
 
 -- The main profile activation handler
+-- Returns true if activation started, false if busy
 local function activateProfile(profileName, profile)
   if activating then
     helpers.notify("Activation already in progress, ignoring")
-    return
+    return false
   end
   activating = true
   helpers.notify("Activating profile: " .. profileName)
@@ -57,6 +58,8 @@ local function activateProfile(profileName, profile)
   else
     proceed()
   end
+
+  return true
 end
 
 -- Connect watcher to activation handler

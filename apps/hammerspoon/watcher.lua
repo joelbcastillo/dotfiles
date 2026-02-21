@@ -19,9 +19,13 @@ function M._onScreenChange()
       return
     end
     helpers.notify("Display change detected: applying '" .. matchedName .. "'")
-    M.activeProfile = matchedName
     if M.onProfileActivate then
-      M.onProfileActivate(matchedName, matchedProfile)
+      local accepted = M.onProfileActivate(matchedName, matchedProfile)
+      if accepted ~= false then
+        M.activeProfile = matchedName
+      end
+    else
+      M.activeProfile = matchedName
     end
   elseif #allMatches > 1 then
     local choices = {}
@@ -36,9 +40,13 @@ function M._onScreenChange()
 
     local chooser = hs.chooser.new(function(choice)
       if choice then
-        M.activeProfile = choice.profileName
         if M.onProfileActivate then
-          M.onProfileActivate(choice.profileName, choice.profile)
+          local accepted = M.onProfileActivate(choice.profileName, choice.profile)
+          if accepted ~= false then
+            M.activeProfile = choice.profileName
+          end
+        else
+          M.activeProfile = choice.profileName
         end
       end
     end)
@@ -83,11 +91,18 @@ function M.activateProfile(profileName)
     return false
   end
 
-  M.activeProfile = profileName
+  local activated = true
   if M.onProfileActivate then
-    M.onProfileActivate(profileName, profile)
+    local accepted = M.onProfileActivate(profileName, profile)
+    if accepted == false then
+      activated = false
+    end
   end
-  return true
+
+  if activated then
+    M.activeProfile = profileName
+  end
+  return true, activated
 end
 
 function M.getProfileNames()
