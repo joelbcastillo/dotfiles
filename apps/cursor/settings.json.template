@@ -114,6 +114,9 @@
     ],
     "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.14-darwin-arm64/config-yaml-schema.json": [
       ".continue/**/*.yaml"
+    ],
+    "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.16-darwin-arm64/config-yaml-schema.json": [
+      ".continue/**/*.yaml"
     ]
   },
   "claudeCode.preferredLocation": "panel",

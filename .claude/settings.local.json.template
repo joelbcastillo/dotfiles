@@ -6,7 +6,8 @@
       "WebFetch(domain:a.co)",
       "WebFetch(domain:www.amazon.com)",
       "mcp__plugin_Notion_notion__notion-search",
-      "mcp__plugin_Notion_notion__notion-fetch"
+      "mcp__plugin_Notion_notion__notion-fetch",
+      "WebFetch(domain:www.threads.com)"
     ],
     "deny": [],
     "ask": []
