@@ -1,0 +1,21 @@
+# dmux configuration template
+# Copy to dmux.conf.yaml and fill in your values
+# See: https://github.com/anthropics/dmux
+
+# Default connection target
+default_host: my-server
+
+# Host definitions
+hosts:
+  my-server:
+    address: YOUR_SERVER_IP
+    user: YOUR_USERNAME
+    # Use worktree isolation by default
+    worktree: true
+
+# Session defaults
+defaults:
+  # Auto-resume existing sessions
+  resume: true
+  # Session naming
+  session_prefix: dmux

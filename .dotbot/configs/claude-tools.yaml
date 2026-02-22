@@ -1,0 +1,52 @@
+- shell:
+  -
+    command: |
+      echo "Setting up Claude Code companion tools (Happy, dmux, Paseo)..."
+    description: Setting up Claude Code companion tools
+
+- shell:
+  -
+    command: |
+      if ! command -v happy >/dev/null 2>&1; then
+        echo "Installing happy-coder..."
+        npm install -g happy-coder
+      else
+        echo "happy-coder is already installed"
+      fi
+    description: Install happy-coder
+
+- shell:
+  -
+    command: |
+      if ! command -v dmux >/dev/null 2>&1; then
+        echo "Installing dmux..."
+        npm install -g dmux
+      else
+        echo "dmux is already installed"
+      fi
+    description: Install dmux
+
+- shell:
+  -
+    command: |
+      if ! command -v paseo >/dev/null 2>&1; then
+        echo "Installing Paseo CLI..."
+        npm install -g @getpaseo/cli
+      else
+        echo "Paseo CLI is already installed"
+      fi
+    description: Install Paseo CLI
+
+- shell:
+  -
+    command: |
+      echo "Claude tools setup completed"
+      echo "Note: Run './install config claude-tools-private' for personal config (dmux, env vars)"
+      for tool in happy dmux paseo; do
+        if command -v $tool >/dev/null 2>&1; then
+          echo "  $tool: $($tool --version 2>/dev/null || echo 'installed')"
+        else
+          echo "  $tool: not found (may need to restart shell)"
+        fi
+      done
+    description: Verify Claude tools installation

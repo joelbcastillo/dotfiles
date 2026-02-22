@@ -49,6 +49,7 @@ api-keys
 ai-tools
 claude
 claude-code
+claude-tools
 cursor-agent
 
 # Utilities (can be last)

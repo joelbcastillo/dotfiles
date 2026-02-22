@@ -33,8 +33,9 @@ config.json
 # Private files (managed by dotfiles-private repository)
 # The pre-commit hook automatically ignores any symlinks pointing to the private repo
 
-# Personal SSH configurations (symlinked from private repo)
+# Personal configurations (symlinked from private repo)
 .dotbot/configs/ssh-*.yaml
+.dotbot/configs/claude-tools-private.yaml
 
 # AI tools personal configurations
 tools/claude/config.json
@@ -62,6 +63,7 @@ tools/git/*
 shells/zsh/zsh.before/*
 !shells/zsh/zsh.before/1password.zsh
 !shells/zsh/zsh.before/asdf.zsh
+!shells/zsh/zsh.before/claude-tools.zsh
 !shells/zsh/zsh.before/completion.zsh
 !shells/zsh/zsh.before/direnv.zsh
 !shells/zsh/zsh.before/history.zsh
@@ -88,6 +90,9 @@ tools/ssh/keys/**/*
 !tools/ssh/keys/**/.gitkeep
 !tools/ssh/**/*.template
 !tools/ssh/**/*.md
+
+# Claude tools - Ignore actual configs (symlinked from private repo), allow templates
+tools/claude-tools/dmux.conf.yaml
 
 # Finicky - Ignore actual config (symlinked from private repo), allow template
 tools/finicky/finicky.js
