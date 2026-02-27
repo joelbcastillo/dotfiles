@@ -101,3 +101,4 @@ tools/finicky/finicky.js
 tools/aws/*/credentials
 apps/vscode/*-settings.json.context/
 .dotfiles.code-workspace
+.dmux/
