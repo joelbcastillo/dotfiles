@@ -4,8 +4,6 @@ This repository serves as a template for setting up a development environment on
 
 ## 🚀 Quick Start
 
-**New users:** See [QUICKSTART.md](QUICKSTART.md) for a step-by-step setup guide.
-
 **Quick setup (3 steps):**
 1. **Use this template** - Click "Use this template" on GitHub to create your repository
 2. **Clone and bootstrap:**
@@ -26,12 +24,16 @@ This repository serves as a template for setting up a development environment on
 - 🛠 **Modular Design**: Organized by tool and environment
 - 🔧 **Easy Customization**: Simple to modify and extend
 - 🔒 **Private File Support**: Secure handling of personal configurations
+- 🤖 **AI Tools Integration**: Claude CLI, Claude Code, Cursor Agent, MCP servers
 - 🎨 **Curated Configurations**:
-  - Shell (Zsh with Oh My Zsh)
-  - Git
-  - VS Code
+  - Shell (Zsh with Oh My Zsh + Starship prompt)
+  - Git (with 1Password SSH signing)
+  - VS Code and Cursor editors
+  - Ghostty terminal
   - Homebrew
+  - tmux
   - macOS defaults
+  - Hammerspoon automation
   - And more!
 
 ## 📋 Prerequisites
@@ -164,33 +166,22 @@ The default profile includes essential development tools and configurations:
 
 ### Development Tools
 - Homebrew package manager
-- Git and GitHub CLI
+- Git configuration
 - SSH configuration
 - Version managers (asdf)
-- Development environments:
-  - Python (with pipx for isolated tool installation)
-  - Node.js
-  - Go
-  - Ruby
-  - Rust
-  - Terraform
-
-### Applications
 - VS Code with curated extensions
-- Docker
-- Database tools (Postman, Insomnia, TablePlus)
-- Productivity tools (1Password, Raycast, Slack, Zoom)
-- Terminal tools:
-  - ripgrep (fast code search)
-  - htop (system monitoring)
-  - tmux (terminal multiplexer)
-  - sleepwatcher (power management)
 
 ### Shell & Terminal
 - Zsh with Oh My Zsh
 - Starship prompt
 - Useful aliases and functions
-- Terminal configuration
+- tmux (terminal multiplexer)
+- ripgrep (fast code search)
+
+### System
+- TouchID for sudo authentication
+- neofetch (system info display)
+- General utilities
 
 ### macOS Configuration
 - Developer-friendly defaults:
@@ -210,6 +201,13 @@ The default profile includes essential development tools and configurations:
   - Set up secure defaults
   - Manage privacy permissions
 
+## 🖥 Workspace Orchestration
+
+The full profile includes workspace automation tools:
+
+- **Hammerspoon**: macOS automation for window management, keyboard shortcuts, and workspace switching
+- **dmux**: Workspace management with worktree isolation and auto-resume sessions
+
 ## 🔧 Customization
 
 ### Available Profiles
@@ -217,34 +215,33 @@ The default profile includes essential development tools and configurations:
 The repository includes several pre-configured profiles:
 
 1. **default** - Essential development setup:
-   - Homebrew
-   - Git and GitHub CLI
-   - SSH
-   - Oh My Zsh
-   - Starship prompt
-   - Python
+   - Homebrew, Git, SSH
+   - Oh My Zsh + Starship prompt
+   - Zsh configuration
+   - asdf (version manager)
    - VS Code
-   - tmux
-   - ripgrep
-   - AWS CLI
+   - tmux, ripgrep, utils
+   - neofetch, TouchID for sudo
 
-2. **minimal** - Lightweight setup for basic development:
-   - Homebrew
-   - Git
-   - SSH
-   - Basic shell configuration
+2. **full** - Complete development environment:
+   - All default tools, plus:
+   - Colima (Docker runtime)
+   - 1Password CLI
+   - Languages: Python, Node.js, Go, Ruby, Rust
+   - GitHub CLI, AWS CLI, DigitalOcean CLI
+   - Cursor editor, Ghostty terminal
+   - Hammerspoon automation
+   - AI tools: Claude CLI, Claude Code, Cursor Agent, MCP servers, API keys
 
-3. **full** - Complete development environment:
-   - All default tools
-   - Additional development languages
-   - Database tools
-   - Cloud tools
-   - Security tools
+3. **ai-tools** - AI and Claude-focused setup:
+   - Claude CLI and Claude Code
+   - Cursor Agent
+   - Claude tools integration
+   - MCP server configuration
+   - API key management (via 1Password)
 
-4. **devcontainer** - Development container configuration:
-   - VS Code devcontainer settings
-   - Container-specific tools
-   - Development environment isolation
+4. **template** - Starter kit for customization:
+   - Generates template files for creating your own private repo
 
 ### Git Configuration Management
 
@@ -310,17 +307,33 @@ The system automatically detects available SSH configs and links them to your do
 
 ```
 .
-├── .dotbot/              # Dotbot configuration
+├── .dotbot/              # Dotbot framework, profiles, and configs
+│   ├── configs/          # Tool configuration YAML files
+│   ├── profiles/         # Installation profiles (default, full, ai-tools, template)
+│   └── plugins/          # Dotbot plugins
 ├── apps/                 # Application configurations
-│   └── vscode/          # VS Code settings and extensions
-├── shells/              # Shell configurations
-│   └── oh-my-zsh/       # Oh My Zsh customizations
-├── tools/               # Tool configurations
-│   ├── homebrew/        # Homebrew packages
-│   ├── git/            # Git configurations
-│   └── macos/          # macOS defaults
-├── scripts/             # Utility scripts
-└── install              # Installation script
+│   ├── claude/           # Claude Desktop settings
+│   ├── cursor/           # Cursor editor settings
+│   ├── ghostty/          # Ghostty terminal config
+│   ├── hammerspoon/      # Hammerspoon automation
+│   └── vscode/           # VS Code settings and extensions
+├── shells/               # Shell configurations
+│   ├── zsh/              # Zsh config and custom functions
+│   ├── oh-my-zsh/        # Oh My Zsh plugins and themes
+│   └── starship/         # Starship prompt config
+├── tools/                # Tool configurations
+│   ├── 1password/        # 1Password CLI integration
+│   ├── git/              # Git config and hooks
+│   ├── homebrew/         # Brewfile and package management
+│   ├── mcp/              # MCP server configurations
+│   ├── ssh/              # SSH config templates
+│   └── ...               # Python, Node.js, Go, Ruby, Rust, etc.
+├── .dmux/                # dmux workspace orchestration
+├── scripts/              # Utility and setup scripts
+├── docs/                 # Documentation and guides
+├── templates/            # Configuration templates for new users
+├── tests/                # Test suite
+└── install               # Main installation script
 ```
 
 ## 🔄 Updating
