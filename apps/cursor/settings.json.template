@@ -15,32 +15,27 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit"
   },
-
   // Workbench Settings
   "workbench.colorTheme": "GitHub Dark Colorblind (Beta)",
   "workbench.iconTheme": "material-icon-theme",
   "workbench.startupEditor": "newUntitledFile",
   "workbench.editor.enablePreview": false,
   "workbench.editor.showTabs": "multiple",
-
   // Terminal Settings
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.fontFamily": "Fira Code, 'Courier New', monospace",
   "terminal.integrated.defaultProfile.osx": "zsh",
-
   // File Settings
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
-
   // Git Settings
   "git.enableSmartCommit": true,
   "git.confirmSync": false,
   "git.autofetch": true,
   "git.autoStash": true,
-
   // Language Specific Settings
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -62,13 +57,11 @@
     "editor.defaultFormatter": "redhat.vscode-yaml",
     "editor.tabSize": 2
   },
-
   // Extension Settings
   "emmet.includeLanguages": {
     "javascript": "javascriptreact",
     "typescript": "typescriptreact"
   },
-
   // Search Settings
   "search.exclude": {
     "**/node_modules": true,
@@ -77,18 +70,14 @@
     "**/dist": true,
     "**/build": true
   },
-
   // Explorer Settings
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
-
   // IntelliSense Settings
   "typescript.suggest.autoImports": true,
   "javascript.suggest.autoImports": true,
-
   // Security Settings
   "security.workspace.trust.untrustedFiles": "open",
-
   // Cursor-specific settings
   "cursor.cpp.disabledLanguages": [],
   "cursor.general.enableAutoSave": true,
@@ -117,7 +106,11 @@
     ],
     "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.16-darwin-arm64/config-yaml-schema.json": [
       ".continue/**/*.yaml"
+    ],
+    "file:///Users/joel.castillo.cq/.cursor/extensions/continue.continue-1.2.17-darwin-arm64/config-yaml-schema.json": [
+      ".continue/**/*.yaml"
     ]
   },
-  "claudeCode.preferredLocation": "panel"
+  "claudeCode.preferredLocation": "panel",
+  "workbench.statusBar.visible": false
 }
