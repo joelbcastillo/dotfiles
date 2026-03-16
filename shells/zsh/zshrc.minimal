@@ -1,14 +1,6 @@
 # Minimal zshrc for maximum startup speed
 # This version removes Oh My Zsh and uses only essential components
 
-# Enable Powerlevel10k instant prompt (if using p10k)
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# Fig shell integration (keep at top)
-[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
-
 # Fix for shell integrations that expect dump_zsh_state function
 dump_zsh_state() {
     # Dummy function to prevent "command not found" errors
@@ -119,7 +111,7 @@ add-zsh-hook precmd load_autosuggestions
 
 # Lazy load custom functions
 load_custom_functions() {
-    if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
+    if [[ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]]; then
         source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
     fi
     add-zsh-hook -d precmd load_custom_functions
@@ -129,6 +121,3 @@ add-zsh-hook precmd load_custom_functions
 # Task Master aliases
 alias tm='task-master'
 alias taskmaster='task-master'
-
-# Fig shell integration (keep at end)
-[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh

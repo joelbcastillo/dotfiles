@@ -59,6 +59,10 @@ alias ar='source $dotfiles/shells/zsh/zsh.before/aliases.zsh'  #alias reload
 alias gar="killall -HUP -u \"$USER\" zsh"  #global alias reload
 alias reload='exec zsh' # reload the shell
 
+# Task Master
+alias tm='task-master'
+alias taskmaster='task-master'
+
 # Git Aliases
 alias gs='git status'
 alias gstsh='git stash'

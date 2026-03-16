@@ -1,14 +1,6 @@
 # Optimized zshrc for faster startup
 # This version uses lazy loading and optimizations to reduce startup time
 
-# Enable Powerlevel10k instant prompt (if using p10k)
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# Fig shell integration (keep at top)
-[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
-
 # Fix for shell integrations that expect dump_zsh_state function
 dump_zsh_state() {
     # Dummy function to prevent "command not found" errors
@@ -21,9 +13,6 @@ export DOTFILES="$HOME/.dotfiles"
 
 # Path to your oh-my-zsh installation
 export ZSH="$HOME/.oh-my-zsh"
-
-# Theme configuration
-ZSH_THEME="steeef"
 
 # Minimal plugin configuration for faster startup
 plugins=(
@@ -52,7 +41,7 @@ export VISUAL="$EDITOR"
 
 # Source essential zsh.before files (fast ones only)
 for file in ~/.zsh.before/{1password,aliases,history,key-bindings,noglob,path,rm,zmv,zoxide}.zsh; do
-    [ -f "$file" ] && source "$file"
+    [[ -f "$file" ]] && source "$file"
 done
 
 # Lazy load heavy components
@@ -106,14 +95,14 @@ add-zsh-hook precmd load_syntax_highlighting
 add-zsh-hook precmd load_autosuggestions
 
 # Source custom functions (lightweight)
-if [ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]; then
+if [[ -f "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh" ]]; then
     source "$DOTFILES/shells/oh-my-zsh/custom/functions.zsh"
 fi
 
 # Source remaining zsh.before files (lazy load the heavy ones)
 # These will be loaded when the commands are first used
 for file in ~/.zsh.before/{asdf,completion,direnv}.zsh; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         # Create wrapper functions for lazy loading
         case "$(basename "$file" .zsh)" in
             asdf)
@@ -129,9 +118,3 @@ for file in ~/.zsh.before/{asdf,completion,direnv}.zsh; do
     fi
 done
 
-# Task Master aliases
-alias tm='task-master'
-alias taskmaster='task-master'
-
-# Fig shell integration (keep at end)
-[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
