@@ -1,0 +1,50 @@
+# Linux profile (Ubuntu 24.04 and similar).
+# Mirrors the Dev slice of the Mac `full` profile, omitting:
+#   - brew (no Linuxbrew by default — run scripts/bootstrap-linux.sh first)
+#   - macOS-only GUI tooling: hammerspoon, finicky, touchid, colima,
+#     macos-defaults, raycast, mas, casks
+
+# Security & Auth
+1password
+
+# Core Shell Setup
+zsh
+oh-my-zsh
+starship
+
+# Version Control
+git
+
+# Version Manager
+asdf
+
+# Languages
+languages/python
+languages/nodejs
+
+# Development Tools
+gh
+ripgrep
+tmux
+
+# Cloud & Infrastructure
+ssh
+aws
+doctl
+
+# Terminal / editors (config-only on Linux; apps installed separately)
+ghostty
+vscode
+cursor
+
+# AI Tools (CLIs: claude, cursor-agent, copilot CLI, etc.)
+api-keys
+ai-tools
+claude
+claude-code
+claude-tools
+cursor-agent
+
+# Utilities
+utils
+neofetch
