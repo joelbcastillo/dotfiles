@@ -63,7 +63,9 @@ Watch for:
       `~/Library/Application Support/Cursor/User/settings.json`.
 - [ ] `lazygit` config still at
       `~/Library/Application Support/jesseduffield/lazygit/config.yml`.
-- [ ] `~/.gitconfig.os` exists and points at `.../tools/git/gitconfig.os.macos`.
+- [ ] `~/.gitconfig.os` is a regular file (not a symlink) containing
+      `program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign`.
+      Installer logs `✅ gpg.ssh.program → /Applications/...`.
 - [ ] `~/Brewfile` link resolves to `tools/homebrew/Brewfile.mac`.
 
 ## 4. Private files still work

@@ -76,8 +76,13 @@ Watch for:
       should all be symlinks into `~/.dotfiles/shells/zsh/`.
 - [ ] `chsh` prompts once for your password and succeeds (`echo $SHELL`
       shows `/usr/bin/zsh` on next login).
-- [ ] `~/.gitconfig.os` is a symlink to
-      `~/.dotfiles/tools/git/gitconfig.os.linux`.
+- [ ] `~/.gitconfig.os` is a regular file (not a symlink). On a headless
+      droplet without the 1Password Linux desktop it should be **empty**
+      and the installer logs
+      `ℹ️  No op-ssh-sign found; ~/.gitconfig.os left empty.` If the
+      1Password `.deb` + desktop is installed and `/opt/1Password/op-ssh-sign`
+      exists, the file contains `program = /opt/1Password/op-ssh-sign` and
+      the installer logs `✅ gpg.ssh.program → /opt/1Password/op-ssh-sign`.
 - [ ] `~/.config/Code/User/settings.json`, `~/.config/Cursor/User/settings.json`,
       `~/.config/lazygit/config.yml` are symlinks to the repo.
 - [ ] `~/.asdfrc`, `~/.tool-versions` are symlinks.
@@ -128,28 +133,63 @@ If the droplet is headless (no X), `clip-copy` will fall back to swallowing
 stdin and tmux copy-mode will still populate tmux's own buffer — that's
 expected.
 
-## 7. 1Password on Linux (optional)
+## 7. Git signing on Linux
 
-If you install the 1Password Linux desktop app and want SSH signing:
+Three scenarios, ordered from "I'm just SSH'ing in from my Mac" (most
+common for a droplet) to "this is a Linux desktop":
+
+### 7a. Headless droplet + SSH-agent forwarding from your Mac (recommended)
+
+The best path for a droplet. Your Mac keeps doing the 1Password signing;
+the remote git commit forwards the request back.
 
 ```bash
-# After signing in to the 1Password Linux app and enabling SSH agent:
-echo "$SSH_AUTH_SOCK"   # expect: $HOME/.1password/agent.sock
-ssh-add -l               # expect: your 1P keys
+# On your Mac, ~/.ssh/config:
+#   Host my-droplet
+#     HostName <ip>
+#     User <you>
+#     ForwardAgent yes
+#
+# SSH in:
+ssh my-droplet
 
-# Test git signing:
+# On the droplet:
+echo "$SSH_AUTH_SOCK"     # expect: something under /tmp/ssh-XXXXXX/agent.<pid>
+ssh-add -l                # expect: your Mac 1P keys (forwarded)
+cat ~/.gitconfig.os       # expect: empty (no local op-ssh-sign)
+
+# Test signing:
 cd /tmp && git init sign-test && cd sign-test
 echo hi > a && git add a && git commit -S -m test
-# expect: signed commit. `gitconfig.os.linux` points gpg.ssh.program at
-# /opt/1Password/op-ssh-sign.
+# expect: 1Password on the Mac prompts to authorize; commit is signed.
+# Behind the scenes: .gitconfig.os is empty, so git uses ssh-keygen -Y sign,
+# which talks to the forwarded agent.
 ```
 
-If you're on a headless droplet without the Linux desktop, skip this step
-— signing will fail because `/opt/1Password/op-ssh-sign` doesn't exist. In
-that case either:
-- set `git config --global commit.gpgsign false` locally on the droplet, or
-- install a different SSH-signer and update `~/.gitconfig.os` (or the
-  tracked `gitconfig.os.linux`) to point at it.
+### 7b. Linux with the 1Password desktop app installed
+
+```bash
+# /opt/1Password/op-ssh-sign should exist after installing the .deb.
+echo "$SSH_AUTH_SOCK"     # expect: $HOME/.1password/agent.sock
+cat ~/.gitconfig.os
+# expect:
+#   [gpg "ssh"]
+#     program = /opt/1Password/op-ssh-sign
+
+cd /tmp && git init sign-test && cd sign-test
+echo hi > a && git add a && git commit -S -m test
+# expect: 1Password Linux desktop prompts; commit is signed.
+```
+
+### 7c. Headless with no forwarded agent and no Linux desktop
+
+You have no way to sign with 1Password. Either turn signing off locally:
+
+```bash
+git config --global commit.gpgsign false
+```
+
+…or install a different SSH-signer and override `~/.gitconfig.os` manually.
 
 ## 8. Private repo (optional)
 
