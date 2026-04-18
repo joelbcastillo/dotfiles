@@ -9,12 +9,12 @@
         if [ ! -d "$HOME/.oh-my-zsh" ]; then
           sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
         fi
-        
+
         # Install zsh-autosuggestions
         if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions" ]; then
           git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
         fi
-        
+
         # Install zsh-syntax-highlighting
         if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" ]; then
           git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
@@ -24,15 +24,21 @@
 - shell:
   -
     command: |
-      echo 'export SHELL=/opt/homebrew/bin/zsh' >> ~/.zshrc
-      echo 'exec /opt/homebrew/bin/zsh -l' >> ~/.zshrc
-    description: Set ZSH as default shell
+      ZSH_BIN="$(command -v zsh || true)"
+      if [ -z "$ZSH_BIN" ]; then
+        echo "⚠️  zsh not found in PATH; skipping default-shell wire-up"
+        exit 0
+      fi
+      # Don't append duplicate lines if they already exist
+      if ! grep -qxF "export SHELL=$ZSH_BIN" "$HOME/.zshrc" 2>/dev/null; then
+        echo "export SHELL=$ZSH_BIN" >> "$HOME/.zshrc"
+      fi
+      if ! grep -qxF "exec $ZSH_BIN -l" "$HOME/.zshrc" 2>/dev/null; then
+        echo "exec $ZSH_BIN -l" >> "$HOME/.zshrc"
+      fi
+    description: Ensure ~/.zshrc wires up the detected zsh binary
 
 - link:
     ~/.oh-my-zsh/custom: shells/oh-my-zsh/custom
     ~/.zsh.after: shells/zsh/zsh.after
     ~/.zsh.before: shells/zsh/zsh.before
-    ~/.secrets:
-      path: secrets/macos
-      ignore-missing: true
-
