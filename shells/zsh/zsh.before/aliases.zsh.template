@@ -137,9 +137,11 @@ alias cl='clear'
 # Zippin
 alias gz='tar -zcvf'
 
-# Finder
-alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
-alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
+# Finder (macOS only)
+if [[ "$platform" == "darwin" ]]; then
+  alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
+  alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
+fi
 
 # Homebrew
 alias brewu='brew update && brew upgrade && brew cleanup && brew doctor'
@@ -172,7 +174,9 @@ alias szcode='_z_open "_secure_run ai code"'
 
 # ASDF
 alias asdfup='asdf-upgrade'
-alias xattr='/usr/bin/xattr'  # Bypass asdf shim to use system xattr
+if [[ "$platform" == "darwin" ]]; then
+  alias xattr='/usr/bin/xattr'  # Bypass asdf shim to use system xattr
+fi
 
 # Add your personal aliases here
 # alias myalias='my command'
