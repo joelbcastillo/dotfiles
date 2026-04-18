@@ -6,22 +6,61 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-macos:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+
       - name: Install dependencies
         run: |
           brew install shellcheck
           brew install zsh
-          # Ensure zsh is available in PATH
           echo "/opt/homebrew/bin" >> $GITHUB_PATH
           echo "/usr/local/bin" >> $GITHUB_PATH
-      
+
       - name: Run shell function tests
         run: /opt/homebrew/bin/zsh tests/run_tests.zsh
-      
+
       - name: Run linting and validation tests
-        run: /opt/homebrew/bin/zsh scripts/test.sh 
+        run: /opt/homebrew/bin/zsh scripts/test.sh
+
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y shellcheck zsh
+
+      - name: Syntax-check install script
+        run: zsh -n install
+
+      - name: Syntax-check bootstrap-linux.sh
+        run: bash -n scripts/bootstrap-linux.sh
+
+      - name: Syntax-check clip-copy helper
+        run: bash -n tools/tmux/clip-copy
+
+      - name: Syntax-check asdf loader
+        run: bash -n tools/asdf/load-asdf.sh
+
+      - name: Syntax-check select-brewfile
+        run: bash -n tools/homebrew/select-brewfile.sh
+
+      - name: Shellcheck shell scripts
+        run: |
+          # Mirror the exclusions from scripts/test.sh
+          set -e
+          find . -type f \( -name '*.sh' -o -name 'install' \) \
+            -not -path './.dotbot/dotbot/*' \
+            -not -path './.dotbot/plugins/*' \
+            -not -path './shells/prezto/prezto/*' \
+            -not -path './shells/oh-my-zsh/custom/plugins/zsh-*' \
+            | while read -r script; do
+              shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2248,SC2030,SC2031 "$script" \
+                || echo "::warning file=$script::shellcheck reported issues"
+            done
