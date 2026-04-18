@@ -6,7 +6,7 @@
 detect_homebrew() {
     local brew_prefix=""
 
-    # Priority 1: Check for user-local installation
+    # Priority 1: Check for user-local installation (macOS)
     if [ -x "$HOME/.homebrew/bin/brew" ]; then
         brew_prefix="$HOME/.homebrew"
         echo "Found user-local Homebrew at $brew_prefix"
@@ -21,20 +21,31 @@ detect_homebrew() {
         brew_prefix="/usr/local"
         echo "Found Homebrew at $brew_prefix (Intel Mac)"
 
-    # Priority 4: Check if brew is in PATH
+    # Priority 4: Linuxbrew default location
+    elif [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+        brew_prefix="/home/linuxbrew/.linuxbrew"
+        echo "Found Homebrew at $brew_prefix (Linuxbrew)"
+
+    # Priority 5: Check if brew is in PATH
     elif command -v brew >/dev/null 2>&1; then
         brew_prefix="$(brew --prefix)"
         echo "Found Homebrew at $brew_prefix (from PATH)"
 
-    # Priority 5: Check HOMEBREW_PREFIX environment variable
-    elif [ -n "$HOMEBREW_PREFIX" ] && [ -x "$HOMEBREW_PREFIX/bin/brew" ]; then
+    # Priority 6: Check HOMEBREW_PREFIX environment variable
+    elif [ -n "${HOMEBREW_PREFIX:-}" ] && [ -x "$HOMEBREW_PREFIX/bin/brew" ]; then
         brew_prefix="$HOMEBREW_PREFIX"
         echo "Found Homebrew at $brew_prefix (from HOMEBREW_PREFIX)"
 
     else
-        echo "ERROR: Homebrew not found!"
-        echo "Please install Homebrew or set HOMEBREW_PREFIX environment variable"
-        return 1
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            echo "ERROR: Homebrew not found!"
+            echo "Please install Homebrew or set HOMEBREW_PREFIX environment variable"
+            return 1
+        else
+            # On Linux, brew is optional — exit 0 so callers don't break
+            echo "Homebrew not detected (Linux — use apt via scripts/bootstrap-linux.sh)"
+            return 0
+        fi
     fi
 
     export HOMEBREW_PREFIX="$brew_prefix"
