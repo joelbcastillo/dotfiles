@@ -99,6 +99,9 @@ tools/claude-tools/dmux.conf.yaml
 # Finicky - Ignore actual config (symlinked from private repo), allow template
 tools/finicky/finicky.js
 
+# Brewfile is a runtime symlink created by tools/homebrew/select-brewfile.sh
+tools/homebrew/Brewfile
+
 # Application-specific configs
 tools/aws/*/credentials
 apps/vscode/*-settings.json.context/
