@@ -8,6 +8,11 @@ set -e
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  echo "⏭  Skipping macOS defaults — not on macOS"
+  exit 0
+fi
+
 # Detect macOS version
 MACOS_VERSION=$(sw_vers -productVersion | cut -d '.' -f 1)
 

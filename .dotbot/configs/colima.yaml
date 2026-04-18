@@ -1,34 +1,40 @@
 - shell:
   -
     command: |
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        echo "⏭  Skipping Colima — macOS-only (Linux uses native Docker)"
+        exit 0
+      fi
       if ! command -v colima >/dev/null 2>&1; then
         echo "❌ ERROR: Colima is not installed"
         echo "Please run 'brew bundle' first to install Colima"
         exit 1
       fi
       echo "✅ Colima is installed"
-    description: Verify Colima is installed
+    description: Verify Colima is installed (macOS only)
 
 - shell:
   -
     command: |
-      # Run the Colima setup script
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        exit 0
+      fi
       if [ -x ~/.dotfiles/tools/colima/setup.sh ]; then
         ~/.dotfiles/tools/colima/setup.sh
       else
         echo "❌ ERROR: Setup script not found or not executable"
         exit 1
       fi
-    description: Run Colima setup script
+    description: Run Colima setup script (macOS only)
 
 - shell:
   -
     command: |
-      # Verify Colima is running and Docker is working
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        exit 0
+      fi
       if colima status >/dev/null 2>&1; then
         echo "✅ Colima is running"
-
-        # Verify Docker CLI works
         if docker version >/dev/null 2>&1; then
           echo "✅ Docker CLI is working with Colima"
         else
@@ -38,4 +44,4 @@
         echo "⚠️  WARNING: Colima is not running"
         echo "Run 'colima start' to start Colima"
       fi
-    description: Verify Colima setup
+    description: Verify Colima setup (macOS only)
