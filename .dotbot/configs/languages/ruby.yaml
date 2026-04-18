@@ -1,6 +1,6 @@
 - shell:
     - command: |
-        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add ruby || true
         asdf plugin update ruby
         asdf install ruby 3.3.0

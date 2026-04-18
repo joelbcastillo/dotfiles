@@ -1,6 +1,6 @@
 - shell:
     - command: |
-        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add rust || true
         asdf plugin update rust
         asdf install rust 1.91.1

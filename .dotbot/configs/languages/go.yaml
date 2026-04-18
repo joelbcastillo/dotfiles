@@ -1,6 +1,6 @@
 - shell:
     - command: |
-        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add golang || true
         asdf plugin update golang
         asdf install golang 1.22.0

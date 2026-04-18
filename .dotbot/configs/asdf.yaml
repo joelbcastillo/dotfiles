@@ -1,20 +1,24 @@
 - shell:
     - command: |
-        # Validate and source asdf
-        BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/opt/homebrew")
+        # Install asdf via git clone if not already installed and brew isn't in play
+        if ! command -v asdf >/dev/null 2>&1 && [ ! -f "$HOME/.asdf/asdf.sh" ]; then
+          if command -v brew >/dev/null 2>&1 && [ -f "$(brew --prefix)/opt/asdf/libexec/asdf.sh" ]; then
+            echo "✅ asdf available via Homebrew"
+          else
+            echo "Installing asdf via git clone to ~/.asdf..."
+            git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+          fi
+        fi
 
-        if [ -f "$BREW_PREFIX/opt/asdf/libexec/asdf.sh" ]; then
-          . "$BREW_PREFIX/opt/asdf/libexec/asdf.sh"
+        # Load asdf via portable helper to validate
+        if . "$HOME/.dotfiles/tools/asdf/load-asdf.sh"; then
           echo "✅ asdf loaded successfully"
         else
-          echo "⚠️  WARNING: asdf not found at $BREW_PREFIX/opt/asdf"
-          echo "Skipping asdf setup. Install with:"
-          echo "  brew install asdf"
+          echo "⚠️  asdf not available; language configs will no-op"
           exit 0
         fi
-      description: Validate and source asdf with error handling
+      description: Install (if needed) and validate asdf
 
 - link:
     ~/.asdfrc: tools/asdf/asdfrc
     ~/.tool-versions: tools/asdf/tool-versions
-    ~/.asdf/asdf.sh: /opt/homebrew/opt/asdf/libexec/asdf.sh 
