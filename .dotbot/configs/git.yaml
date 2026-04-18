@@ -5,13 +5,35 @@
 
 - shell:
   - command: |
-      # Link the OS-specific git include to the right signing-program file
-      if [[ "$OSTYPE" == "darwin"* ]]; then
-        ln -sf "$HOME/.dotfiles/tools/git/gitconfig.os.macos" "$HOME/.gitconfig.os"
-      else
-        ln -sf "$HOME/.dotfiles/tools/git/gitconfig.os.linux" "$HOME/.gitconfig.os"
+      # Generate ~/.gitconfig.os with the right SSH signer program for this box.
+      # Falls through to an empty file if no signer is present — git will then
+      # default to ssh-keygen, which works via a forwarded SSH agent (e.g.
+      # 1Password on your Mac, reached via ForwardAgent).
+      OS_GITCONFIG="$HOME/.gitconfig.os"
+      # Remove any prior symlink from older installs
+      [ -L "$OS_GITCONFIG" ] && rm -f "$OS_GITCONFIG"
+
+      SIGNER=""
+      if [[ "$OSTYPE" == "darwin"* ]] && [ -x "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" ]; then
+        SIGNER="/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+      elif [ -x "/opt/1Password/op-ssh-sign" ]; then
+        SIGNER="/opt/1Password/op-ssh-sign"
+      elif command -v op-ssh-sign >/dev/null 2>&1; then
+        SIGNER="$(command -v op-ssh-sign)"
       fi
-    description: Link OS-specific git signing config
+
+      if [ -n "$SIGNER" ]; then
+        cat > "$OS_GITCONFIG" <<EOF
+      [gpg "ssh"]
+      	program = $SIGNER
+      EOF
+        echo "✅ gpg.ssh.program → $SIGNER"
+      else
+        : > "$OS_GITCONFIG"
+        echo "ℹ️  No op-ssh-sign found; ~/.gitconfig.os left empty."
+        echo "   git will use ssh-keygen (works via forwarded SSH agent)."
+      fi
+    description: Write ~/.gitconfig.os based on available SSH signer
 
 - shell:
   - command: |

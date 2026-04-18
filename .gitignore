@@ -56,8 +56,6 @@ tools/1password/
 tools/git/*
 !tools/git/gitconfig
 !tools/git/gitconfig.user.template
-!tools/git/gitconfig.os.macos
-!tools/git/gitconfig.os.linux
 !tools/git/gitignore_global
 !tools/git/lazygit.yaml
 
