@@ -1,10 +1,13 @@
-# macOS Development Environment Template
+# Development Environment Template (macOS + Linux)
 
-This repository serves as a template for setting up a development environment on macOS. It provides a solid foundation with carefully selected tools and configurations that you can customize to your needs.
+This repository serves as a template for setting up a development environment
+on macOS (primary target) and Ubuntu Linux (supported for the shell / CLI
+subset). It provides a solid foundation with carefully selected tools and
+configurations that you can customize to your needs.
 
 ## 🚀 Quick Start
 
-**Quick setup (3 steps):**
+**Quick setup — macOS:**
 1. **Use this template** - Click "Use this template" on GitHub to create your repository
 2. **Clone and bootstrap:**
    ```bash
@@ -14,8 +17,27 @@ This repository serves as a template for setting up a development environment on
    ```
 3. **Install profile:**
    ```bash
-   ./install profile default
+   ./install profile default   # or `full`
    ```
+
+**Quick setup — Linux (Ubuntu 24.04):**
+1. **Clone** the repo:
+   ```bash
+   git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
+   ```
+2. **Run the Linux bootstrap** (apt + installers, no Homebrew):
+   ```bash
+   scripts/bootstrap-linux.sh
+   ```
+3. **Install submodules + the `linux` profile:**
+   ```bash
+   git submodule update --init --recursive
+   ./install profile linux
+   ```
+4. **Open a new shell** (`exec zsh -l`) — Starship prompt, oh-my-zsh plugins,
+   and asdf should all be live. See [docs/linux.md](docs/linux.md) for the
+   full list of what's skipped on Linux vs. macOS.
 
 **Optional:** For private configurations (git identity, SSH keys, etc.), see the [Private Setup Guide](docs/private-setup.md).
 
@@ -41,21 +63,23 @@ This repository serves as a template for setting up a development environment on
 ### Platform Requirements
 
 **Supported:**
-- macOS Ventura (13.0) or later
-- Apple Silicon (M1/M2/M3/M4) and Intel Macs
-- Xcode Command Line Tools
+- macOS Ventura (13.0) or later — full profile (including casks, `mas`,
+  Hammerspoon, Finicky, Colima, TouchID).
+- Ubuntu 24.04 (and other Debian-based distros) — `linux` profile. Installs
+  the shell + CLI stack via apt and direct installers; skips the macOS-only
+  GUI pieces.
+- Apple Silicon (M1/M2/M3/M4) and Intel Macs.
+- Xcode Command Line Tools on macOS.
 
 **Not Supported:**
-- Linux (may work with modifications, but untested)
-- Windows (including WSL)
-- macOS Monterey (12.x) or earlier
-
-**Note:** For Linux users, consider using [yadm](https://yadm.io/), [chezmoi](https://www.chezmoi.io/), or [dotbot](https://github.com/anishathalye/dotbot) directly.
+- Windows (including WSL — untested).
+- macOS Monterey (12.x) or earlier.
 
 ### Required Tools
 
 - Git
-- Xcode Command Line Tools (`xcode-select --install`)
+- macOS: Xcode Command Line Tools (`xcode-select --install`)
+- Linux: `sudo` + apt (Ubuntu/Debian)
 
 ## 🛠 Installation
 
