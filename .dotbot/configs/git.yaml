@@ -2,4 +2,25 @@
     ~/.gitconfig: ~/.dotfiles/tools/git/gitconfig
     ~/.gitconfig.user: ~/.dotfiles/tools/git/gitconfig.user
     ~/.gitignore_global: ~/.dotfiles/tools/git/gitignore_global
-    ~/Library/Application Support/jesseduffield/lazygit/config.yml: ~/.dotfiles/tools/git/lazygit.yaml
+
+- shell:
+  - command: |
+      # Link the OS-specific git include to the right signing-program file
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        ln -sf "$HOME/.dotfiles/tools/git/gitconfig.os.macos" "$HOME/.gitconfig.os"
+      else
+        ln -sf "$HOME/.dotfiles/tools/git/gitconfig.os.linux" "$HOME/.gitconfig.os"
+      fi
+    description: Link OS-specific git signing config
+
+- shell:
+  - command: |
+      # Link lazygit config to the OS-appropriate location
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        LAZYGIT_DIR="$HOME/Library/Application Support/jesseduffield/lazygit"
+      else
+        LAZYGIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/lazygit"
+      fi
+      mkdir -p "$LAZYGIT_DIR"
+      ln -sf "$HOME/.dotfiles/tools/git/lazygit.yaml" "$LAZYGIT_DIR/config.yml"
+    description: Link lazygit config (OS-aware path)
