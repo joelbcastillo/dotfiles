@@ -20,7 +20,7 @@ configurations that you can customize to your needs.
    ./install profile default   # or `full`
    ```
 
-**Quick setup — Linux (Ubuntu 24.04):**
+**Quick setup — Linux (Ubuntu 22.04+):**
 1. **Clone** the repo:
    ```bash
    git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
@@ -28,16 +28,18 @@ configurations that you can customize to your needs.
    ```
 2. **Run the Linux bootstrap** (apt + installers, no Homebrew):
    ```bash
-   scripts/bootstrap-linux.sh
+   scripts/bootstrap-linux.sh           # interactive
+   NONINTERACTIVE=1 scripts/bootstrap-linux.sh   # IaC / unattended (needs sudo NOPASSWD)
    ```
-3. **Install submodules + the `linux` profile:**
+3. **Install submodules + the `full` profile:**
    ```bash
    git submodule update --init --recursive
-   ./install profile linux
+   ./install profile full
    ```
+   Mac-only configs (Homebrew, Hammerspoon, Finicky, TouchID, Colima,
+   macos-defaults) self-skip on Linux. Same profile works on both OSes.
 4. **Open a new shell** (`exec zsh -l`) — Starship prompt, oh-my-zsh plugins,
-   and asdf should all be live. See [docs/linux.md](docs/linux.md) for the
-   full list of what's skipped on Linux vs. macOS.
+   and asdf should all be live.
 
 **Optional:** For private configurations (git identity, SSH keys, etc.), see the [Private Setup Guide](docs/private-setup.md).
 
@@ -65,9 +67,10 @@ configurations that you can customize to your needs.
 **Supported:**
 - macOS Ventura (13.0) or later — full profile (including casks, `mas`,
   Hammerspoon, Finicky, Colima, TouchID).
-- Ubuntu 24.04 (and other Debian-based distros) — `linux` profile. Installs
-  the shell + CLI stack via apt and direct installers; skips the macOS-only
-  GUI pieces.
+- Ubuntu 22.04+ (24.04 recommended; other Debian-based distros may work)
+  — same `full` profile. Mac-only configs auto-skip; apt installer
+  (`scripts/bootstrap-linux.sh`) handles the CLI stack via apt + direct
+  installers (Linuxbrew is intentionally unsupported).
 - Apple Silicon (M1/M2/M3/M4) and Intel Macs.
 - Xcode Command Line Tools on macOS.
 
