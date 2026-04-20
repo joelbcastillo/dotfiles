@@ -43,13 +43,6 @@
       fi
     description: Configure Homebrew shell environment (macOS only)
 
-- shell:
-  -
-    command: |
-      # Pick Brewfile.mac or Brewfile.linux based on OS
-      ~/.dotfiles/tools/homebrew/select-brewfile.sh
-    description: Select OS-appropriate Brewfile
-
 - link:
     ~/Brewfile:
       path: tools/homebrew/Brewfile
