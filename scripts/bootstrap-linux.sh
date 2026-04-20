@@ -60,6 +60,7 @@ DEBIAN_FRONTEND=noninteractive sudo_run apt-get install -y \
     wget \
     zsh \
     tmux \
+    vim \
     jq \
     tree \
     python3 \
