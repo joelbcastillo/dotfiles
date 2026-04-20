@@ -20,6 +20,16 @@ SELF_NAME=$(basename "$0")
 ERROR_COUNT=0
 WARNING_COUNT=0
 
+# Detect non-interactive (IaC) execution: NONINTERACTIVE=1 env var, or
+# stdin not a tty. Exported so child scripts (bootstrap-linux.sh, etc.)
+# inherit the same mode.
+if [ "${NONINTERACTIVE:-0}" = "1" ] || [ ! -t 0 ]; then
+    NONINTERACTIVE=1
+else
+    NONINTERACTIVE=0
+fi
+export NONINTERACTIVE
+
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
