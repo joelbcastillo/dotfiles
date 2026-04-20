@@ -21,9 +21,6 @@ elif [ -x "/usr/local/bin/brew" ]; then
     # Intel Mac
     eval "$(/usr/local/bin/brew shellenv)"
     [ -f "/usr/local/etc/homebrew.env" ] && source "/usr/local/etc/homebrew.env"
-elif [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-    # Linuxbrew (only if user opted in - not installed by default on Linux)
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 elif command -v brew >/dev/null 2>&1; then
     # Homebrew in PATH
     eval "$(brew shellenv)"

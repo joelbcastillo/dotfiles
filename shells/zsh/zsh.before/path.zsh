@@ -7,12 +7,11 @@ export PATH="$PATH:$HOME/.oh-my-zsh/custom/scripts"
 # Add local bin directory
 export PATH="$HOME/.local/bin:$PATH"
 
-# Add Homebrew paths
+# Add Homebrew paths (macOS only — Linux uses apt-installed binaries on
+# the default PATH; linuxbrew is intentionally not supported here).
 if [[ "$OSTYPE" == "darwin"* ]]; then
   export PATH="/opt/homebrew/bin:$PATH"
   export PATH="/opt/homebrew/sbin:$PATH"
-elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-  export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
 fi
 
 # Add cargo bin directory

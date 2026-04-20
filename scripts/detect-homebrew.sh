@@ -21,12 +21,7 @@ detect_homebrew() {
         brew_prefix="/usr/local"
         echo "Found Homebrew at $brew_prefix (Intel Mac)"
 
-    # Priority 4: Linuxbrew default location
-    elif [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-        brew_prefix="/home/linuxbrew/.linuxbrew"
-        echo "Found Homebrew at $brew_prefix (Linuxbrew)"
-
-    # Priority 5: Check if brew is in PATH
+    # Priority 4: Check if brew is in PATH
     elif command -v brew >/dev/null 2>&1; then
         brew_prefix="$(brew --prefix)"
         echo "Found Homebrew at $brew_prefix (from PATH)"
