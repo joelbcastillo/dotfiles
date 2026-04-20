@@ -1,0 +1,14 @@
+# Linux counterpart to brew.yaml — invokes scripts/bootstrap-linux.sh.
+# Idempotent. Honors NONINTERACTIVE for IaC use.
+- shell:
+  -
+    command: |
+      if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+        echo "⏭  Skipping apt setup — not on Linux"
+        exit 0
+      fi
+      "$HOME/.dotfiles/scripts/bootstrap-linux.sh"
+    description: Run apt installer + asdf + starship + Nerd Fonts (Linux only)
+    stdin: true
+    stdout: true
+    stderr: true
