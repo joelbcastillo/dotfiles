@@ -20,11 +20,19 @@ plugins=(
 )
 export ZSH_DISABLE_COMPFIX="true"
 
-# Editor configuration
+# Editor configuration: vim over SSH; otherwise pick the first available
+# local editor in this order. Lets the same zshrc work on Mac (Cursor.app)
+# and on a Linux droplet without a GUI editor.
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='cursor --wait'
+  for _ed in 'cursor --wait' 'code --wait' 'nvim' 'vim'; do
+    if command -v "${_ed%% *}" >/dev/null 2>&1; then
+      export EDITOR="$_ed"
+      break
+    fi
+  done
+  unset _ed
 fi
 export VISUAL="$EDITOR"
 

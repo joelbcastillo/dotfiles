@@ -16,11 +16,18 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export PATH="$HOME/.local/bin:$PATH"
 
-# Editor configuration
+# Editor configuration: vim over SSH; otherwise pick the first available
+# local editor in this order.
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='cursor --wait'
+  for _ed in 'cursor --wait' 'code --wait' 'nvim' 'vim'; do
+    if command -v "${_ed%% *}" >/dev/null 2>&1; then
+      export EDITOR="$_ed"
+      break
+    fi
+  done
+  unset _ed
 fi
 export VISUAL="$EDITOR"
 
