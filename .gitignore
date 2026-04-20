@@ -69,6 +69,7 @@ shells/zsh/zsh.before/*
 !shells/zsh/zsh.before/history.zsh
 !shells/zsh/zsh.before/key-bindings.zsh
 !shells/zsh/zsh.before/noglob.zsh
+!shells/zsh/zsh.before/os-compat.zsh
 !shells/zsh/zsh.before/path.zsh
 !shells/zsh/zsh.before/rm.zsh
 !shells/zsh/zsh.before/zmv.zsh
