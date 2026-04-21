@@ -10,6 +10,53 @@ All commands are copy-pasteable. Each section has an "Expected" block — glance
 
 ---
 
+## Provision the droplet (2 min, optional)
+
+Skip this if you already have a droplet. Otherwise, use `doctl` (install: `brew install doctl`; auth: `doctl auth init`).
+
+```bash
+# Pick your SSH key fingerprint (the one you want to SSH in with)
+doctl compute ssh-key list
+
+# Create an Ubuntu 24.04 droplet in NYC3, smallest size (s-1vcpu-1gb, ~$6/mo)
+# Replace <SSH_KEY_FINGERPRINT> below.
+doctl compute droplet create linux-compat-test \
+    --region nyc3 \
+    --size s-1vcpu-1gb \
+    --image ubuntu-24-04-x64 \
+    --ssh-keys <SSH_KEY_FINGERPRINT> \
+    --wait
+
+# Grab the IP
+DROPLET_IP="$(doctl compute droplet get linux-compat-test --format PublicIPv4 --no-header)"
+echo "$DROPLET_IP"
+
+# SSH in (default user is root — create a non-root user to match real usage)
+ssh root@"$DROPLET_IP"
+```
+
+Inside the droplet, create a sudo user (so the rest of this guide runs as non-root, matching real usage):
+
+```bash
+adduser joel                          # set a password; accept defaults
+usermod -aG sudo joel
+# Copy your SSH key so you can log in as that user
+rsync --archive --chown=joel:joel ~/.ssh /home/joel
+# Give passwordless sudo for NONINTERACTIVE=1 testing
+echo "joel ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/90-joel
+exit
+```
+
+Re-SSH as the new user:
+
+```bash
+ssh joel@"$DROPLET_IP"
+```
+
+**Tear-down when you're done:** `doctl compute droplet delete linux-compat-test` (add `-f` to skip confirmation).
+
+---
+
 ## 0. Prereqs (30 sec)
 
 SSH to the droplet, then:
