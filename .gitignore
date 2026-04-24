@@ -42,9 +42,12 @@ tools/claude/config.json
 tools/cursor-agent/config.json
 tools/1password/secret-paths.json
 
-# 1Password config (contains device/account IDs - should be per-user)
-tools/1password/
-!tools/1password/*.template
+# 1Password config (contains device/account IDs - should be per-user).
+# Scripts (.sh) and templates (.template) are shared; instance-specific
+# JSON/config files stay local.
+tools/1password/accounts.json
+tools/1password/config
+tools/1password/secret-paths.json
 
 # Claude AI configuration (personal settings)
 .claude/settings.local.json
