@@ -1,0 +1,40 @@
+# Headless profile — sysadmin bits for a clamshell-mode, tailnet-only Mac.
+# Designed to compose on top of `default` (or `full`). This config only adds
+# the headless-specific mechanics; it does NOT install machine-specific
+# identity like hostname or authorized_keys (that belongs in the consuming
+# repo, e.g. jbctechsolutions/jbc-dev-laptop).
+
+- shell:
+    - command: |
+        # pmset settings for a Mac that must never idle-sleep on AC power.
+        ~/.dotfiles/tools/macos/headless-power.sh
+      description: Headless power config (pmset)
+      stdin: true
+      stderr: true
+
+    - command: |
+        # OpenSSH: enable Remote Login + install secure-defaults drop-in.
+        # Per-host AllowUsers and authorized_keys are installed by the
+        # consuming repo; this step just handles the global hardening.
+        ~/.dotfiles/tools/ssh/enable-remote-login.sh
+      description: OpenSSH hardening (secure defaults drop-in)
+      stdin: true
+      stderr: true
+
+    - command: |
+        # Screen Sharing LaunchDaemon — SSH-broken recovery path.
+        ~/.dotfiles/tools/screensharing/enable.sh
+      description: Enable Screen Sharing (VNC) for tailnet recovery
+      stdin: true
+      stderr: true
+
+    - command: |
+        # Tailscale: verify installed + signed in, and align the node name.
+        # install.sh defaults to the current $HOSTNAME / LocalHostName when
+        # called with no args, so consuming repos that want a specific name
+        # (e.g. jbc-dev-laptop's 20-set-hostname step) must set the machine's
+        # hostname BEFORE this step runs.
+        ~/.dotfiles/tools/tailscale/install.sh
+      description: Verify Tailscale + align node hostname to local $HOSTNAME
+      stdin: true
+      stderr: true
