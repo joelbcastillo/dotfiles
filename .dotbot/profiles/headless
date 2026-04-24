@@ -1,0 +1,3 @@
+# Headless — add-on profile. Apply AFTER `default` or `full`.
+# Only adds headless-specific mechanics; composes cleanly with the others.
+headless
