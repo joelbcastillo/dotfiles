@@ -10,7 +10,11 @@ set -euo pipefail
 
 log() { printf '[tailscale] %s\n' "$*" >&2; }
 
-want_hostname="${1:-${HOSTNAME:-$(scutil --get LocalHostName)}}"
+want_hostname="${1:-${HOSTNAME:-$(scutil --get LocalHostName 2>/dev/null || true)}}"
+if [[ -z "$want_hostname" ]]; then
+  log "could not determine target hostname (no arg, no \$HOSTNAME, empty LocalHostName)."
+  exit 3
+fi
 
 if ! command -v tailscale >/dev/null 2>&1; then
   log "tailscale CLI not found."
@@ -26,8 +30,17 @@ if ! tailscale status --json >/dev/null 2>&1; then
   exit 2
 fi
 
+# Pipefail + explicit empty-check: if the JSON is unexpectedly shaped, bail
+# rather than silently falling through to `tailscale set --hostname=""`.
 current="$(tailscale status --json | /usr/bin/python3 -c \
-  'import json,sys; print(json.load(sys.stdin)["Self"]["HostName"])' 2>/dev/null || true)"
+  'import json, sys
+data = json.load(sys.stdin)
+host = data.get("Self", {}).get("HostName")
+sys.exit(1) if not host else print(host)')"
+if [[ -z "$current" ]]; then
+  log "failed to determine current tailscale hostname from status JSON."
+  exit 3
+fi
 
 if [[ "$current" == "$want_hostname" ]]; then
   log "tailscale hostname already '$want_hostname'."

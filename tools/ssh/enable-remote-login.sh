@@ -42,8 +42,13 @@ if ! sudo /usr/sbin/sshd -t; then
 fi
 
 # 4. Kick sshd so it picks up the new drop-in. `launchctl kickstart -k`
-#    replaces the (obsolete) `launchctl stop/start` dance.
+#    replaces the (obsolete) `launchctl stop/start` dance. If this fails we
+#    want the caller to see it — our config-is-valid check already passed, so
+#    a kickstart failure now means the daemon reload itself went wrong.
 log "reloading sshd…"
-sudo launchctl kickstart -k system/com.openssh.sshd >/dev/null 2>&1 || true
+if ! sudo launchctl kickstart -k system/com.openssh.sshd >/dev/null 2>&1; then
+  log "failed to reload sshd (kickstart returned non-zero)."
+  exit 3
+fi
 
 log "done."

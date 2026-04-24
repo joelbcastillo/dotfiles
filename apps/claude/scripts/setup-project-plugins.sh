@@ -186,12 +186,15 @@ create_custom_config() {
             7) echo -n '    "pr-review-toolkit@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
             8) echo -n '    "cursor-builder@jbc-tech-solutions-marketplace": true' >> "$CONFIG_FILE" ;;
             9) echo -n '    "outlook-mcp@local": true' >> "$CONFIG_FILE" ;;
+            *) ;;  # unknown index: skip silently (input was already validated above)
         esac
     done
 
-    echo "" >> "$CONFIG_FILE"
-    echo '  }' >> "$CONFIG_FILE"
-    echo '}' >> "$CONFIG_FILE"
+    {
+        echo ""
+        echo '  }'
+        echo '}'
+    } >> "$CONFIG_FILE"
 
     echo -e "${GREEN}✓${NC} Created custom configuration"
 }

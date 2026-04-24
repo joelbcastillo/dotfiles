@@ -29,9 +29,12 @@
       stderr: true
 
     - command: |
-        # Tailscale: verify already installed and signed in; hostname rename
-        # is the consuming repo's responsibility (needs the machine's ID).
+        # Tailscale: verify installed + signed in, and align the node name.
+        # install.sh defaults to the current $HOSTNAME / LocalHostName when
+        # called with no args, so consuming repos that want a specific name
+        # (e.g. jbc-dev-laptop's 20-set-hostname step) must set the machine's
+        # hostname BEFORE this step runs.
         ~/.dotfiles/tools/tailscale/install.sh
-      description: Verify Tailscale reachable
+      description: Verify Tailscale + align node hostname to local $HOSTNAME
       stdin: true
       stderr: true

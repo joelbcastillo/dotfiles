@@ -16,9 +16,15 @@ log() { printf '[power] %s\n' "$*" >&2; }
 
 [[ "$(uname -s)" == "Darwin" ]] || { log "macOS only."; exit 1; }
 
-# Read current values so we can no-op if nothing would change.
-current="$(pmset -g | tr -s ' ')"
-want() { grep -qE "(^| )$1 $2(\$| )" <<<"$current"; }
+# Read current values from the AC-power section of `pmset -g custom` so we
+# can no-op if nothing would change. `pmset -g` only reports the active
+# profile — on battery it would misreport the AC profile and cause spurious
+# "no change" results. `pmset -g custom` always lists both profiles; we
+# extract only the AC section here.
+ac_section="$(pmset -g custom 2>/dev/null \
+  | awk '/^AC Power:/{flag=1;next} /^[A-Za-z].*:$/{flag=0} flag' \
+  | tr -s ' ')"
+want() { grep -qE "(^| )$1 $2(\$| )" <<<"$ac_section"; }
 
 needs_change=false
 while IFS=' ' read -r k v; do
@@ -32,11 +38,8 @@ womp 1
 powernap 0
 autopoweroff 0
 standby 0
+disablesleep 1
 EOF
-# `disablesleep` is not in `pmset -g` output by default; check separately.
-if ! pmset -g custom 2>/dev/null | grep -qE 'disablesleep +1'; then
-  needs_change=true
-fi
 
 if ! $needs_change; then
   log "pmset already configured for headless on AC; no change."
