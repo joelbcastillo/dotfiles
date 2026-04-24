@@ -38,3 +38,13 @@
       description: Verify Tailscale + align node hostname to local $HOSTNAME
       stdin: true
       stderr: true
+
+    - command: |
+        # 1Password service account token: interactive prompt if not yet set.
+        # Writes ~/.config/op/token.sh (600), ensures ~/.zshrc sources it.
+        # No-op when already configured or when stdin isn't a tty.
+        ~/.dotfiles/tools/1password/service-account-install.sh
+      description: 1Password service account token (interactive)
+      stdin: true
+      stdout: true
+      stderr: true
