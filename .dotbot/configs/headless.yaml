@@ -48,3 +48,14 @@
       stdin: true
       stdout: true
       stderr: true
+
+    - command: |
+        # Fetch ed25519 SSH key from 1Password to ~/.ssh/id_ed25519 and
+        # pin it for github.com. Pre-req: an "SSH Key" item must exist in
+        # the configured 1P vault (default: Local Dev / $(hostname -s)),
+        # and its public key must be added to the user's GitHub account.
+        # No-op when OP_SERVICE_ACCOUNT_TOKEN isn't set (e.g., on a laptop).
+        ~/.dotfiles/tools/ssh/fetch-headless-ssh-key.sh
+      description: Fetch headless SSH key from 1Password (no-op without SA token)
+      stdin: true
+      stderr: true
