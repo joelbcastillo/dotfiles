@@ -190,10 +190,12 @@ function asdf-upgrade() {
         esac
     done
 
-    # Ensure asdf is available
+    # Ensure asdf is available (0.16+ is a Go binary on PATH).
     if ! command -v asdf &>/dev/null; then
-        if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
-            source "$HOME/.asdf/asdf.sh"
+        if [[ -x "/opt/homebrew/bin/asdf" ]]; then
+            export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
+        elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+            source "$HOME/.asdf/asdf.sh"  # legacy asdf <= 0.15
         else
             _asdf_log_error "asdf not found. Please install asdf first."
             return 1

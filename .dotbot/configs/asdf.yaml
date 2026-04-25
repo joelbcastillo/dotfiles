@@ -1,20 +1,24 @@
 - shell:
     - command: |
-        # Validate and source asdf
+        # Validate asdf is installed. asdf >= 0.16 is a Go binary with no
+        # asdf.sh shim source — PATH integration via ~/.asdf/shims is all
+        # that's needed. Legacy asdf (<= 0.15) had a sourceable shim, but
+        # that path no longer exists with current Homebrew formula.
         BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/opt/homebrew")
-
-        if [ -f "$BREW_PREFIX/opt/asdf/libexec/asdf.sh" ]; then
+        if [ -x "$BREW_PREFIX/bin/asdf" ]; then
+          echo "✅ asdf found at $BREW_PREFIX/bin/asdf ($($BREW_PREFIX/bin/asdf --version))"
+        elif [ -f "$BREW_PREFIX/opt/asdf/libexec/asdf.sh" ]; then
+          # Legacy fallback for boxes still on asdf <= 0.15
           . "$BREW_PREFIX/opt/asdf/libexec/asdf.sh"
-          echo "✅ asdf loaded successfully"
+          echo "✅ asdf (legacy) loaded successfully"
         else
-          echo "⚠️  WARNING: asdf not found at $BREW_PREFIX/opt/asdf"
+          echo "⚠️  WARNING: asdf not found"
           echo "Skipping asdf setup. Install with:"
           echo "  brew install asdf"
           exit 0
         fi
-      description: Validate and source asdf with error handling
+      description: Validate asdf install (0.16+ binary, with legacy fallback)
 
 - link:
     ~/.asdfrc: tools/asdf/asdfrc
     ~/.tool-versions: tools/asdf/tool-versions
-    ~/.asdf/asdf.sh: /opt/homebrew/opt/asdf/libexec/asdf.sh 

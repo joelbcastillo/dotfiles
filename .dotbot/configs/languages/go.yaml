@@ -1,8 +1,8 @@
 - shell:
     - command: |
-        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
         asdf plugin add golang || true
-        asdf plugin update golang
+        asdf plugin update golang || true
         asdf install golang 1.22.0
         asdf set -u golang 1.22.0
         
