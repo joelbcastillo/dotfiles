@@ -54,14 +54,16 @@ alias gp='git push'
 alias gl='git log --oneline'
 alias gd='git diff'
 
+# asdf 0.16+ is a Go binary on PATH; just expose its shims.
+export PATH="$HOME/.asdf/shims:$PATH"
+
 # Lazy load everything else
-# ASDF - load only when asdf command is used
+# ASDF - load completions on first invocation
 asdf() {
     unfunction asdf
-    . $HOME/.asdf/asdf.sh
-    fpath=(${ASDF_DIR}/completions $fpath)
+    fpath=("${ASDF_DATA_DIR:-$HOME/.asdf}/completions" $fpath)
     autoload -Uz compinit && compinit -C
-    asdf "$@"
+    command asdf "$@"
 }
 
 # Direnv - load only when direnv command is used

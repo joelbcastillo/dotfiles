@@ -1,8 +1,8 @@
 - shell:
     - command: |
-        . /opt/homebrew/opt/asdf/libexec/asdf.sh
+        export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
         asdf plugin add rust || true
-        asdf plugin update rust
+        asdf plugin update rust || true
         asdf install rust 1.91.1
         asdf set -u rust 1.91.1
 
