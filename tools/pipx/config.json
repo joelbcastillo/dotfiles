@@ -1,0 +1,10 @@
+{
+  "venvs_dir": "~/.local/pipx/venvs",
+  "bin_dir": "~/.local/bin",
+  "python": "python3",
+  "pip_args": [
+    "--no-cache-dir",
+    "--disable-pip-version-check"
+  ],
+  "verbose": false
+} 

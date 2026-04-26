@@ -7,6 +7,22 @@
             asdf install python 3.13.8
             asdf set -p python 3.13.8
         description: Set up Python with asdf
+      - command: |
+            # pipx ships pinned to whichever python brew picked at install time.
+            # On fresh boxes that's python@3.14, whose ensurepip is broken under
+            # current Homebrew. Force pipx onto python@3.13 by recreating the
+            # shared venv when it points at a non-functional interpreter.
+            PIPX_PY313="/opt/homebrew/opt/python@3.13/bin/python3.13"
+            if [ -x "$PIPX_PY313" ]; then
+              SHARED_CFG="$HOME/.local/pipx/shared/pyvenv.cfg"
+              if [ ! -f "$SHARED_CFG" ] || ! grep -q "python@3.13" "$SHARED_CFG"; then
+                echo "Recreating pipx shared venv with python@3.13..."
+                rm -rf "$HOME/.local/pipx/shared"
+                "$PIPX_PY313" -m venv "$HOME/.local/pipx/shared"
+                "$HOME/.local/pipx/shared/bin/python" -m pip install --upgrade pip pipx
+              fi
+            fi
+        description: Pin pipx shared venv to python@3.13
 
 - link:
       ~/.pip/pip.conf:
