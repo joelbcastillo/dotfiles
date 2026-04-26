@@ -45,13 +45,14 @@ for file in ~/.zsh.before/{1password,aliases,history,key-bindings,noglob,path,rm
 done
 
 # Lazy load heavy components
-# ASDF - load only when needed
+# ASDF - load only when needed (0.16+; see zsh.before/asdf.zsh)
 asdf() {
     unfunction asdf
-    . $HOME/.asdf/asdf.sh
-    fpath=(${ASDF_DIR}/completions $fpath)
-    autoload -Uz compinit && compinit -C
-    asdf "$@"
+    if [[ -f "$DOTFILES/shells/zsh/zsh.before/asdf.zsh" ]]; then
+        # shellcheck disable=SC1090
+        source "$DOTFILES/shells/zsh/zsh.before/asdf.zsh"
+    fi
+    command asdf "$@"
 }
 
 # Direnv - load only when needed

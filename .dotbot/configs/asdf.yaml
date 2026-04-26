@@ -1,16 +1,24 @@
 - shell:
     - command: |
-        # Install asdf via git clone if not already installed and brew isn't in play
-        if ! command -v asdf >/dev/null 2>&1 && [ ! -f "$HOME/.asdf/asdf.sh" ]; then
-          if command -v brew >/dev/null 2>&1 && [ -f "$(brew --prefix)/opt/asdf/libexec/asdf.sh" ]; then
-            echo "✅ asdf available via Homebrew"
+        if ! command -v asdf >/dev/null 2>&1 && [ ! -x "$HOME/.asdf/bin/asdf" ] && [ ! -f "$HOME/.asdf/asdf.sh" ]; then
+          if command -v brew >/dev/null 2>&1; then
+            BREW_ASDF_PFX="$(brew --prefix asdf 2>/dev/null || true)"
+            if [ -n "$BREW_ASDF_PFX" ] && { [ -x "$BREW_ASDF_PFX/bin/asdf" ] || [ -f "$BREW_ASDF_PFX/libexec/asdf.sh" ]; }; then
+              echo "✅ asdf will load from Homebrew"
+            else
+              echo "⚠️  Install asdf: brew install asdf  (or run tools/asdf/install-asdf-linux.sh on Linux)"
+            fi
+          elif [ "$(uname -s 2>/dev/null)" = "Linux" ]; then
+            echo "Installing asdf v0.16+ for Linux..."
+            bash "$HOME/.dotfiles/tools/asdf/install-asdf-linux.sh" || {
+              echo "⚠️  asdf install failed; language configs will no-op"
+              exit 0
+            }
           else
-            echo "Installing asdf via git clone to ~/.asdf..."
-            git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+            echo "⚠️  asdf not found; install Homebrew asdf (macOS) or tools/asdf/install-asdf-linux.sh (Linux)"
+            exit 0
           fi
         fi
-
-        # Load asdf via portable helper to validate
         if . "$HOME/.dotfiles/tools/asdf/load-asdf.sh"; then
           echo "✅ asdf loaded successfully"
         else

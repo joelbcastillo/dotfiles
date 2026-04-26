@@ -205,7 +205,9 @@ function asdf-upgrade() {
 
     # Ensure asdf is available
     if ! command -v asdf &>/dev/null; then
-        if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+        if [[ -x "$HOME/.asdf/bin/asdf" ]]; then
+            path=("$HOME/.asdf/bin" "$HOME/.asdf/shims" $path)
+        elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
             source "$HOME/.asdf/asdf.sh"
         else
             _asdf_log_error "asdf not found. Please install asdf first."

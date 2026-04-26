@@ -103,7 +103,7 @@ function check_platform() {
             distro="Linux"
         fi
         green_echo "Platform Check" "$distro detected"
-        yellow_echo "Platform Check" "Linux users: run 'scripts/bootstrap-linux.sh' before './install profile linux'"
+        yellow_echo "Platform Check" "Linux: run 'scripts/bootstrap-linux.sh' (set NONINTERACTIVE=1 for droplets) then './install profile full'"
         return 0
     fi
 

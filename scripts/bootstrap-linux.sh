@@ -154,11 +154,15 @@ if ! command -v eza >/dev/null 2>&1; then
     fi
 fi
 
-# --- 7. asdf -----------------------------------------------------------------
-if [ ! -d "$HOME/.asdf" ] && ! command -v asdf >/dev/null 2>&1; then
+# --- 7. asdf (0.16+ official Linux build — matches Homebrew asdf on Mac) ----
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if ! command -v asdf >/dev/null 2>&1 && [ ! -x "$HOME/.asdf/bin/asdf" ]; then
     info "Installing asdf..."
-    git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+    bash "$DOTFILES_ROOT/tools/asdf/install-asdf-linux.sh"
 fi
+# Ensure shims & plugins dirs exist; asdf will populate shims.
+mkdir -p "$HOME/.asdf/shims"
+export PATH="$HOME/.asdf/bin:$HOME/.asdf/shims:$PATH"
 
 # --- 8. Nerd Fonts -----------------------------------------------------------
 # Two fonts (FiraCode, JetBrainsMono) for the Starship prompt + terminal.

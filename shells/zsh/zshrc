@@ -72,14 +72,7 @@ for file in ~/.zsh.after/*.zsh; do
 done
 unsetopt nullglob
 
-# --- Lazy load ---
-asdf() {
-    unfunction asdf
-    . $HOME/.asdf/asdf.sh
-    fpath=(${ASDF_DIR}/completions $fpath)
-    autoload -Uz compinit && compinit -C
-    asdf "$@"
-}
+# --- Lazy load (asdf: loaded in zsh.before/asdf.zsh for 0.16+; no asdf shims here) ---
 
 direnv() {
     unfunction direnv
