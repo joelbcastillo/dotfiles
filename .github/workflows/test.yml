@@ -36,31 +36,21 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y shellcheck zsh
 
-      - name: Syntax-check install script
-        run: zsh -n install
-
-      - name: Syntax-check bootstrap-linux.sh
-        run: bash -n scripts/bootstrap-linux.sh
-
-      - name: Syntax-check clip-copy helper
-        run: bash -n tools/tmux/clip-copy
-
-      - name: Syntax-check asdf loader
-        run: bash -n tools/asdf/load-asdf.sh
-
-      - name: Syntax-check select-brewfile
-        run: bash -n tools/homebrew/select-brewfile.sh
-
-      - name: Shellcheck shell scripts
+      - name: Static checks (syntax + shellcheck, shared with scripts/test-static.sh)
         run: |
-          # Mirror the exclusions from scripts/test.sh
-          set -e
-          find . -type f \( -name '*.sh' -o -name 'install' \) \
-            -not -path './.dotbot/dotbot/*' \
-            -not -path './.dotbot/plugins/*' \
-            -not -path './shells/prezto/prezto/*' \
-            -not -path './shells/oh-my-zsh/custom/plugins/zsh-*' \
-            | while read -r script; do
-              shellcheck -e SC2317,SC1091,SC2329,SC2086,SC2034,SC2155,SC2162,SC2181,SC2001,SC2248,SC2030,SC2031 "$script" \
-                || echo "::warning file=$script::shellcheck reported issues"
-            done
+          chmod +x scripts/test-static.sh
+          ./scripts/test-static.sh
+
+  # End-to-end: non-root user + passwordless sudo, full bootstrap-linux.sh in Ubuntu 24.04
+  test-linux-bootstrap:
+    runs-on: ubuntu-latest
+    needs: [ test-linux ]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run bootstrap in Docker
+        run: |
+          chmod +x scripts/test-linux-docker.sh
+          ./scripts/test-linux-docker.sh
