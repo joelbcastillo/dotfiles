@@ -21,13 +21,6 @@
         fi
     description: Install Oh My Zsh and required plugins
 
-- shell:
-  -
-    command: |
-      echo 'export SHELL=/opt/homebrew/bin/zsh' >> ~/.zshrc
-      echo 'exec /opt/homebrew/bin/zsh -l' >> ~/.zshrc
-    description: Set ZSH as default shell
-
 - link:
     ~/.oh-my-zsh/custom: shells/oh-my-zsh/custom
     ~/.zsh.after: shells/zsh/zsh.after

@@ -44,10 +44,14 @@ if command -v op >/dev/null 2>&1 && [ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then
         export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat "$_gh_token_cache")"
         export GITHUB_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
         export GH_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
-    elif op account list >/dev/null 2>&1; then
-        # Fetch from 1Password and cache
+    elif [ -z "$OP_SERVICE_ACCOUNT_TOKEN" ] && op account list >/dev/null 2>&1; then
+        # Fetch from 1Password and cache.
+        # Skipped when running under a service-account token (headless mode):
+        # SA tokens are scoped to a single account and cannot resolve
+        # cross-account vault refs, which causes `op read` to hang.
+        # `timeout 5` is a safety net for biometric prompts that never get answered.
         mkdir -p "$HOME/.cache"
-        _token="$(op read --account jbctechsolutions.1password.com "op://Local Dev/GitHub PAT - Claude Code/credential" 2>/dev/null)"
+        _token="$(timeout 5 op read --account jbctechsolutions.1password.com "op://Local Dev/GitHub PAT - Claude Code/credential" 2>/dev/null)"
         if [ -n "$_token" ]; then
             echo "$_token" > "$_gh_token_cache"
             chmod 600 "$_gh_token_cache"
