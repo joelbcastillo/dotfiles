@@ -2,7 +2,7 @@
     - command: |
         . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add rust || true
-        asdf plugin update rust
+        asdf plugin update rust || true
         asdf install rust 1.91.1
         asdf set -u rust 1.91.1
 

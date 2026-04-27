@@ -72,7 +72,7 @@ for file in ~/.zsh.after/*.zsh; do
 done
 unsetopt nullglob
 
-# --- Lazy load (asdf: loaded in zsh.before/asdf.zsh for 0.16+; no asdf shims here) ---
+# --- Lazy load (asdf: loaded in zsh.before/asdf.zsh for 0.16+; no duplicate PATH here) ---
 
 direnv() {
     unfunction direnv

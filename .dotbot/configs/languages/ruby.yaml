@@ -2,7 +2,7 @@
     - command: |
         . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add ruby || true
-        asdf plugin update ruby
+        asdf plugin update ruby || true
         asdf install ruby 3.3.0
         asdf set -u ruby 3.3.0
         

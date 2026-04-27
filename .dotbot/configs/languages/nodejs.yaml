@@ -1,15 +1,12 @@
 - shell:
-    - command: >
-        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0;
+    - command: |
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add nodejs || true
-        asdf plugin update nodejs
+        asdf plugin update nodejs || true
         asdf install nodejs 20.19.1
         asdf set -u nodejs 20.19.1
-        # Ensure the new version is active and available
         asdf reshim nodejs
-        export PATH="$HOME/.asdf/shims:$PATH"
-        export PATH="$HOME/.asdf/bin:$PATH"
-        
+
         # Install global npm packages
         npm install -g npm@10.2.4
         npm install -g yarn

@@ -124,7 +124,7 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 # Lazy load heavy components
-# ASDF (0.16+; see zsh.before/asdf.zsh)
+# ASDF — first use sources zsh.before/asdf.zsh
 asdf() {
     unfunction asdf
     if [[ -f "$DOTFILES/shells/zsh/zsh.before/asdf.zsh" ]]; then

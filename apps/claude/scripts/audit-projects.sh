@@ -206,11 +206,13 @@ case $choice in
             project_name=$(basename "${projects[$i]}")
             template_name=$(get_template_name "${suggestions[$i]}")
 
-            echo "$((i+1)). $project_name" >> "$output_file"
-            echo "   Path: ${projects[$i]}" >> "$output_file"
-            echo "   Suggested: $template_name (Template ${suggestions[$i]})" >> "$output_file"
-            echo "   Reason: ${reasons[$i]}" >> "$output_file"
-            echo "" >> "$output_file"
+            {
+                echo "$((i+1)). $project_name"
+                echo "   Path: ${projects[$i]}"
+                echo "   Suggested: $template_name (Template ${suggestions[$i]})"
+                echo "   Reason: ${reasons[$i]}"
+                echo ""
+            } >> "$output_file"
         done
 
         echo -e "${GREEN}✓${NC} Exported to: $output_file"

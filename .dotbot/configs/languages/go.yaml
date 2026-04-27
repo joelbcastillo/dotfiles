@@ -2,7 +2,7 @@
     - command: |
         . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add golang || true
-        asdf plugin update golang
+        asdf plugin update golang || true
         asdf install golang 1.22.0
         asdf set -u golang 1.22.0
         

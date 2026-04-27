@@ -3,10 +3,43 @@
             echo "Setting up Python with asdf..."
             . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
             asdf plugin add python || true
-            asdf plugin update python
+            asdf plugin update python || true
             asdf install python 3.13.8
             asdf set -p python 3.13.8
         description: Set up Python with asdf
+      - command: |
+            # macOS 26 (Tahoe) ships an older system libexpat than the brew
+            # python@3.13/3.14 bottles were built against. pyexpat.so links to
+            # /usr/lib/libexpat.1.dylib and fails to find the new symbol
+            # _XML_SetAllocTrackerActivationThreshold, breaking ensurepip,
+            # pipx, and anything that imports xml.parsers.expat. Patch the
+            # dylib reference to the brew expat version and re-sign.
+            brew list expat >/dev/null 2>&1 || brew install expat
+            for PYV in 3.13 3.14; do
+              PYEXPAT=$(ls /opt/homebrew/Cellar/python@${PYV}/*/Frameworks/Python.framework/Versions/${PYV}/lib/python${PYV}/lib-dynload/pyexpat.cpython-${PYV/./}-darwin.so 2>/dev/null | head -1)
+              [ -n "$PYEXPAT" ] || continue
+              if otool -L "$PYEXPAT" 2>/dev/null | grep -q '/usr/lib/libexpat.1.dylib'; then
+                echo "Patching pyexpat for python@${PYV} -> brew libexpat..."
+                install_name_tool -change /usr/lib/libexpat.1.dylib /opt/homebrew/opt/expat/lib/libexpat.1.dylib "$PYEXPAT" 2>/dev/null
+                codesign --force -s - "$PYEXPAT" 2>/dev/null
+              fi
+            done
+        description: Patch pyexpat to use brew libexpat (macOS 26 workaround)
+      - command: |
+            # pipx ships pinned to whichever python brew picked at install time.
+            # On fresh boxes that's python@3.14. Force pipx onto python@3.13
+            # by recreating the shared venv when it points elsewhere.
+            PIPX_PY313="/opt/homebrew/opt/python@3.13/bin/python3.13"
+            if [ -x "$PIPX_PY313" ]; then
+              SHARED_CFG="$HOME/.local/pipx/shared/pyvenv.cfg"
+              if [ ! -f "$SHARED_CFG" ] || ! grep -q "python@3.13" "$SHARED_CFG"; then
+                echo "Recreating pipx shared venv with python@3.13..."
+                rm -rf "$HOME/.local/pipx/shared"
+                "$PIPX_PY313" -m venv "$HOME/.local/pipx/shared"
+                "$HOME/.local/pipx/shared/bin/python" -m pip install --upgrade pip pipx
+              fi
+            fi
+        description: Pin pipx shared venv to python@3.13
 
 - link:
       ~/.pip/pip.conf:
