@@ -28,8 +28,16 @@ else
 fi
 export VISUAL="$EDITOR"
 
-# 1Password SSH Agent Configuration
-export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+# 1Password SSH Agent Configuration.
+# Guard for headless / GUI-less hosts where the 1Password app isn't running:
+# pointing SSH_AUTH_SOCK at a nonexistent socket makes ssh-add / git fall over
+# with confusing "communication with agent failed" errors. Only export when
+# the socket actually exists.
+_op_ssh_sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+if [[ -S "$_op_ssh_sock" ]]; then
+  export SSH_AUTH_SOCK="$_op_ssh_sock"
+fi
+unset _op_ssh_sock
 
 # --- OMZ & prompt ---
 if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
