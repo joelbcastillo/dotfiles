@@ -5,6 +5,12 @@ export LC_ALL=en_US.UTF-8
 # Set dotfiles directory
 export DOTFILES="$HOME/.dotfiles"
 
+# Headless / service-account hosts: load OP_SERVICE_ACCOUNT_TOKEN if it has
+# been provisioned. Must come BEFORE the GitHub-PAT block below — that block
+# uses [ -z "$OP_SERVICE_ACCOUNT_TOKEN" ] to skip an `op read` that otherwise
+# hangs on its 5s timeout (no GUI app to answer biometric auth, every shell).
+[ -f "$HOME/.config/op/token.sh" ] && . "$HOME/.config/op/token.sh"
+
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
