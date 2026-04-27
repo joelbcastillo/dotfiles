@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Portable clipboard-copy helper used from tmux.conf.
+# Reads stdin and copies it to the system clipboard, picking the right
+# command based on the OS and display server.
+
+set -eu
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    exec pbcopy
+fi
+
+if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v wl-copy >/dev/null 2>&1; then
+    exec wl-copy
+fi
+
+if command -v xclip >/dev/null 2>&1; then
+    exec xclip -in -selection clipboard
+fi
+
+if command -v xsel >/dev/null 2>&1; then
+    exec xsel --clipboard --input
+fi
+
+# No clipboard helper available (likely headless SSH without forwarding).
+# Swallow stdin so tmux's copy-pipe doesn't error; tmux's own buffer still works.
+cat >/dev/null

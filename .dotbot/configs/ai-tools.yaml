@@ -1,16 +1,16 @@
 - shell:
-  - 
+  -
     command: |
       echo "Installing AI development tools..."
     description: Installing AI development tools
 
 - shell:
-  - 
+  -
     command: |
       if ! command -v cursor-agent >/dev/null 2>&1; then
         echo "Installing cursor-agent..."
         curl https://cursor.com/install -fsS | bash
-        # Add ~/.local/bin to PATH if not already there
+        # Ensure ~/.local/bin is in PATH
         if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
           export PATH="$HOME/.local/bin:$PATH"
@@ -21,15 +21,16 @@
     description: Install cursor-agent
 
 - shell:
-  - 
+  -
     command: |
       if ! command -v claude >/dev/null 2>&1; then
         echo "Installing Claude Code..."
-        if command -v brew >/dev/null 2>&1; then
+        if [[ "$OSTYPE" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
           brew install claude
+        elif command -v npm >/dev/null 2>&1; then
+          npm install -g @anthropic-ai/claude-code
         else
-          echo "Homebrew not found. Please install Homebrew first."
-          exit 1
+          echo "⚠️  Cannot install claude: need Homebrew (macOS) or npm (Linux)"
         fi
       else
         echo "Claude Code is already installed"
@@ -37,29 +38,40 @@
     description: Install Claude Code
 
 - shell:
-  - 
+  -
     command: |
-      # Create symlink for claude in ~/.local/bin if it doesn't exist
-      if [ -f "/opt/homebrew/bin/claude" ] && [ ! -L "$HOME/.local/bin/claude" ]; then
-        echo "Creating symlink for claude in ~/.local/bin"
-        ln -sf /opt/homebrew/bin/claude "$HOME/.local/bin/claude"
-      elif [ -L "$HOME/.local/bin/claude" ]; then
-        echo "Claude symlink already exists in ~/.local/bin"
-      else
-        echo "Warning: Claude not found in /opt/homebrew/bin/claude"
+      # Symlink claude into ~/.local/bin on macOS (so it shadows any older version)
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        if [ -f "/opt/homebrew/bin/claude" ] && [ ! -L "$HOME/.local/bin/claude" ]; then
+          mkdir -p "$HOME/.local/bin"
+          ln -sf /opt/homebrew/bin/claude "$HOME/.local/bin/claude"
+          echo "Claude symlinked into ~/.local/bin"
+        fi
       fi
-    description: Create Claude symlink in ~/.local/bin
+    description: Create Claude symlink in ~/.local/bin (macOS only)
 
 - shell:
-  - 
+  -
     command: |
-      echo "AI tools installation completed successfully"
-      # Ensure ~/.local/bin is in PATH for this session
+      # GitHub Copilot CLI via gh extension (works on both OSes if gh is installed)
+      if command -v gh >/dev/null 2>&1; then
+        if ! gh extension list 2>/dev/null | grep -q "github/gh-copilot"; then
+          echo "Installing GitHub Copilot CLI..."
+          gh extension install github/gh-copilot || true
+        else
+          echo "GitHub Copilot CLI already installed"
+        fi
+      else
+        echo "⚠️  gh CLI not installed — skipping Copilot CLI"
+      fi
+    description: Install GitHub Copilot CLI
+
+- shell:
+  -
+    command: |
       export PATH="$HOME/.local/bin:$PATH"
       if command -v cursor-agent >/dev/null 2>&1; then
         echo "cursor-agent version: $(cursor-agent --version)"
-      else
-        echo "Warning: cursor-agent not found in PATH"
       fi
       if command -v claude >/dev/null 2>&1; then
         echo "Claude Code version: $(claude --version)"

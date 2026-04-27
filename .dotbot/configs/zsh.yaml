@@ -1,13 +1,18 @@
 - shell:
     - command: |
-        if ! grep -q "/opt/homebrew/bin/zsh" /etc/shells; then
-          echo "/opt/homebrew/bin/zsh" | sudo tee -a /etc/shells
+        ZSH_BIN="$(command -v zsh || true)"
+        if [ -z "$ZSH_BIN" ]; then
+          echo "⚠️  zsh not found in PATH — install zsh first (apt install zsh on Linux)"
+          exit 1
         fi
-        if [ "$SHELL" != "/opt/homebrew/bin/zsh" ]; then
-          echo -e "[INFO] You will now be prompted for your password to change your default shell. Please enter your password when prompted."
-          chsh -s /opt/homebrew/bin/zsh
+        if ! grep -qxF "$ZSH_BIN" /etc/shells; then
+          echo "$ZSH_BIN" | sudo tee -a /etc/shells
         fi
-      description: Add ZSH to allowed shells and set as default shell
+        if [ "$SHELL" != "$ZSH_BIN" ]; then
+          echo "[INFO] You will now be prompted for your password to change your default shell."
+          chsh -s "$ZSH_BIN"
+        fi
+      description: Add zsh to /etc/shells and set as default shell (portable)
 
 - link:
     ~/.zshenv: shells/zsh/zshenv

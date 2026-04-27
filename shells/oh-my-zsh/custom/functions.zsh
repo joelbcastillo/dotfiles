@@ -98,7 +98,13 @@ function dusage() {
 
 # Get local IP address
 function localip() {
-    ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+    elif command -v ip >/dev/null 2>&1; then
+        ip -4 addr show scope global | awk '/inet / {print $2}' | cut -d/ -f1
+    else
+        hostname -I 2>/dev/null | awk '{print $1}'
+    fi
 }
 
 # Test network connectivity
@@ -110,8 +116,13 @@ function pingtest() {
 
 # Update all development tools
 function update-dev() {
-    echo "Updating Homebrew..."
-    brew update && brew upgrade
+    if command -v brew >/dev/null 2>&1; then
+        echo "Updating Homebrew..."
+        brew update && brew upgrade
+    elif command -v apt >/dev/null 2>&1 && [[ "$OSTYPE" != "darwin"* ]]; then
+        echo "Updating apt packages..."
+        sudo apt update && sudo apt upgrade -y
+    fi
 
     echo "Updating pip packages..."
     pip3 list --outdated | cut -d ' ' -f1 | tail -n +3 | xargs -n1 pip3 install -U
@@ -119,8 +130,10 @@ function update-dev() {
     echo "Updating npm packages..."
     npm update -g
 
-    echo "Updating VS Code extensions..."
-    code --list-extensions | xargs -n 1 code --install-extension
+    if command -v code >/dev/null 2>&1; then
+        echo "Updating VS Code extensions..."
+        code --list-extensions | xargs -n 1 code --install-extension
+    fi
 
     echo "Development tools updated!"
 }
@@ -193,7 +206,9 @@ function asdf-upgrade() {
     # Ensure asdf is available (0.16+ is a Go binary on PATH).
     if ! command -v asdf &>/dev/null; then
         if [[ -x "/opt/homebrew/bin/asdf" ]]; then
-            export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
+            export PATH="/opt/homebrew/bin:${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+        elif [[ -x "$HOME/.asdf/bin/asdf" ]]; then
+            path=("$HOME/.asdf/bin" "$HOME/.asdf/shims" $path)
         elif [[ -f "$HOME/.asdf/asdf.sh" ]]; then
             source "$HOME/.asdf/asdf.sh"  # legacy asdf <= 0.15
         else
@@ -595,16 +610,19 @@ function sysinfo() {
     echo "System Information"
     echo "System: $(uname -a)"
     echo "Uptime: $(uptime)"
-    
-    # Memory info for macOS
-    if command -v vm_stat >/dev/null 2>&1; then
-        local memory_info
-        memory_info=$(vm_stat | grep -E "Pages (free|active|inactive|wired|speculative)" | awk '{sum+=$3} END {print sum*4096/1024/1024/1024 " GB"}')
-        echo "Memory: $memory_info"
-    else
-        echo "Memory: $(system_profiler SPHardwareDataType | grep "Memory:" | awk '{print $2, $3}')"
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if command -v vm_stat >/dev/null 2>&1; then
+            local memory_info
+            memory_info=$(vm_stat | grep -E "Pages (free|active|inactive|wired|speculative)" | awk '{sum+=$3} END {print sum*4096/1024/1024/1024 " GB"}')
+            echo "Memory: $memory_info"
+        elif command -v system_profiler >/dev/null 2>&1; then
+            echo "Memory: $(system_profiler SPHardwareDataType | grep "Memory:" | awk '{print $2, $3}')"
+        fi
+    elif command -v free >/dev/null 2>&1; then
+        echo "Memory: $(free -h | awk '/^Mem:/ {print $3 "/" $2}')"
     fi
-    
+
     echo "Disk: $(df -h / | awk '/\// {print $3 "/" $2}')"
 }
 

@@ -20,16 +20,28 @@ plugins=(
 )
 export ZSH_DISABLE_COMPFIX="true"
 
-# Editor configuration
+# Editor configuration: vim over SSH; otherwise pick the first available
+# local editor in this order. Lets the same zshrc work on Mac (Cursor.app)
+# and on a Linux droplet without a GUI editor.
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='cursor --wait'
+  for _ed in 'cursor --wait' 'code --wait' 'nvim' 'vim'; do
+    if command -v "${_ed%% *}" >/dev/null 2>&1; then
+      export EDITOR="$_ed"
+      break
+    fi
+  done
+  unset _ed
 fi
 export VISUAL="$EDITOR"
 
-# 1Password SSH Agent Configuration
-export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+# 1Password SSH Agent Configuration (per-OS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+elif [[ -S "$HOME/.1password/agent.sock" ]]; then
+    export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
+fi
 
 # --- OMZ & prompt ---
 if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
@@ -60,17 +72,7 @@ for file in ~/.zsh.after/*.zsh; do
 done
 unsetopt nullglob
 
-# --- asdf 0.16+ ---
-# Modern asdf is a Go binary on PATH; no shim source. Just expose its shims dir.
-export PATH="$HOME/.asdf/shims:$PATH"
-
-# --- Lazy load ---
-asdf() {
-    unfunction asdf
-    fpath=("${ASDF_DATA_DIR:-$HOME/.asdf}/completions" $fpath)
-    autoload -Uz compinit && compinit -C
-    command asdf "$@"
-}
+# --- Lazy load (asdf: loaded in zsh.before/asdf.zsh for 0.16+; no duplicate PATH here) ---
 
 direnv() {
     unfunction direnv

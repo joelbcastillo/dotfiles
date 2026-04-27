@@ -1,23 +1,31 @@
 - shell:
     - command: |
-        # Validate asdf is installed. asdf >= 0.16 is a Go binary with no
-        # asdf.sh shim source — PATH integration via ~/.asdf/shims is all
-        # that's needed. Legacy asdf (<= 0.15) had a sourceable shim, but
-        # that path no longer exists with current Homebrew formula.
-        BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/opt/homebrew")
-        if [ -x "$BREW_PREFIX/bin/asdf" ]; then
-          echo "✅ asdf found at $BREW_PREFIX/bin/asdf ($($BREW_PREFIX/bin/asdf --version))"
-        elif [ -f "$BREW_PREFIX/opt/asdf/libexec/asdf.sh" ]; then
-          # Legacy fallback for boxes still on asdf <= 0.15
-          . "$BREW_PREFIX/opt/asdf/libexec/asdf.sh"
-          echo "✅ asdf (legacy) loaded successfully"
+        if ! command -v asdf >/dev/null 2>&1 && [ ! -x "$HOME/.asdf/bin/asdf" ] && [ ! -f "$HOME/.asdf/asdf.sh" ]; then
+          if command -v brew >/dev/null 2>&1; then
+            BREW_ASDF_PFX="$(brew --prefix asdf 2>/dev/null || true)"
+            if [ -n "$BREW_ASDF_PFX" ] && { [ -x "$BREW_ASDF_PFX/bin/asdf" ] || [ -f "$BREW_ASDF_PFX/libexec/asdf.sh" ]; }; then
+              echo "✅ asdf will load from Homebrew"
+            else
+              echo "⚠️  Install asdf: brew install asdf  (or run tools/asdf/install-asdf-linux.sh on Linux)"
+            fi
+          elif [ "$(uname -s 2>/dev/null)" = "Linux" ]; then
+            echo "Installing asdf v0.16+ for Linux..."
+            bash "$HOME/.dotfiles/tools/asdf/install-asdf-linux.sh" || {
+              echo "⚠️  asdf install failed; language configs will no-op"
+              exit 0
+            }
+          else
+            echo "⚠️  asdf not found; install Homebrew asdf (macOS) or tools/asdf/install-asdf-linux.sh (Linux)"
+            exit 0
+          fi
+        fi
+        if . "$HOME/.dotfiles/tools/asdf/load-asdf.sh"; then
+          echo "✅ asdf loaded successfully"
         else
-          echo "⚠️  WARNING: asdf not found"
-          echo "Skipping asdf setup. Install with:"
-          echo "  brew install asdf"
+          echo "⚠️  asdf not available; language configs will no-op"
           exit 0
         fi
-      description: Validate asdf install (0.16+ binary, with legacy fallback)
+      description: Install (if needed) and validate asdf
 
 - link:
     ~/.asdfrc: tools/asdf/asdfrc

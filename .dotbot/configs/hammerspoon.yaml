@@ -1,2 +1,9 @@
-- link:
-    ~/.hammerspoon: apps/hammerspoon
+- shell:
+  -
+    command: |
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        echo "⏭  Skipping Hammerspoon — macOS-only"
+        exit 0
+      fi
+      ln -sfn "$HOME/.dotfiles/apps/hammerspoon" "$HOME/.hammerspoon"
+    description: Link ~/.hammerspoon (macOS only)

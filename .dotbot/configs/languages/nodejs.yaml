@@ -1,7 +1,6 @@
 - shell:
     - command: |
-        # asdf 0.16+ is a Go binary; PATH integration is enough.
-        export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add nodejs || true
         asdf plugin update nodejs || true
         asdf install nodejs 20.19.1

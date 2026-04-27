@@ -16,11 +16,18 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export PATH="$HOME/.local/bin:$PATH"
 
-# Editor configuration
+# Editor configuration: vim over SSH; otherwise pick the first available
+# local editor in this order.
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='cursor --wait'
+  for _ed in 'cursor --wait' 'code --wait' 'nvim' 'vim'; do
+    if command -v "${_ed%% *}" >/dev/null 2>&1; then
+      export EDITOR="$_ed"
+      break
+    fi
+  done
+  unset _ed
 fi
 export VISUAL="$EDITOR"
 
@@ -54,15 +61,14 @@ alias gp='git push'
 alias gl='git log --oneline'
 alias gd='git diff'
 
-# asdf 0.16+ is a Go binary on PATH; just expose its shims.
-export PATH="$HOME/.asdf/shims:$PATH"
-
 # Lazy load everything else
-# ASDF - load completions on first invocation
+# ASDF — first use sources zsh.before/asdf.zsh (0.16+ / Homebrew / legacy)
 asdf() {
     unfunction asdf
-    fpath=("${ASDF_DATA_DIR:-$HOME/.asdf}/completions" $fpath)
-    autoload -Uz compinit && compinit -C
+    if [[ -f "$DOTFILES/shells/zsh/zsh.before/asdf.zsh" ]]; then
+        # shellcheck disable=SC1090
+        source "$DOTFILES/shells/zsh/zsh.before/asdf.zsh"
+    fi
     command asdf "$@"
 }
 

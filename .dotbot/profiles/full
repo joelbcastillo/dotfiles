@@ -1,5 +1,8 @@
-# Package Management (must be first - installs all dependencies)
+# Package Management (must be first - installs all dependencies).
+# brew is a no-op on Linux; apt is a no-op on macOS — both run safely on
+# either OS (each self-skips on the other), so one profile works for both.
 brew
+apt
 
 # Container Runtime (after brew, before dev tools)
 colima

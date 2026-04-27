@@ -182,12 +182,13 @@
 [mergetool "cursor"]
   cmd = cursor --wait $MERGED
 [gpg "ssh"]
-	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
 	allowedSignersFile = ~/.ssh/allowed_signers
-	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
 [gpg]
 	format = ssh
 [commit]
 	gpgsign = true
+[include]
+	# OS-specific signing program path is written here by .dotbot/configs/git.yaml
+	path = ~/.gitconfig.os
 [url "https://github.com/"]
 	insteadOf = git@github.com:

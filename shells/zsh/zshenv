@@ -16,12 +16,10 @@ if [ -x "$HOME/.homebrew/bin/brew" ]; then
 elif [ -x "/opt/homebrew/bin/brew" ]; then
     # Apple Silicon Mac (ARM)
     eval "$(/opt/homebrew/bin/brew shellenv)"
-    # Load group configuration if it exists
     [ -f "/opt/homebrew/etc/homebrew.env" ] && source "/opt/homebrew/etc/homebrew.env"
 elif [ -x "/usr/local/bin/brew" ]; then
     # Intel Mac
     eval "$(/usr/local/bin/brew shellenv)"
-    # Load group configuration if it exists
     [ -f "/usr/local/etc/homebrew.env" ] && source "/usr/local/etc/homebrew.env"
 elif command -v brew >/dev/null 2>&1; then
     # Homebrew in PATH

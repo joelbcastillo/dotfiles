@@ -2,5 +2,14 @@
     file: apps/vscode/extensions
     insiders: false
 
-- link:
-    ~/Library/Application Support/Code/User/settings.json: apps/vscode/settings.json
+- shell:
+  -
+    command: |
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
+      else
+        VSCODE_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Code/User"
+      fi
+      mkdir -p "$VSCODE_USER_DIR"
+      ln -sfn "$HOME/.dotfiles/apps/vscode/settings.json" "$VSCODE_USER_DIR/settings.json"
+    description: Link VS Code settings (OS-aware path)

@@ -1,2 +1,11 @@
-- link:
-    ~/Library/Application Support/Cursor/User/settings.json: apps/cursor/settings.json
+- shell:
+  -
+    command: |
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        CURSOR_USER_DIR="$HOME/Library/Application Support/Cursor/User"
+      else
+        CURSOR_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Cursor/User"
+      fi
+      mkdir -p "$CURSOR_USER_DIR"
+      ln -sfn "$HOME/.dotfiles/apps/cursor/settings.json" "$CURSOR_USER_DIR/settings.json"
+    description: Link Cursor settings (OS-aware path)

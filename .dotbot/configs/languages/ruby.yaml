@@ -1,6 +1,6 @@
 - shell:
     - command: |
-        export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
+        . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
         asdf plugin add ruby || true
         asdf plugin update ruby || true
         asdf install ruby 3.3.0

@@ -44,15 +44,14 @@ for file in ~/.zsh.before/{1password,aliases,history,key-bindings,noglob,path,rm
     [[ -f "$file" ]] && source "$file"
 done
 
-# asdf 0.16+ is a Go binary on PATH; just expose its shims.
-export PATH="$HOME/.asdf/shims:$PATH"
-
 # Lazy load heavy components
-# ASDF - load completions on first invocation
+# ASDF — first use sources zsh.before/asdf.zsh
 asdf() {
     unfunction asdf
-    fpath=("${ASDF_DATA_DIR:-$HOME/.asdf}/completions" $fpath)
-    autoload -Uz compinit && compinit -C
+    if [[ -f "$DOTFILES/shells/zsh/zsh.before/asdf.zsh" ]]; then
+        # shellcheck disable=SC1090
+        source "$DOTFILES/shells/zsh/zsh.before/asdf.zsh"
+    fi
     command asdf "$@"
 }
 

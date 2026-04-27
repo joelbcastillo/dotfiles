@@ -13,6 +13,15 @@ BACKUP_DIR="${HOME}/.dotfiles_backup"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_PATH="${BACKUP_DIR}/${TIMESTAMP}"
 
+# OS-aware helpers
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    VSCODE_USER_DIR="${HOME}/Library/Application Support/Code/User"
+    SHA256="shasum -a 256"
+else
+    VSCODE_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Code/User"
+    SHA256="sha256sum"
+fi
+
 # Function to print colored messages
 print_message() {
     local color=$1
@@ -40,8 +49,8 @@ create_backup() {
     # Backup VS Code configurations
     print_message "${GREEN}" "Backing up VS Code configurations..."
     mkdir -p "${BACKUP_PATH}/vscode"
-    cp -r "${HOME}/Library/Application Support/Code/User/settings.json" "${BACKUP_PATH}/vscode/" 2>/dev/null || true
-    cp -r "${HOME}/Library/Application Support/Code/User/extensions" "${BACKUP_PATH}/vscode/" 2>/dev/null || true
+    cp -r "${VSCODE_USER_DIR}/settings.json" "${BACKUP_PATH}/vscode/" 2>/dev/null || true
+    cp -r "${VSCODE_USER_DIR}/extensions" "${BACKUP_PATH}/vscode/" 2>/dev/null || true
     
     # Backup tool configurations
     print_message "${GREEN}" "Backing up tool configurations..."
@@ -59,7 +68,7 @@ create_backup() {
     
     # Create backup manifest
     print_message "${GREEN}" "Creating backup manifest..."
-    (cd "${BACKUP_PATH}" && find . -type f -not -name manifest.txt -not -path "*/\.*" -exec shasum -a 256 {} \; > manifest.tmp && mv manifest.tmp manifest.txt)
+    (cd "${BACKUP_PATH}" && find . -type f -not -name manifest.txt -not -path "*/\.*" -exec $SHA256 {} \; > manifest.tmp && mv manifest.tmp manifest.txt)
     
     print_message "${GREEN}" "Backup completed successfully!"
     print_message "${YELLOW}" "Backup location: ${BACKUP_PATH}"
@@ -94,7 +103,7 @@ restore_backup() {
     
     # Verify backup integrity
     print_message "${GREEN}" "Verifying backup integrity..."
-    (cd "${backup_path}" && shasum -a 256 -c manifest.txt) || {
+    (cd "${backup_path}" && $SHA256 -c manifest.txt) || {
         print_message "${RED}" "Backup integrity check failed!"
         exit 1
     }
@@ -107,9 +116,9 @@ restore_backup() {
     cp -r "${backup_path}/.gitignore_global" "${HOME}/" 2>/dev/null || true
     
     # Restore VS Code configurations
-    mkdir -p "${HOME}/Library/Application Support/Code/User"
-    cp -r "${backup_path}/vscode/settings.json" "${HOME}/Library/Application Support/Code/User/" 2>/dev/null || true
-    cp -r "${backup_path}/vscode/extensions" "${HOME}/Library/Application Support/Code/User/" 2>/dev/null || true
+    mkdir -p "${VSCODE_USER_DIR}"
+    cp -r "${backup_path}/vscode/settings.json" "${VSCODE_USER_DIR}/" 2>/dev/null || true
+    cp -r "${backup_path}/vscode/extensions" "${VSCODE_USER_DIR}/" 2>/dev/null || true
     
     cp -r "${backup_path}/.ssh" "${HOME}/" 2>/dev/null || true
     cp -r "${backup_path}/.aws" "${HOME}/" 2>/dev/null || true

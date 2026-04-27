@@ -8,13 +8,27 @@ PROFILE_DIR="${META_DIR}/profiles"
 CONFIG_DIR="${META_DIR}/configs"
 CONFIG_SUFFIX=".yaml"
 MIN_MACOS_VERSION="13.0"  # macOS Ventura
-REQUIRED_TOOLS=("git" "curl" "xcode-select")
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    REQUIRED_TOOLS=("git" "curl" "xcode-select")
+else
+    REQUIRED_TOOLS=("git" "curl")
+fi
 
 # Script state
 OPERATION=${1}
 SELF_NAME=$(basename "$0")
 ERROR_COUNT=0
 WARNING_COUNT=0
+
+# Detect non-interactive (IaC) execution: NONINTERACTIVE=1 env var, or
+# stdin not a tty. Exported so child scripts (bootstrap-linux.sh, etc.)
+# inherit the same mode.
+if [ "${NONINTERACTIVE:-0}" = "1" ] || [ ! -t 0 ]; then
+    NONINTERACTIVE=1
+else
+    NONINTERACTIVE=0
+fi
+export NONINTERACTIVE
 
 # Color codes
 RED='\033[0;31m'
@@ -60,35 +74,41 @@ function stop_spinner() {
 }
 
 function check_platform() {
-    # Check if running on macOS
-    if [[ "$OSTYPE" != "darwin"* ]]; then
-        red_echo "Platform Check" "This setup is designed for macOS only"
-        red_echo "Platform Check" "Current OS: $OSTYPE"
-        echo ""
-        yellow_echo "Platform Check" "For Linux, consider:"
-        yellow_echo "Platform Check" "  - yadm: https://yadm.io/"
-        yellow_echo "Platform Check" "  - chezmoi: https://www.chezmoi.io/"
-        yellow_echo "Platform Check" "  - dotbot: https://github.com/anishathalye/dotbot"
-        return 1
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        local macos_version
+        macos_version=$(sw_vers -productVersion 2>/dev/null || echo "unknown")
+
+        if [ "$macos_version" = "unknown" ]; then
+            red_echo "Version Check" "Unable to determine macOS version"
+            return 1
+        fi
+
+        if [ "$(printf '%s\n' "$MIN_MACOS_VERSION" "$macos_version" | sort -V | head -n1)" != "$MIN_MACOS_VERSION" ]; then
+            red_echo "Version Check" "macOS version $macos_version is not supported"
+            red_echo "Version Check" "Minimum required: macOS $MIN_MACOS_VERSION (Ventura) or later"
+            return 1
+        fi
+
+        green_echo "Version Check" "macOS version $macos_version is supported"
+        return 0
     fi
 
-    # Check macOS version
-    local macos_version
-    macos_version=$(sw_vers -productVersion 2>/dev/null || echo "unknown")
-
-    if [ "$macos_version" = "unknown" ]; then
-        red_echo "Version Check" "Unable to determine macOS version"
-        return 1
+    if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$(uname -s 2>/dev/null)" == "Linux" ]]; then
+        local distro=""
+        if [ -r /etc/os-release ]; then
+            # shellcheck disable=SC1091
+            . /etc/os-release
+            distro="${PRETTY_NAME:-Linux}"
+        else
+            distro="Linux"
+        fi
+        green_echo "Platform Check" "$distro detected"
+        yellow_echo "Platform Check" "Linux: run 'scripts/bootstrap-linux.sh' (set NONINTERACTIVE=1 for droplets) then './install profile full'"
+        return 0
     fi
 
-    if [ "$(printf '%s\n' "$MIN_MACOS_VERSION" "$macos_version" | sort -V | head -n1)" != "$MIN_MACOS_VERSION" ]; then
-        red_echo "Version Check" "macOS version $macos_version is not supported"
-        red_echo "Version Check" "Minimum required: macOS $MIN_MACOS_VERSION (Ventura) or later"
-        return 1
-    fi
-
-    green_echo "Version Check" "macOS version $macos_version is supported"
-    return 0
+    red_echo "Platform Check" "Unsupported OS: $OSTYPE"
+    return 1
 }
 
 function check_required_tools() {
@@ -109,6 +129,9 @@ function check_required_tools() {
 }
 
 function check_xcode_tools() {
+    if [[ "$OSTYPE" != "darwin"* ]]; then
+        return 0
+    fi
     if ! xcode-select -p >/dev/null 2>&1; then
         red_echo "Xcode Check" "Xcode Command Line Tools are not installed"
         blue_echo "Xcode Check" "Installing Xcode Command Line Tools..."
@@ -129,8 +152,12 @@ function backup_existing_config() {
         "$HOME/.zshrc"
         "$HOME/.gitconfig"
         "$HOME/.ssh/config"
-        "$HOME/Library/Application Support/Code/User/settings.json"
     )
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        files_to_backup+=("$HOME/Library/Application Support/Code/User/settings.json")
+    else
+        files_to_backup+=("$HOME/.config/Code/User/settings.json")
+    fi
     
     for file in "${files_to_backup[@]}"; do
         if [ -f "$file" ]; then
@@ -304,33 +331,39 @@ function bootstrap() {
     blue_echo "${SELF_NAME}" "Backing up existing configuration..."
     backup_existing_config "$backup_dir"
     
-    # Install Homebrew if not present
-    if ! exists brew; then
-        blue_echo "${SELF_NAME}" "Installing Homebrew"
-        start_spinner "Installing Homebrew..."
-        if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # Install Homebrew if not present (macOS only)
+        if ! exists brew; then
+            blue_echo "${SELF_NAME}" "Installing Homebrew"
+            start_spinner "Installing Homebrew..."
+            if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"; then
+                stop_spinner
+                red_echo "${SELF_NAME}" "Failed to install Homebrew"
+                rollback "$backup_dir"
+                return 1
+            fi
             stop_spinner
-            red_echo "${SELF_NAME}" "Failed to install Homebrew"
-            rollback "$backup_dir"
-            return 1
         fi
-        stop_spinner
-    fi
-    
-    # Install 1Password CLI if not present
-    if ! exists op; then
-        blue_echo "${SELF_NAME}" "Installing 1Password CLI"
-        start_spinner "Installing 1Password CLI..."
-        if ! brew install --cask 1password-cli; then
+
+        # Install 1Password CLI via cask (macOS only)
+        if ! exists op; then
+            blue_echo "${SELF_NAME}" "Installing 1Password CLI"
+            start_spinner "Installing 1Password CLI..."
+            if ! brew install --cask 1password-cli; then
+                stop_spinner
+                red_echo "${SELF_NAME}" "Failed to install 1Password CLI"
+                rollback "$backup_dir"
+                return 1
+            fi
             stop_spinner
-            red_echo "${SELF_NAME}" "Failed to install 1Password CLI"
-            rollback "$backup_dir"
-            return 1
+            blue_echo "${SELF_NAME}" "Please sign in to 1Password CLI: op signin"
+        else
+            green_echo "${SELF_NAME}" "1Password CLI is already installed"
         fi
-        stop_spinner
-        blue_echo "${SELF_NAME}" "Please sign in to 1Password CLI: op signin"
     else
-        green_echo "${SELF_NAME}" "1Password CLI is already installed"
+        # Linux: bootstrap script handles apt + CLI installers + 1Password CLI apt repo
+        yellow_echo "${SELF_NAME}" "Linux detected — bootstrap skips Homebrew."
+        yellow_echo "${SELF_NAME}" "If you haven't already, run: scripts/bootstrap-linux.sh"
     fi
     
     # Update submodules

@@ -1,11 +1,14 @@
 - shell:
   -
     command: |
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        echo "⏭  Skipping Homebrew setup — not on macOS"
+        exit 0
+      fi
       if ! command -v brew >/dev/null 2>&1; then
         echo "Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-        # Verify installation
         if ! command -v brew >/dev/null 2>&1; then
           echo "❌ ERROR: Homebrew installation failed"
           echo "Please install Homebrew manually:"
@@ -17,11 +20,14 @@
       else
         echo "✅ Homebrew already installed"
       fi
-    description: Install and verify Homebrew
+    description: Install and verify Homebrew (macOS only)
 
 - shell:
   -
     command: |
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        exit 0
+      fi
       # Detect Homebrew location (prioritize user-local)
       if [ -x "$HOME/.homebrew/bin/brew" ]; then
         BREW_PREFIX="$HOME/.homebrew"
@@ -35,7 +41,7 @@
         eval "$($BREW_PREFIX/bin/brew shellenv)"
         echo "✅ Configured Homebrew from: $BREW_PREFIX"
       fi
-    description: Configure Homebrew shell environment (detects user-local or system)
+    description: Configure Homebrew shell environment (macOS only)
 
 - link:
     ~/Brewfile:
@@ -44,14 +50,14 @@
       force: true
 
 - shell:
-  - 
-    command: brew update
-    description: Update Homebrew
-  - 
-    command: brew upgrade
-    description: Upgrade Homebrew packages
-  - 
-    command: brew cleanup
-    description: Clean up Homebrew
-  - command: ~/.dotfiles/scripts/brew-bundle-safe.sh ~/Brewfile
-    description: Install all Homebrew packages from Brewfile (with warnings for failed casks) 
+  -
+    command: |
+      if [[ "$OSTYPE" != "darwin"* ]]; then
+        echo "⏭  Skipping brew bundle — not on macOS"
+        exit 0
+      fi
+      brew update
+      brew upgrade
+      brew cleanup
+      ~/.dotfiles/scripts/brew-bundle-safe.sh ~/Brewfile
+    description: Update Homebrew and install Brewfile (macOS only)

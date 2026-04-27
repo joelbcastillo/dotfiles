@@ -1,7 +1,7 @@
 - shell:
       - command: |
             echo "Setting up Python with asdf..."
-            export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
+            . "$HOME/.dotfiles/tools/asdf/load-asdf.sh" || exit 0
             asdf plugin add python || true
             asdf plugin update python || true
             asdf install python 3.13.8
