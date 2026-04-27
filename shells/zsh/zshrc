@@ -20,6 +20,14 @@ plugins=(
 )
 export ZSH_DISABLE_COMPFIX="true"
 
+# Disable OMZ's auto-update check at shell init. It's run inline (blocks
+# new shells) and on stale caches it shells out to git/network, which on
+# the headless box was contributing seconds of wall-clock delay. Run
+# `omz update` manually when needed.
+DISABLE_AUTO_UPDATE="true"
+DISABLE_UPDATE_PROMPT="true"
+zstyle ':omz:update' mode disabled
+
 # Editor configuration
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
