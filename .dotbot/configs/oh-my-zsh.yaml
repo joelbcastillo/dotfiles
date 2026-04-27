@@ -21,24 +21,10 @@
         fi
     description: Install Oh My Zsh and required plugins
 
-- shell:
-  -
-    command: |
-      ZSH_BIN="$(command -v zsh || true)"
-      if [ -z "$ZSH_BIN" ]; then
-        echo "⚠️  zsh not found in PATH; skipping default-shell wire-up"
-        exit 0
-      fi
-      # Don't append duplicate lines if they already exist
-      if ! grep -qxF "export SHELL=$ZSH_BIN" "$HOME/.zshrc" 2>/dev/null; then
-        echo "export SHELL=$ZSH_BIN" >> "$HOME/.zshrc"
-      fi
-      if ! grep -qxF "exec $ZSH_BIN -l" "$HOME/.zshrc" 2>/dev/null; then
-        echo "exec $ZSH_BIN -l" >> "$HOME/.zshrc"
-      fi
-    description: Ensure ~/.zshrc wires up the detected zsh binary
-
 - link:
     ~/.oh-my-zsh/custom: shells/oh-my-zsh/custom
     ~/.zsh.after: shells/zsh/zsh.after
     ~/.zsh.before: shells/zsh/zsh.before
+    ~/.secrets:
+      path: secrets/macos
+      ignore-missing: true
