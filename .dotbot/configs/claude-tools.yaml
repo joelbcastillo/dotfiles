@@ -7,40 +7,21 @@
 - shell:
   -
     command: |
-      if ! command -v happy >/dev/null 2>&1; then
-        echo "Installing happy-coder..."
-        npm install -g happy-coder
+      # Always pin @latest so re-running this config upgrades dmux / happy / Paseo.
+      # Manual / zsh: upgrade-claude-npm-tools (see scripts/upgrade-claude-npm-tools.sh)
+      if command -v npm >/dev/null 2>&1; then
+        bash scripts/upgrade-claude-npm-tools.sh
       else
-        echo "happy-coder is already installed"
+        echo "Skipping Claude npm tools: npm not on PATH."
+        echo "Install Node.js first (profile full runs languages/nodejs before this; ai-tools-only users need npm)."
       fi
-    description: Install happy-coder
-
-- shell:
-  -
-    command: |
-      if ! command -v dmux >/dev/null 2>&1; then
-        echo "Installing dmux..."
-        npm install -g dmux
-      else
-        echo "dmux is already installed"
-      fi
-    description: Install dmux
-
-- shell:
-  -
-    command: |
-      if ! command -v paseo >/dev/null 2>&1; then
-        echo "Installing Paseo CLI..."
-        npm install -g @getpaseo/cli
-      else
-        echo "Paseo CLI is already installed"
-      fi
-    description: Install Paseo CLI
+    description: Install or upgrade Claude npm CLIs (dmux, happy-coder, Paseo) to latest
 
 - shell:
   -
     command: |
       echo "Claude tools setup completed"
+      echo "Tip: run upgrade-claude-npm-tools in zsh anytime to pull @latest without full dotbot."
       echo "Note: Run './install config claude-tools-private' for personal config (dmux, env vars)"
       for tool in happy dmux paseo; do
         if command -v $tool >/dev/null 2>&1; then
