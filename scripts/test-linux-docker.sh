@@ -47,7 +47,9 @@ docker run --rm \
     echo "ci ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ci
     chmod 0440 /etc/sudoers.d/ci
     chown -R ci:ci /work
-    sudo -u ci -E env NONINTERACTIVE=1 CI=1 bash -c "cd /work && ./scripts/bootstrap-linux.sh"
+    # Avoid sudo -E: it keeps HOME=/root from the parent shell so bootstrap runs as
+    # ci but targets /root (mkdir fails with Permission denied).
+    sudo -u ci bash -c "export NONINTERACTIVE=1 CI=1; cd /work && ./scripts/bootstrap-linux.sh"
     echo "✅ bootstrap-linux.sh completed in container"
   '
 
