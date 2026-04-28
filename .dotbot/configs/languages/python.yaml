@@ -4,8 +4,8 @@
             export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
             asdf plugin add python || true
             asdf plugin update python || true
-            asdf install python 3.13.8
-            asdf set -p python 3.13.8
+            asdf install python 3.14.4
+            asdf set -p python 3.14.4
         description: Set up Python with asdf
       - command: |
             # macOS 26 (Tahoe) ships an older system libexpat than the brew

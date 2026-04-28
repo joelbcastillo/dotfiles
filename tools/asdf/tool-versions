@@ -1,10 +1,10 @@
-# Node.js (LTS - v22 entered LTS Oct 2024, active until Oct 2025)
-nodejs 22.11.0
-# Python (Latest stable - 3.14.0t is still in testing)
-python 3.13.8
+# Node.js (current asdf latest)
+nodejs 25.9.0
+# Python (current asdf latest stable CPython, non free-threaded)
+python 3.14.4
 # Ruby (Latest stable)
 ruby 3.4.4
 # Go (Latest stable)
-golang 1.25.4
+golang 1.26.2
 # Rust (Latest stable)
-rust 1.91.1
+rust 1.95.0

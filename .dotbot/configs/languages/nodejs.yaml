@@ -4,12 +4,12 @@
         export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
         asdf plugin add nodejs || true
         asdf plugin update nodejs || true
-        asdf install nodejs 20.19.1
-        asdf set -u nodejs 20.19.1
+        asdf install nodejs 25.9.0
+        asdf set -u nodejs 25.9.0
         asdf reshim nodejs
 
         # Install global npm packages
-        npm install -g npm@10.2.4
+        npm install -g npm@latest
         npm install -g yarn
         npm install -g pnpm
         npm install -g typescript

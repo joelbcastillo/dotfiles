@@ -3,8 +3,8 @@
         export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
         asdf plugin add ruby || true
         asdf plugin update ruby || true
-        asdf install ruby 3.3.0
-        asdf set -u ruby 3.3.0
+        asdf install ruby 3.4.4
+        asdf set -u ruby 3.4.4
         
         # Install Ruby tools
         gem install bundler
