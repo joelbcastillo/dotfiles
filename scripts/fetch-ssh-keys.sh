@@ -132,6 +132,17 @@ setup_ssh_key() {
 
 # Main function
 main() {
+    # Service-account mode early-exit. SA tokens are scoped to a single
+    # 1Password account and can't drive `op signin --account`, so the
+    # multi-account key fetch below is a non-starter. On headless boxes the
+    # operator agent-forwards SSH from the laptop instead, so missing
+    # ~/.ssh/keys/* is benign.
+    if command -v op >/dev/null 2>&1 && op whoami 2>/dev/null | grep -q SERVICE_ACCOUNT; then
+        echo "Detected 1Password service-account mode — skipping multi-account SSH key fetch."
+        echo "Use SSH agent forwarding from the laptop for git pushes from this host."
+        return 0
+    fi
+
     # Legacy mode - old single-key behavior
     if [ "$LEGACY_MODE" = true ]; then
         echo "Setting up SSH key from 1Password (legacy mode)..."
