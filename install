@@ -31,7 +31,7 @@ SPINNER_PID=""
 function spinner() {
     local msg="$1"
     local delay=0.1
-    
+
     # Start spinner
     while true; do
         printf "\r${BLUE}[%c] %s${NC}" "${SPINNER_CHARS:$SPINNER_POS:1}" "$msg"
@@ -40,11 +40,18 @@ function spinner() {
     done
 }
 
+# The spinner uses tput civis/cnorm to hide/show the cursor. Both require a
+# usable TERM and an actual terminal — over a non-interactive ssh
+# (e.g. `ssh host './install …'` from a bootstrap script) TERM is unset and
+# tput dies, which under `set -e` (or a parent script with errexit) silently
+# kills whatever step is running. Skip the whole spinner when stdout isn't a
+# TTY; nothing observes the cursor in that case anyway.
 function start_spinner() {
+    [ -t 1 ] || return 0
     spinner "$1" &
     SPINNER_PID=$!
     # Disable cursor
-    tput civis
+    tput civis 2>/dev/null || true
 }
 
 function stop_spinner() {
@@ -53,8 +60,9 @@ function stop_spinner() {
         wait "$SPINNER_PID" 2>/dev/null
         SPINNER_PID=""
     fi
+    [ -t 1 ] || return 0
     # Enable cursor
-    tput cnorm
+    tput cnorm 2>/dev/null || true
     # Clear the spinner line
     printf "\r\033[K"
 }
