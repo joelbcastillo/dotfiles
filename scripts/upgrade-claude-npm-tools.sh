@@ -15,14 +15,18 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "npm install -g (Claude tools @latest)..."
-npm install -g \
-  dmux@latest \
-  happy-coder@latest \
-  "@getpaseo/cli@latest"
+echo "npm install -g (Claude Code CLI + companion tools @latest)..."
+# Install one package per invocation so one failure (e.g. happy-coder + npm 11
+# "workspace:" protocol) does not skip the rest.
+npm install -g "@anthropic-ai/claude-code@latest"
+npm install -g "dmux@latest"
+if ! npm install -g "happy-coder@latest"; then
+  echo "upgrade-claude-npm-tools: happy-coder install failed (known issue on some npm versions with workspace: deps). Skipping." >&2
+fi
+npm install -g "@getpaseo/cli@latest"
 
 echo "Installed versions:"
-for cmd in happy dmux paseo; do
+for cmd in claude happy dmux paseo; do
   if command -v "$cmd" >/dev/null 2>&1; then
     printf '  %s: %s\n' "$cmd" "$($cmd --version 2>/dev/null || echo ok)"
   else

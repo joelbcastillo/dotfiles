@@ -25,9 +25,10 @@
 - shell:
     - command: |
         if ! command -v claude >/dev/null 2>&1; then
-          echo "Warning: Claude Code not found. Install with: brew install claude-code"
+          echo "Warning: Claude Code not found. Install with: npm install -g @anthropic-ai/claude-code"
+          echo "  (or run: upgrade-claude-npm-tools)"
         else
-          echo "Claude Code found at: $(which claude)"
+          echo "Claude Code found at: $(command -v claude)"
         fi
       description: Check Claude Code installation
 
