@@ -55,6 +55,7 @@ get_target_dir() {
         azure) echo "tools/azure" ;;
         docker) echo "tools/docker" ;;
         kubernetes) echo "tools/kubernetes" ;;
+        shells/secure_profiles) echo "shells/oh-my-zsh/custom/secure_profiles" ;;
         *) echo "" ;;
     esac
 }
@@ -72,6 +73,7 @@ PRIVATE_SUBDIRS=(
     "azure"
     "docker"
     "kubernetes"
+    "shells/secure_profiles"
 )
 
 # Link files from a directory with optional prefix
