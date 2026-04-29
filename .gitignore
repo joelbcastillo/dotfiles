@@ -60,6 +60,7 @@ tools/git/*
 !tools/git/gitconfig
 !tools/git/gitconfig.user.template
 !tools/git/gitignore_global
+!tools/git/headless-signing-config.sh
 !tools/git/lazygit.yaml
 
 # Zsh before directory - ignore everything except allowed files

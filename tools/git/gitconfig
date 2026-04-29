@@ -154,6 +154,12 @@
   enabled = true
 [include]
   path = ~/.gitconfig.user
+[include]
+  # Host-local overrides. Empty/missing on most machines — git silently
+  # skips. Used by the headless dotbot profile (tools/git/headless-signing-config.sh)
+  # to override user.signingkey + gpg.ssh.program for boxes that don't
+  # run the 1Password desktop app.
+  path = ~/.gitconfig.local
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
