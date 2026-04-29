@@ -1,1 +1,1 @@
-/Users/joel.castillo.cq/.dotfiles-private/aliases/aliases.zsh
+../../../../.dotfiles-private/aliases/aliases.zsh

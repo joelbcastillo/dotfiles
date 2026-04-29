@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '\n📦 Plugin Status:' && PLUGIN_COUNT=$(grep -c '\".*@.*\": true' ~/.claude/settings.json) && echo \"   ✓ $PLUGIN_COUNT plugins enabled (optimized for context)\" && echo '   💡 To enable more: edit ~/.claude/settings.json' && echo '   📄 Enable project-specific plugins: .claude/settings.local.json\n'"
+            "command": "echo '\n\ud83d\udce6 Plugin Status:' && PLUGIN_COUNT=$(grep -c '\".*@.*\": true' ~/.claude/settings.json) && echo \"   \u2713 $PLUGIN_COUNT plugins enabled (optimized for context)\" && echo '   \ud83d\udca1 To enable more: edit ~/.claude/settings.json' && echo '   \ud83d\udcc4 Enable project-specific plugins: .claude/settings.local.json\n'"
           }
         ]
       }
@@ -38,5 +38,6 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark"
 }
