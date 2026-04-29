@@ -59,3 +59,17 @@
       description: Fetch headless SSH key from 1Password (no-op without SA token)
       stdin: true
       stderr: true
+
+    - command: |
+        # Configure git commit signing for this headless box: write
+        # ~/.gitconfig.local pointing user.signingkey at the on-disk
+        # pubkey from the previous step and gpg.ssh.program at system
+        # ssh-keygen (not the laptop's op-ssh-sign). The public gitconfig
+        # has an [include] for ~/.gitconfig.local at the bottom, so these
+        # overrides win on this box and are no-op everywhere else.
+        # Pubkey still needs registering on GitHub as a signing key —
+        # see the script header for the gh API call.
+        ~/.dotfiles/tools/git/headless-signing-config.sh
+      description: Headless git commit-signing overrides (~/.gitconfig.local)
+      stdin: true
+      stderr: true
