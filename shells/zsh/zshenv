@@ -11,6 +11,14 @@ export DOTFILES="$HOME/.dotfiles"
 # hangs on its 5s timeout (no GUI app to answer biometric auth, every shell).
 [ -f "$HOME/.config/op/token.sh" ] && . "$HOME/.config/op/token.sh"
 
+# Multi-account `op` wrapper. Lives in zsh.before for prezto-time setup, but
+# we also source it here from zshenv so non-interactive SSH commands like
+# `ssh jbc-dev-mac 'op --account joshuaproject vault list'` get the wrapper
+# (zshrc / zsh.before only run for interactive shells). The file is pure
+# function/export definitions — safe to source twice.
+[ -f "$HOME/.dotfiles/shells/zsh/zsh.before/1password.zsh" ] && \
+    . "$HOME/.dotfiles/shells/zsh/zsh.before/1password.zsh"
+
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
