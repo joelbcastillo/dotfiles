@@ -107,3 +107,17 @@ tools/aws/*/credentials
 apps/vscode/*-settings.json.context/
 .dotfiles.code-workspace
 .dmux/
+
+# Symlinks materialized at install time by scripts/setup-private-files.sh
+# (points into ~/.dotfiles-private/). Tracked symlinks drift on every run
+# because the script writes absolute paths; matches the SSH precedent.
+apps/vscode/settings.json
+apps/cursor/settings.json
+shells/oh-my-zsh/custom/secure_profiles/ai
+shells/oh-my-zsh/custom/secure_profiles/aws
+shells/oh-my-zsh/custom/secure_profiles/claude
+shells/oh-my-zsh/custom/secure_profiles/jbctech_cloud
+shells/zsh/zsh.before/aliases.zsh
+shells/zsh/zsh.before/company-aliases.zsh
+tools/git/gitconfig.carequant
+tools/git/gitconfig.personal
