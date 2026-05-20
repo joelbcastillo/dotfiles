@@ -90,6 +90,7 @@ shells/zsh/zsh.before/*
 
 # SSH - Ignore everything except templates and docs
 tools/ssh/config
+tools/ssh/configs/
 tools/ssh/keys/**/*
 !tools/ssh/keys/**/.gitkeep
 !tools/ssh/**/*.template
