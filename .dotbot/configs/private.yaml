@@ -2,6 +2,18 @@
 # This configuration creates symlinks to private files from the dotfiles-private repository
 # to the locations where the original dotbot configs expect them
 
+# Base SSH config: swap the regular file in for a symlink to the private
+# canonical. `force: true` is needed here exactly once — it overwrites a
+# drifted regular file on first run, then becomes a no-op (the `link.py`
+# idempotency check short-circuits). `canonicalize: false` preserves the
+# `~/...` target instead of resolving through `realpath`.
+- link:
+    ~/.dotfiles/tools/ssh/config:
+      path: ~/.dotfiles-private/ssh/config
+      force: true
+      canonicalize: false
+      if: '[ -f ~/.dotfiles-private/ssh/config ]'
+
 - shell:
     - command: |
         # Create symlinks for all files in private git directory
@@ -44,20 +56,20 @@
       description: "Link private Cursor files to dotfiles/apps/cursor/"
 
     - command: |
-        # Create symlinks for SSH configs from private repo
-        if [ -f ~/.dotfiles-private/ssh/config ]; then
-          ln -sf ~/.dotfiles-private/ssh/config ~/.dotfiles/tools/ssh/config
-          echo "Linked private SSH config"
-        fi
-        if [ -d ~/.dotfiles-private/ssh/configs ]; then
-          ln -sf ~/.dotfiles-private/ssh/configs ~/.dotfiles/tools/ssh/configs
-          echo "Linked private SSH configs folder"
-        fi
-        if [ -d ~/.dotfiles-private/ssh/keys ]; then
-          ln -sf ~/.dotfiles-private/ssh/keys ~/.dotfiles/tools/ssh/keys
-          echo "Linked private SSH keys folder"
-        fi
-      description: "Link private SSH config, configs, and keys to dotfiles/tools/ssh/"
+        # Ensure SSH per-identity directories exist. tools/ssh/configs is
+        # populated with fragment symlinks by the identity yamls
+        # (ssh-personal.yaml, ssh-jbctechsolutions.yaml). tools/ssh/keys is
+        # populated with per-identity subdirs by fetch-ssh-keys.sh, which the
+        # identity yamls invoke. tools/ssh/config itself is symlinked above
+        # via dotbot's native link: (force overwrites the drifted regular
+        # file from before this restructure).
+        #
+        # The prior version of this command tried `ln -sf
+        # ~/.dotfiles-private/ssh/{configs,keys} ~/.dotfiles/tools/ssh/...`,
+        # which produced nested `configs/configs` and `keys/keys` symlinks
+        # because the targets were already non-empty real directories.
+        mkdir -p ~/.dotfiles/tools/ssh/configs ~/.dotfiles/tools/ssh/keys
+      description: "Ensure SSH per-identity directories exist"
 
     - command: |
         # Create symlinks for all secure_profiles from private repo
