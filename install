@@ -347,7 +347,14 @@ function bootstrap() {
         rollback "$backup_dir"
         return 1
     fi
-    
+
+    # Enable tracked git hooks in this repo. The post-merge hook auto-runs
+    # ./install private when relevant — see scripts/git-hooks/post-merge.
+    # setup-private-files.sh also sets this on every ./install private run,
+    # so this is a belt-and-suspenders for users who run bootstrap but not
+    # (yet) the private setup.
+    git -C "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" config --local core.hooksPath scripts/git-hooks 2>/dev/null || true
+
     green_echo "${SELF_NAME}" "Bootstrap completed successfully"
     if [ $WARNING_COUNT -gt 0 ]; then
         yellow_echo "${SELF_NAME}" "Completed with $WARNING_COUNT warnings"
