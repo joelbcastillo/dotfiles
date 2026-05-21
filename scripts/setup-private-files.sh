@@ -76,6 +76,13 @@ PRIVATE_SUBDIRS=(
     "shells/secure_profiles"
 )
 
+# Compute path of $1 relative to directory $2. Uses perl's File::Spec
+# because BSD realpath on macOS doesn't have GNU's --relative-to flag.
+# Perl ships with macOS, so no extra dep.
+_rel_path() {
+    perl -MFile::Spec -e 'print File::Spec->abs2rel($ARGV[0], $ARGV[1])' "$1" "$2"
+}
+
 # Link files from a directory with optional prefix
 link_directory_files() {
     local source_dir=$1
@@ -92,13 +99,17 @@ link_directory_files() {
 
     local linked_count=0
 
-    # Link all files from source to target
+    # Link all files from source to target. Relative symlink targets keep
+    # the symlinks portable across machines (different $HOME paths) and
+    # idempotent against the committed-symlink values, so `git status` stays
+    # clean after every install.
     for file in "$source_dir"/*; do
         if [ -f "$file" ]; then
             local filename=$(basename "$file")
             local target_file="$target_dir/${prefix}${filename}"
+            local rel_src=$(_rel_path "$file" "$target_dir")
 
-            ln -sf "$file" "$target_file"
+            ln -sf "$rel_src" "$target_file"
             print_message "${GREEN}" "  ✅ Linked ${prefix}${filename}" >&2
             ((linked_count++))
         fi
@@ -118,13 +129,22 @@ link_directory_files() {
 
 # Function to setup private repository
 setup_private_files() {
-    if [ -z "$PRIVATE_REPO_URL" ]; then
-        print_message "${YELLOW}" "No private repository URL provided."
+    # PRIVATE_REPO_URL is only required to CLONE the private repo for the
+    # first time. If a clone already exists, we can re-materialize symlinks
+    # (and `git pull` against the embedded remote) without the URL — this
+    # is the path .dotbot/configs/private.yaml takes when invoked via
+    # `./install config private`.
+    if [ -z "$PRIVATE_REPO_URL" ] && [ ! -d "$PRIVATE_DIR" ]; then
+        print_message "${YELLOW}" "No private repository URL provided and no existing clone at $PRIVATE_DIR."
         print_message "${BLUE}" "Usage: PRIVATE_REPO_URL=https://github.com/yourusername/dotfiles-private.git ./scripts/setup-private-files.sh"
         return 1
     fi
 
-    print_message "${BLUE}" "🔒 Setting up private files from: $PRIVATE_REPO_URL"
+    if [ -n "$PRIVATE_REPO_URL" ]; then
+        print_message "${BLUE}" "🔒 Setting up private files from: $PRIVATE_REPO_URL"
+    else
+        print_message "${BLUE}" "🔒 Updating private files (existing clone at $PRIVATE_DIR)"
+    fi
 
     # Clone or update private repository
     if [ -d "$PRIVATE_DIR" ]; then
