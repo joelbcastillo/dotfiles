@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Auto-run ./install private after a merge that may have updated tracked
+# state for files materialized by setup-private-files.sh.
+#
+# Why this exists: a number of symlinks pointing into ~/.dotfiles-private/
+# are gitignored in this repo and materialized at install time. If an
+# incoming commit did `git rm --cached` on one of those (or added a new
+# private file), `git pull` deletes the working-tree symlink (or fails
+# to create the new one). Re-running `./install private` is idempotent
+# and fast (a few seconds, no network calls), so we just always do it.
+#
+# Enable on this clone with:
+#   git config --local core.hooksPath scripts/git-hooks
+# The ./install bootstrap step does this automatically.
+
+set -e
+
+# Resolve dotfiles root via the symlink that always exists on a configured
+# machine. Don't depend on $PWD — git invokes hooks from arbitrary cwds.
+DOTFILES_ROOT="${HOME}/.dotfiles"
+
+if [ ! -x "${DOTFILES_ROOT}/install" ]; then
+  exit 0
+fi
+
+# Only run when the merge actually touched something setup-private-files.sh
+# cares about. HEAD@{1} is the pre-merge HEAD; HEAD is post-merge.
+if git diff-tree --name-only -r HEAD@{1} HEAD 2>/dev/null | grep -qE '^(\.gitignore|scripts/setup-private-files\.sh|apps/|shells/|tools/(git|ssh|claude|finicky|sshop)/|\.dotbot/configs/private\.yaml)'; then
+  echo "[post-merge] re-running ./install private (incoming changes touched private-linked paths)"
+  cd "${DOTFILES_ROOT}" && ./install private
+fi
