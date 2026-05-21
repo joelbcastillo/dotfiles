@@ -160,6 +160,30 @@ This template supports secure handling of personal configurations through a sepa
 
 📚 **Full guide:** [Private Setup Documentation](docs/private-setup.md)
 
+### Auto-install on pull
+
+Both `~/.dotfiles` and `~/.dotfiles-private` ship a tracked git hook at
+`scripts/git-hooks/post-merge`. The hook is enabled per-clone via
+`git config --local core.hooksPath scripts/git-hooks`, which
+`./install private` sets automatically (so existing clones pick it up
+on the next install cycle; fresh clones get it on first run).
+
+What it does:
+- After any `git pull` whose changes touched paths that
+  `setup-private-files.sh` materializes (apps/, shells/, tools/git/,
+  tools/ssh/, dotbot/, etc.), the hook re-runs `./install private` so
+  symlinks stay current. Idempotent; a few seconds; no network calls.
+- On the private side, the hook also `chmod 600`s `ssh/config` after
+  every merge — git uses the user's umask when materializing merged
+  files, which can produce `0664` perms that OpenSSH refuses (the
+  failure surfaces as `Bad owner or permissions on ~/.ssh/config` and
+  silently breaks subsequent git-over-ssh fetches).
+
+Symlinks created by `setup-private-files.sh` use **relative** targets
+(computed via `perl File::Spec`), so they're portable across machines
+and committed values match what the script generates — no spurious
+diffs in `git status` after install.
+
 ## 🎯 Default Profile
 
 The default profile includes essential development tools and configurations:

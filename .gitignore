@@ -62,6 +62,10 @@ tools/git/*
 !tools/git/gitignore_global
 !tools/git/headless-signing-config.sh
 !tools/git/lazygit.yaml
+# Per-identity gitconfigs are symlinks into ~/.dotfiles-private/git/; tracked
+# with relative targets so the symlink itself documents the wiring.
+!tools/git/gitconfig.carequant
+!tools/git/gitconfig.personal
 
 # Zsh before directory - ignore everything except allowed files
 shells/zsh/zsh.before/*
@@ -77,6 +81,9 @@ shells/zsh/zsh.before/*
 !shells/zsh/zsh.before/rm.zsh
 !shells/zsh/zsh.before/zmv.zsh
 !shells/zsh/zsh.before/zoxide.zsh
+# Aliases/company-aliases are symlinks into ~/.dotfiles-private/aliases/.
+!shells/zsh/zsh.before/aliases.zsh
+!shells/zsh/zsh.before/company-aliases.zsh
 !shells/zsh/zsh.before/aliases.zsh.template
 
 # Template files (these are the public versions)
@@ -108,16 +115,8 @@ apps/vscode/*-settings.json.context/
 .dotfiles.code-workspace
 .dmux/
 
-# Symlinks materialized at install time by scripts/setup-private-files.sh
-# (points into ~/.dotfiles-private/). Tracked symlinks drift on every run
-# because the script writes absolute paths; matches the SSH precedent.
-apps/vscode/settings.json
-apps/cursor/settings.json
-shells/oh-my-zsh/custom/secure_profiles/ai
-shells/oh-my-zsh/custom/secure_profiles/aws
-shells/oh-my-zsh/custom/secure_profiles/claude
-shells/oh-my-zsh/custom/secure_profiles/jbctech_cloud
-shells/zsh/zsh.before/aliases.zsh
-shells/zsh/zsh.before/company-aliases.zsh
-tools/git/gitconfig.carequant
-tools/git/gitconfig.personal
+# (Previously gitignored: symlinks materialized at install time by
+# scripts/setup-private-files.sh. The script now writes RELATIVE
+# symlink targets via perl File::Spec, so they're portable across
+# machines and idempotent against committed values. The files are
+# tracked again — see git history for the un-gitignore commit.)
