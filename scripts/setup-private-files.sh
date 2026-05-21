@@ -138,6 +138,15 @@ setup_private_files() {
 
     cd "$DOTFILES_DIR"
 
+    # Enable the tracked git hooks in both repos. The post-merge hook auto-
+    # runs `./install private` after any pull that touches private-linked
+    # paths, so gitignored symlinks (vscode/cursor/secure_profiles/etc.) get
+    # re-materialized on update. Idempotent — safe to run every install.
+    git -C "$DOTFILES_DIR" config --local core.hooksPath scripts/git-hooks
+    if [ -d "$PRIVATE_DIR/scripts/git-hooks" ]; then
+        git -C "$PRIVATE_DIR" config --local core.hooksPath scripts/git-hooks
+    fi
+
     # Show active profile if set
     if [ -n "$ACTIVE_PROFILE" ]; then
         print_message "${BLUE}" "📋 Active profile: $ACTIVE_PROFILE"
