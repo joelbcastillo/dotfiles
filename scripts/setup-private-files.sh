@@ -129,13 +129,22 @@ link_directory_files() {
 
 # Function to setup private repository
 setup_private_files() {
-    if [ -z "$PRIVATE_REPO_URL" ]; then
-        print_message "${YELLOW}" "No private repository URL provided."
+    # PRIVATE_REPO_URL is only required to CLONE the private repo for the
+    # first time. If a clone already exists, we can re-materialize symlinks
+    # (and `git pull` against the embedded remote) without the URL — this
+    # is the path .dotbot/configs/private.yaml takes when invoked via
+    # `./install config private`.
+    if [ -z "$PRIVATE_REPO_URL" ] && [ ! -d "$PRIVATE_DIR" ]; then
+        print_message "${YELLOW}" "No private repository URL provided and no existing clone at $PRIVATE_DIR."
         print_message "${BLUE}" "Usage: PRIVATE_REPO_URL=https://github.com/yourusername/dotfiles-private.git ./scripts/setup-private-files.sh"
         return 1
     fi
 
-    print_message "${BLUE}" "🔒 Setting up private files from: $PRIVATE_REPO_URL"
+    if [ -n "$PRIVATE_REPO_URL" ]; then
+        print_message "${BLUE}" "🔒 Setting up private files from: $PRIVATE_REPO_URL"
+    else
+        print_message "${BLUE}" "🔒 Updating private files (existing clone at $PRIVATE_DIR)"
+    fi
 
     # Clone or update private repository
     if [ -d "$PRIVATE_DIR" ]; then

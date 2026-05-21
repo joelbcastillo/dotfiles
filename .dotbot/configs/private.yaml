@@ -1,146 +1,25 @@
-# Private repository integration configuration
-# This configuration creates symlinks to private files from the dotfiles-private repository
-# to the locations where the original dotbot configs expect them
-
-# Base SSH config: swap the regular file in for a symlink to the private
-# canonical. `force: true` is needed here exactly once — it overwrites a
-# drifted regular file on first run, then becomes a no-op (the `link.py`
-# idempotency check short-circuits). `canonicalize: false` preserves the
-# `~/...` target instead of resolving through `realpath`.
-- link:
-    ~/.dotfiles/tools/ssh/config:
-      path: ~/.dotfiles-private/ssh/config
-      force: true
-      canonicalize: false
-      if: '[ -f ~/.dotfiles-private/ssh/config ]'
+# Private repository integration.
+#
+# This config delegates to scripts/setup-private-files.sh — the same
+# implementation `./install private` runs. Calling `./install config private`
+# produces identical output (relative symlink targets via perl
+# File::Spec->abs2rel), so the two install entry points stay in sync.
+#
+# History: this file used to be a single `- shell:` block with one
+# `for file in private/X/*; do ln -sf "$file" public/X/; done` loop per
+# subdir. Two problems with that pattern:
+#   1. `ln -sf` against a non-empty target DIRECTORY silently created a
+#      nested symlink inside it instead of replacing it. Observed on
+#      2026-05-20 with `tools/ssh/configs/configs` and `tools/ssh/keys/keys`.
+#   2. The shell loops expanded glob results to absolute paths, so the
+#      resulting symlink targets were absolute. That drifted against the
+#      relative targets committed in the public repo (and now produced by
+#      setup-private-files.sh via perl File::Spec).
+#
+# Why not use dotbot's native `link: glob: true`? Dotbot writes absolute
+# symlink targets (no `relative` option), which has the same drift issue.
+# Routing both install paths through the shell script avoids it.
 
 - shell:
-    - command: |
-        # Create symlinks for all files in private git directory
-        for file in ~/.dotfiles-private/git/*; do
-          if [ -f "$file" ]; then
-            filename=$(basename "$file")
-            ln -sf "$file" ~/.dotfiles/tools/git/"$filename"
-          fi
-        done
-      description: "Link private git files to dotfiles/tools/git/"
-
-    - command: |
-        # Create symlinks for all files in private aliases directory
-        for file in ~/.dotfiles-private/aliases/*; do
-          if [ -f "$file" ]; then
-            filename=$(basename "$file")
-            ln -sf "$file" ~/.dotfiles/shells/zsh/zsh.before/"$filename"
-          fi
-        done
-      description: "Link private aliases to dotfiles/shells/zsh/zsh.before/"
-
-    - command: |
-        # Create symlinks for all files in private vscode directory
-        for file in ~/.dotfiles-private/vscode/*; do
-          if [ -f "$file" ]; then
-            filename=$(basename "$file")
-            ln -sf "$file" ~/.dotfiles/apps/vscode/"$filename"
-          fi
-        done
-      description: "Link private VS Code files to dotfiles/apps/vscode/"
-
-    - command: |
-        # Create symlinks for all files in private cursor directory
-        for file in ~/.dotfiles-private/cursor/*; do
-          if [ -f "$file" ]; then
-            filename=$(basename "$file")
-            ln -sf "$file" ~/.dotfiles/apps/cursor/"$filename"
-          fi
-        done
-      description: "Link private Cursor files to dotfiles/apps/cursor/"
-
-    - command: |
-        # Ensure SSH per-identity directories exist. tools/ssh/configs is
-        # populated with fragment symlinks by the identity yamls
-        # (ssh-personal.yaml, ssh-jbctechsolutions.yaml). tools/ssh/keys is
-        # populated with per-identity subdirs by fetch-ssh-keys.sh, which the
-        # identity yamls invoke. tools/ssh/config itself is symlinked above
-        # via dotbot's native link: (force overwrites the drifted regular
-        # file from before this restructure).
-        #
-        # The prior version of this command tried `ln -sf
-        # ~/.dotfiles-private/ssh/{configs,keys} ~/.dotfiles/tools/ssh/...`,
-        # which produced nested `configs/configs` and `keys/keys` symlinks
-        # because the targets were already non-empty real directories.
-        mkdir -p ~/.dotfiles/tools/ssh/configs ~/.dotfiles/tools/ssh/keys
-      description: "Ensure SSH per-identity directories exist"
-
-    - command: |
-        # Create symlinks for all secure_profiles from private repo
-        # Ensure target directory exists
-        mkdir -p ~/.dotfiles/shells/oh-my-zsh/custom/secure_profiles
-        if [ -d ~/.dotfiles-private/shells/secure_profiles ]; then
-          for profile in ~/.dotfiles-private/shells/secure_profiles/*; do
-            if [ -f "$profile" ]; then
-              profile_name=$(basename "$profile")
-              ln -sf "$profile" ~/.dotfiles/shells/oh-my-zsh/custom/secure_profiles/"$profile_name"
-              echo "Linked secure profile $profile_name"
-            fi
-          done
-        fi
-      description: "Link private secure_profiles to dotfiles/shells/oh-my-zsh/custom/secure_profiles/"
-
-    - command: |
-        # Create symlinks for all dotbot configs from private repo
-        # This supports any profile-specific configs (personal, work, client1, etc.)
-        if [ -d ~/.dotfiles-private/dotbot ]; then
-          for config in ~/.dotfiles-private/dotbot/*.yaml; do
-            if [ -f "$config" ]; then
-              config_name=$(basename "$config")
-              ln -sf "$config" ~/.dotfiles/.dotbot/configs/"$config_name"
-              echo "Linked private $config_name config"
-            fi
-          done
-        fi
-      description: "Link all private dotbot configs to dotfiles/.dotbot/configs/"
-
-    - command: |
-        # Create symlinks for all Claude tools from private repo
-        if [ -d ~/.dotfiles-private/tools/claude ]; then
-          mkdir -p ~/.dotfiles/tools/claude
-          for file in ~/.dotfiles-private/tools/claude/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              ln -sf "$file" ~/.dotfiles/tools/claude/"$filename"
-              echo "Linked private Claude tool $filename"
-            fi
-          done
-        fi
-      description: "Link private Claude tools to dotfiles/tools/claude/"
-
-    - command: |
-        # Create symlinks for Finicky configuration from private repo
-        if [ -d ~/.dotfiles-private/tools/finicky ]; then
-          mkdir -p ~/.dotfiles/tools/finicky
-          for file in ~/.dotfiles-private/tools/finicky/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              ln -sf "$file" ~/.dotfiles/tools/finicky/"$filename"
-              echo "Linked private Finicky config $filename"
-            fi
-          done
-        fi
-      description: "Link private Finicky configuration to dotfiles/tools/finicky/"
-
-    - command: |
-        # Create symlinks for sshop configuration from private repo
-        if [ -d ~/.dotfiles-private/sshop ]; then
-          mkdir -p ~/.dotfiles/tools/sshop
-          for file in ~/.dotfiles-private/sshop/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              ln -sf "$file" ~/.dotfiles/tools/sshop/"$filename"
-              echo "Linked private sshop config $filename"
-            fi
-          done
-        fi
-      description: "Link private sshop configuration to dotfiles/tools/sshop/"
-
-    - command: echo "Private files symlinked to dotfiles directories successfully"
-      description: "Verify private file symlinks to dotfiles"
+    - command: ${HOME}/.dotfiles/scripts/setup-private-files.sh
+      description: "Materialize private symlinks (via shared setup-private-files.sh)"
