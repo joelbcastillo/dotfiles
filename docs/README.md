@@ -4,7 +4,7 @@ This directory contains detailed documentation for the dotfiles template.
 
 ## 🚀 Getting Started
 
-- **[QUICKSTART.md](../QUICKSTART.md)** - Complete setup guide for new users
+- **[START_HERE.md](START_HERE.md)** - Complete setup guide for new users
 - **[README.md](../README.md)** - Main project documentation
 
 ## 📖 Detailed Guides
