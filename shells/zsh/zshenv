@@ -13,7 +13,7 @@ export DOTFILES="$HOME/.dotfiles"
 
 # Multi-account `op` wrapper. Lives in zsh.before alongside other early shell
 # setup, but we also source it here from zshenv so non-interactive SSH commands like
-# `ssh jbc-dev-mac 'op --account joshuaproject vault list'` get the wrapper
+# `ssh headless-mac 'op --account work vault list'` get the wrapper
 # (zshrc / zsh.before only run for interactive shells). The file is pure
 # function/export definitions — safe to source twice.
 [ -f "$HOME/.dotfiles/shells/zsh/zsh.before/1password.zsh" ] && \

@@ -40,7 +40,7 @@ ln -sf ~/.dotfiles/tools/mcp/claude_desktop_config.json.template \
 
 ```bash
 # Sign in to 1Password CLI (JBC Tech Solutions account)
-op signin jbctechsolutions.1password.com
+op signin your-account.1password.com
 
 # Resolve secrets in the config
 ~/.dotfiles/scripts/resolve-1password-secrets.sh \
@@ -112,7 +112,7 @@ If the MCP servers are working, Claude will be able to access these services.
 
 4. **Check 1Password CLI is working**:
    ```bash
-   op signin jbctechsolutions.1password.com
+   op signin your-account.1password.com
    ~/.dotfiles/scripts/fetch-1password-secrets.sh notion_api_key
    ```
 
@@ -139,7 +139,7 @@ If the MCP servers are working, Claude will be able to access these services.
 
 1. **Sign in to 1Password CLI**:
    ```bash
-   op signin jbctechsolutions.1password.com
+   op signin your-account.1password.com
    ```
 
 2. **Test secret retrieval**:

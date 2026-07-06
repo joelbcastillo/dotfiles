@@ -2,7 +2,7 @@
 # Designed to compose on top of `default` (or `full`). This config only adds
 # the headless-specific mechanics; it does NOT install machine-specific
 # identity like hostname or authorized_keys (that belongs in the consuming
-# repo, e.g. jbctechsolutions/jbc-dev-laptop).
+# repo, e.g. your-org/your-laptop-repo).
 
 - shell:
     - command: |
