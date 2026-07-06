@@ -8,4 +8,11 @@
         brew install zoxide
       fi
     description: Install utility packages via Homebrew
-      
+
+- link:
+    ~/.config/direnv/direnvrc:
+      path: tools/direnv/direnvrc
+      create: true
+      relink: true
+      force: true
+
