@@ -51,6 +51,7 @@ tools/1password/secret-paths.json
 
 # Claude AI configuration (personal settings)
 .claude/settings.local.json
+.claude/dmux/
 
 # Backup location files
 .backup_location
