@@ -40,6 +40,12 @@ for entry in "${PROFILES[@]}"; do
 PLIST
   cat > "$APP/Contents/MacOS/launcher" <<LAUNCH
 #!/bin/bash
+# If this profile is already running, focus it instead of spawning a
+# doomed second instance (Electron single-instance lock exits silently).
+PID=\$(pgrep -f -- "--user-data-dir=.*$PROFILE\$" | head -1)
+if [ -n "\$PID" ]; then
+  exec osascript -e "tell application \\"System Events\\" to set frontmost of (first process whose unix id is \$PID) to true"
+fi
 exec "$CLAUDE_BIN" --user-data-dir="\$HOME/Library/Application Support/$PROFILE"
 LAUNCH
   chmod +x "$APP/Contents/MacOS/launcher"
