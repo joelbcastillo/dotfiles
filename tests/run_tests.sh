@@ -1,7 +1,3 @@
 #!/bin/bash
-
-# Source the shell functions
-source "$(dirname "$0")/../shells/oh-my-zsh/custom/functions.zsh"
-
-# Run the test suite
-"$(dirname "$0")/shell_functions.test.sh" 
+# Shell functions require zsh syntax; delegate to the zsh test harness.
+exec zsh "$(dirname "$0")/run_tests.zsh"
