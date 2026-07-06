@@ -154,7 +154,7 @@ Secrets are defined in `.dotfiles-private/secrets/1password/secret-paths.json`:
       "item_id": "namjmkrvi7y3rlv6glujnol54i",
       "field": "credential",
       "vault": "je45orsqeqmplaeemrshp3kiea",
-      "account": "jbctechsolutions"
+      "account": "your-account"
     }
   }
 }

@@ -51,6 +51,8 @@ tools/1password/secret-paths.json
 
 # Claude AI configuration (personal settings)
 .claude/settings.local.json
+.claude/dmux/
+.claude/hooks/
 
 # Backup location files
 .backup_location
@@ -60,6 +62,7 @@ tools/git/*
 !tools/git/gitconfig
 !tools/git/gitconfig.user.template
 !tools/git/gitignore_global
+!tools/git/gitmessage
 !tools/git/headless-signing-config.sh
 !tools/git/lazygit.yaml
 # Per-identity gitconfigs are symlinks into ~/.dotfiles-private/git/; tracked

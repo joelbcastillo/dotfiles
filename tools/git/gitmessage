@@ -1,0 +1,14 @@
+
+# Conventional Commit — format:
+#   <type>[(<scope>)]: <short summary>
+#
+# type   : feat | fix | chore | docs | refactor | test | ci | perf | build
+# scope  : optional, e.g. (auth) | (api) | (ui)
+# summary: imperative mood, ≤72 chars — "add X" not "added X"
+#
+# Body (optional) — blank line after summary, then explain WHY.
+# Wrap at 72 characters.
+#
+# Footer (optional):
+#   BREAKING CHANGE: <description>
+#   Closes #<issue>

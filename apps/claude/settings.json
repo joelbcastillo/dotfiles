@@ -1,8 +1,12 @@
 {
+  "cleanupPeriodDays": 90,
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "model": "opus",
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -10,27 +14,47 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '\n\ud83d\udce6 Plugin Status:' && PLUGIN_COUNT=$(grep -c '\".*@.*\": true' ~/.claude/settings.json) && echo \"   \u2713 $PLUGIN_COUNT plugins enabled (optimized for context)\" && echo '   \ud83d\udca1 To enable more: edit ~/.claude/settings.json' && echo '   \ud83d\udcc4 Enable project-specific plugins: .claude/settings.local.json\n'"
+            "command": "echo '\n📦 Plugin Status:' && PLUGIN_COUNT=$(grep -c '.*@.*: true' ~/.claude/settings.json) && echo    ✓ $PLUGIN_COUNT plugins enabled (optimized for context) && echo '   💡 To enable more: edit ~/.claude/settings.json' && echo '   📄 Enable project-specific plugins: .claude/settings.local.json\n'"
           }
         ]
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "ccusage statusline",
+    "padding": 0
+  },
   "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
-    "Notion@claude-plugins-official": false,
-    "learning-output-style@claude-plugins-official": false,
-    "security-guidance@claude-plugins-official": false,
+    "compound-engineering@compound-engineering-plugin": true,
+    "compound-knowledge@compound-knowledge-plugin": true,
     "context7@claude-plugins-official": false,
+    "cursor-builder@jbc-tech-solutions-marketplace": false,
     "github@claude-plugins-official": false,
+    "learning-output-style@claude-plugins-official": false,
     "linear@claude-plugins-official": false,
-    "stripe@claude-plugins-official": false,
-    "slack@claude-plugins-official": false,
     "pr-review-toolkit@claude-plugins-official": false,
-    "cursor-builder@jbc-tech-solutions-marketplace": false
+    "security-guidance@claude-plugins-official": false,
+    "slack@claude-plugins-official": false,
+    "stripe@claude-plugins-official": false,
+    "superpowers@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
+    "compound-engineering-plugin": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/EveryInc/every-marketplace.git"
+      }
+    },
+    "compound-knowledge-plugin": {
+      "source": {
+        "source": "github",
+        "repo": "EveryInc/compound-knowledge-plugin"
+      }
+    },
     "local": {
       "source": {
         "source": "directory",
@@ -38,6 +62,8 @@
       }
     }
   },
+  "effortLevel": "high",
+  "tui": "default",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark"
+  "agentPushNotifEnabled": true
 }

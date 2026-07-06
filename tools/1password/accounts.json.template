@@ -18,25 +18,25 @@
         }
       ]
     },
-    "carequant": {
-      "domain": "my.1password.com",
-      "account_uuid": "75O7IXLDSVGUVPXRYCKMQIINE4",
-      "email": "joel.castillo@carequant.health",
-      "default_vault": "CareQuant",
+    "work": {
+      "domain": "your-company.1password.com",
+      "account_uuid": "YOUR_WORK_ACCOUNT_UUID",
+      "email": "you@your-company.com",
+      "default_vault": "Work",
       "ssh_keys": [
         {
           "name": "Github SSH - Work",
           "filename": "github-work",
-          "vault": "CareQuant"
+          "vault": "Work"
         },
         {
           "name": "AWS SSH - Work",
           "filename": "aws-work",
-          "vault": "CareQuant"
+          "vault": "Work"
         }
       ]
     }
   },
-  "active_accounts": ["personal", "carequant"],
+  "active_accounts": ["personal", "work"],
   "default_account": "personal"
 }

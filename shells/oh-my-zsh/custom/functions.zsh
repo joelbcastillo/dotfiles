@@ -106,6 +106,22 @@ function pingtest() {
     ping -c 4 "$1" | grep "packet loss"
 }
 
+# Run a local node binary via node instead of npx (asdf-safe workaround)
+function nrun() {
+    local tool="$1"
+    if [ -z "$tool" ]; then
+        echo "Usage: nrun <tool> [args...]"
+        return 1
+    fi
+    local bin="node_modules/.bin/$tool"
+    if [ ! -x "$bin" ]; then
+        echo "Error: $bin not found — run 'npm install' first" >&2
+        return 1
+    fi
+    shift
+    node "$bin" "$@"
+}
+
 # Development Environment Functions
 
 # Update all development tools
@@ -468,6 +484,126 @@ function cal() {
 
 # Development Workflow Functions
 
+# Scaffold common project files into the current directory
+# Usage: _new_project_scaffold <project_type>
+function _new_project_scaffold() {
+    local project_type="$1"
+
+    # .editorconfig — common baseline
+    cat > .editorconfig <<'EDITORCONFIG'
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+EDITORCONFIG
+
+    # .gitignore and .claude/settings.local.json — seeded for project type
+    case "$project_type" in
+        python)
+            cat > .gitignore <<'GITIGNORE'
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+GITIGNORE
+            mkdir -p .claude
+            cat > .claude/settings.local.json <<'SETTINGS'
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(pip install *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+SETTINGS
+            ;;
+        node)
+            cat > .gitignore <<'GITIGNORE'
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+GITIGNORE
+            mkdir -p .claude
+            cat > .claude/settings.local.json <<'SETTINGS'
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run *)",
+      "Bash(node *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+SETTINGS
+            ;;
+        go)
+            cat > .gitignore <<'GITIGNORE'
+*.test
+*.out
+/vendor/
+GITIGNORE
+            mkdir -p .claude
+            cat > .claude/settings.local.json <<'SETTINGS'
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test *)",
+      "Bash(go build *)",
+      "Bash(go vet *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+SETTINGS
+            ;;
+        rust)
+            cat > .gitignore <<'GITIGNORE'
+/target/
+Cargo.lock
+GITIGNORE
+            mkdir -p .claude
+            cat > .claude/settings.local.json <<'SETTINGS'
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo test *)",
+      "Bash(cargo build *)",
+      "Bash(cargo check *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+SETTINGS
+            ;;
+    esac
+}
+
 # Create a new project with specified type
 function new-project() {
     local project_name="$1"
@@ -509,7 +645,8 @@ function new-project() {
             return 1
             ;;
     esac
-    
+
+    _new_project_scaffold "$project_type"
     echo "Project '$project_name' created successfully!"
 }
 
