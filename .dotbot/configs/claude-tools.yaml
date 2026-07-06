@@ -1,7 +1,7 @@
 - shell:
   -
     command: |
-      echo "Setting up Claude Code companion tools (Happy, dmux, Paseo)..."
+      echo "Setting up Claude Code companion tools (Happy, dmux, Paseo, ccs, ccr)..."
     description: Setting up Claude Code companion tools
 
 - shell:
@@ -15,7 +15,7 @@
         echo "Skipping Claude npm tools: npm not on PATH."
         echo "Install Node.js first (profile full runs languages/nodejs before this; ai-tools-only users need npm)."
       fi
-    description: Install or upgrade Claude npm CLIs (dmux, happy-coder, Paseo) to latest
+    description: Install or upgrade Claude npm CLIs (dmux, happy-coder, Paseo, ccs, ccr) to latest
 
 - shell:
   -
@@ -23,7 +23,8 @@
       echo "Claude tools setup completed"
       echo "Tip: run upgrade-claude-npm-tools in zsh anytime to pull @latest without full dotbot."
       echo "Note: Run './install config claude-tools-private' for personal config (dmux, env vars)"
-      for tool in happy dmux paseo; do
+      echo "Note: 'ccs config' sets up account switching; 'ccr' needs ~/.claude-code-router/config.json (API keys)."
+      for tool in happy dmux paseo ccs ccr; do
         if command -v $tool >/dev/null 2>&1; then
           echo "  $tool: $($tool --version 2>/dev/null || echo 'installed')"
         else

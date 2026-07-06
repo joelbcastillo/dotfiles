@@ -24,9 +24,13 @@ if ! npm install -g "happy-coder@latest"; then
   echo "upgrade-claude-npm-tools: happy-coder install failed (known issue on some npm versions with workspace: deps). Skipping." >&2
 fi
 npm install -g "@getpaseo/cli@latest"
+# ccs: switch between multiple Claude subscription accounts (2 Max + 1 Teams) via OAuth.
+npm install -g "@kaitranntt/ccs@latest"
+# ccr: route Claude Code to other model providers via API keys (opt-in, needs its own config).
+npm install -g "@musistudio/claude-code-router@latest"
 
 echo "Installed versions:"
-for cmd in claude happy dmux paseo; do
+for cmd in claude happy dmux paseo ccs ccr; do
   if command -v "$cmd" >/dev/null 2>&1; then
     printf '  %s: %s\n' "$cmd" "$($cmd --version 2>/dev/null || echo ok)"
   else
