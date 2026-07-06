@@ -4,8 +4,8 @@ This directory contains detailed documentation for the dotfiles template.
 
 ## 🚀 Getting Started
 
-- **[START_HERE.md](START_HERE.md)** - Complete setup guide for new users
-- **[README.md](../README.md)** - Main project documentation
+- **[README.md](../README.md)** - Main project documentation and setup guide
+- **[START_HERE.md](START_HERE.md)** - MCP profile manager integration guide
 
 ## 📖 Detailed Guides
 
