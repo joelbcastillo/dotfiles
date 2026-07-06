@@ -38,9 +38,7 @@ Colima does **not** require any configuration in `.dotfiles-private` because:
 
 ### 5. Shell Configuration
 
-Docker aliases are already available via:
-- `shells/prezto/prezto/modules/docker/` (if using prezto)
-- Works automatically with any Docker-compatible tooling
+Docker aliases are available via oh-my-zsh's docker plugin and work automatically with any Docker-compatible tooling.
 
 ### 6. IDE Configuration
 
