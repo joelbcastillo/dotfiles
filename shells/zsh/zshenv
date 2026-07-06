@@ -42,6 +42,15 @@ elif command -v brew >/dev/null 2>&1; then
     eval "$(brew shellenv)"
 fi
 
+# brew shellenv exports FPATH, so long-lived parents (e.g. the tmux server)
+# can hand new shells a stale snapshot after a zsh upgrade removes the old
+# keg — breaking every core autoload (compinit, add-zsh-hook,
+# up-line-or-beginning-search). Keep the version-independent core-functions
+# dir on fpath as a guard; brew relinks it on every zsh upgrade.
+if [ -n "${HOMEBREW_PREFIX:-}" ] && [ -d "$HOMEBREW_PREFIX/share/zsh/functions" ]; then
+    (( ${fpath[(I)$HOMEBREW_PREFIX/share/zsh/functions]} )) || fpath+=("$HOMEBREW_PREFIX/share/zsh/functions")
+fi
+
 # Set umask for group-writable files (for group-based Homebrew)
 # This doesn't hurt for user-local installations
 umask 0002
