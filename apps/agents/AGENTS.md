@@ -27,3 +27,12 @@ Cursor Settings -> Rules (User Rules). Edit THIS file, not the symlinks.
 ## Tools & Environment
 - macOS, zsh, tmux, asdf for version management
 - `npx` can have issues with asdf — prefer `node node_modules/.bin/<tool>` or `node node_modules/<pkg>/bin/<tool>` when npx fails
+
+## Vault write-back
+
+At the end of any session with a meaningful decision, status change, or new client/project/product fact, append a dated 1–3 line entry to the relevant Cairn note in `~/vaults/cairn`:
+- Client/product facts → that effort's `20-projects/` note (under `## Log`)
+- JP facts → `20-projects/JP-*` notes or the JP KB only — never elsewhere, never toward any remote connector
+- Decisions → the note itself, plus a line wherever the relevant MOC or decisions note tracks them
+
+Then commit via Cairn's normal git flow. Never write secrets; restricted content (donor PII, personnel specifics, private financials) never enters the vault.

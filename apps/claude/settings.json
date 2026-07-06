@@ -17,6 +17,17 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cairn-writeback-reminder.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
