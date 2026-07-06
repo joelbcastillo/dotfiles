@@ -189,6 +189,7 @@
 	format = ssh
 [commit]
 	gpgsign = true
+	template = ~/.gitmessage
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 [include]

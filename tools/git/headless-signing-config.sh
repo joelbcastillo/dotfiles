@@ -18,7 +18,7 @@
 #
 # After this runs, register the same pubkey on GitHub as a SIGNING key
 # (separate from auth keys). From the laptop:
-#   op --account jbctechsolutions.1password.com read \
+#   op --account your-account.1password.com read \
 #     "op://Local Dev/$(hostname -s)/public key" \
 #     | gh api -X POST user/ssh_signing_keys \
 #         -F title="$(hostname -s) (signing)" -F key=@/dev/stdin

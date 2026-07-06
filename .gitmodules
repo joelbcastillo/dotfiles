@@ -16,12 +16,6 @@
 [submodule ".dotbot/plugins/dotbot-vscode"]
 	path = .dotbot/plugins/dotbot-vscode
 	url = https://github.com/hujianxin/dotbot-vscode
-[submodule "shells/prezto/prezto"]
-	path = shells/prezto/prezto
-	url = https://github.com/sorin-ionescu/prezto
-[submodule "dotbot-git"]
-	path = .dotbot/plugins/dotbot-git
-	url = https://github.com/DrDynamic/dotbot-git.git
 [submodule "shells/oh-my-zsh/custom/plugins/zsh-autosuggestions"]
 	path = shells/oh-my-zsh/custom/plugins/zsh-autosuggestions
 	url = https://github.com/zsh-users/zsh-autosuggestions.git

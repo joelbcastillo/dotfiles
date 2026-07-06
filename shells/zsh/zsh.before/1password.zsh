@@ -11,8 +11,8 @@ export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agen
 # parent shell never holds a non-default token.
 #
 # NAME can be either:
-#   - the accounts.json key      (e.g. jbctechsolutions, joshuaproject)
-#   - the 1P domain shorthand    (e.g. jbctechsolutions.1password.com) — the
+#   - the accounts.json key      (e.g. work, client-a)
+#   - the 1P domain shorthand    (e.g. work.1password.com) — the
 #     wrapper strips ".1password.com" and looks for the matching token file
 #
 # In biometric mode (no SA token), this wrapper is a no-op: `op --account` is
@@ -30,7 +30,7 @@ op() {
     local tf="${cfg}/token-${key}.sh"
     if [[ ! -f "$tf" ]]; then
       print -u2 "op: no service-account token for '$key' (looked for $tf)"
-      print -u2 "op: rotate one with: bash ~/.repos/github.com/jbctechsolutions/jbc-dev-laptop/scripts/laptop/rotate-service-account.sh <ssh-target> ${key}"
+      print -u2 "op: rotate one with: bash ~/.repos/github.com/your-org/your-laptop-repo/scripts/laptop/rotate-service-account.sh <ssh-target> ${key}"
       return 1
     fi
     ( unset OP_SERVICE_ACCOUNT_TOKEN

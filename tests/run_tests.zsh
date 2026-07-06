@@ -87,6 +87,30 @@ else
     exit 1
 fi
 
+# Test nrun function
+echo "Testing nrun..."
+mkdir -p node_modules/.bin
+printf '#!/usr/bin/env node\nconsole.log("nrun-ok");\n' > node_modules/.bin/fake-tool
+chmod +x node_modules/.bin/fake-tool
+if nrun fake-tool | grep -q "nrun-ok"; then
+    echo "✅ PASS: nrun executes local node binary"
+else
+    echo "❌ FAIL: nrun execution test"
+    exit 1
+fi
+# Error path: missing binary should fail and mention npm install
+set +e
+nrun_err=$(nrun no-such-tool 2>&1)
+nrun_rc=$?
+set -e
+if [ $nrun_rc -ne 0 ] && echo "$nrun_err" | grep -q "npm install"; then
+    echo "✅ PASS: nrun errors when binary not found"
+else
+    echo "❌ FAIL: nrun missing binary error test"
+    exit 1
+fi
+rm -rf node_modules
+
 # Test development workflow
 echo "Testing development workflow..."
 new-project test_python python
@@ -95,6 +119,12 @@ if [ -d "test_python" ] && [ -d "test_python/.venv" ] && [ -f "test_python/READM
     echo "✅ PASS: new-project creates Python project"
 else
     echo "❌ FAIL: new-project test"
+    exit 1
+fi
+if [ -f "test_python/.editorconfig" ] && [ -f "test_python/.gitignore" ] && [ -f "test_python/.claude/settings.local.json" ]; then
+    echo "✅ PASS: new-project scaffolds .editorconfig, .gitignore, .claude/settings.local.json"
+else
+    echo "❌ FAIL: new-project scaffold files test"
     exit 1
 fi
 

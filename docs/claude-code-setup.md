@@ -23,7 +23,7 @@ The Claude Code setup token is stored in 1Password:
 - **Item Name**: "Claude Code Token"
 - **Vault**: "AI"
 - **Field**: "credential"
-- **Account**: "jbctechsolutions"
+- **Account**: "your-account"
 
 This is configured in `~/.dotfiles-private/secrets/1password/secret-paths.json`:
 
@@ -34,7 +34,7 @@ This is configured in `~/.dotfiles-private/secrets/1password/secret-paths.json`:
       "item": "wyy3kchgemuihnd6x32efyrzci",
       "field": "credential",
       "vault": "AI",
-      "account": "jbctechsolutions"
+      "account": "your-account"
     }
   }
 }
@@ -208,7 +208,7 @@ If you get an error that the token can't be fetched:
 2. **Verify you're on the correct account**:
    ```bash
    op account list
-   op signin --account jbctechsolutions
+   op signin --account your-account
    ```
 
 3. **Verify the item exists**:
