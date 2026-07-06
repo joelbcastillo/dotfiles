@@ -1,0 +1,28 @@
+# direnv stdlib extensions (sourced by every .envrc)
+
+# use_ccs <account> — pin this repo to a specific ccs account by pointing the
+# Claude CLI at that account's isolated CLAUDE_CONFIG_DIR. Applies to `claude`,
+# dmux-launched claude, and anything else that respects CLAUDE_CONFIG_DIR.
+#
+# Native ccs accounts ARE isolated CLAUDE_CONFIG_DIRs, so this needs no ccs
+# process at launch and no proxy — and it pins the account absolutely (unlike
+# `ccs <account>`, which can auto-switch under quota pressure).
+#
+# Usage in a repo's .envrc:   use_ccs jp     (then: direnv allow)
+# List accounts:              ccs auth list
+use_ccs() {
+  local account="$1"
+  local ccs_home="${CCS_HOME:-$HOME/.ccs}"
+  if [ -z "$account" ]; then
+    log_error "use_ccs: account name required (e.g. use_ccs jp). See: ccs auth list"
+    return 1
+  fi
+  local dir="$ccs_home/instances/$account"
+  if [ ! -d "$dir" ]; then
+    log_error "use_ccs: account '$account' not found at $dir (create it: ccs auth create $account)"
+    return 1
+  fi
+  export CLAUDE_CONFIG_DIR="$dir"
+  watch_file "$ccs_home/config.yaml"
+  log_status "claude account: $account"
+}
