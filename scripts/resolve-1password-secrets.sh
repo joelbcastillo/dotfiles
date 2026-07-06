@@ -28,6 +28,7 @@ resolve_secrets() {
             local secret_name="${BASH_REMATCH[1]}"
             local secret_value
 
+            # TODO: dead path — needs google_drive_username + google_drive_credential keys in secret-paths.json.template (only google_drive_credentials exists today)
             # Special handling for google_drive_credentials - combine username and credential
             if [ "$secret_name" = "google_drive_credentials" ]; then
                 local username_value

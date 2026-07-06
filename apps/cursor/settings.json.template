@@ -103,6 +103,5 @@
       ".continue/**/*.yaml"
     ]
   },
-  "claudeCode.preferredLocation": "panel",
-  "workbench.statusBar.visible": false
+  "claudeCode.preferredLocation": "panel"
 }

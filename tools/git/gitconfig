@@ -166,9 +166,11 @@
 [ghq]
   root = ~/.repos
 [credential "https://github.com"]
-	helper = !gh auth git-credential
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = !gh auth git-credential
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
 [diff]
   # Git diff will use (i)ndex, (w)ork tree, (c)ommit and (o)bject
   # instead of a/b/c/d as prefixes for patches
@@ -190,8 +192,6 @@
 [commit]
 	gpgsign = true
 	template = ~/.gitmessage
-[url "git@github.com:"]
-	insteadOf = https://github.com/
 [include]
 	# Host-local overrides — must be the LAST include so it wins over the
 	# [gpg "ssh"] / [user] / [commit] blocks above. Empty/missing on most
@@ -199,3 +199,5 @@
 	# (tools/git/headless-signing-config.sh) to override user.signingkey +
 	# gpg.ssh.program for boxes that don't run the 1Password desktop app.
 	path = ~/.gitconfig.local
+[url "git@github.com:"]
+	insteadof = https://github.com/

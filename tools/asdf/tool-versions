@@ -1,5 +1,5 @@
 # Node.js (current asdf latest)
-nodejs 25.9.0
+nodejs 26.2.0
 # Python (current asdf latest stable CPython, non free-threaded)
 python 3.14.4
 # Ruby (Latest stable)
