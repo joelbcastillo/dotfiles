@@ -48,7 +48,9 @@ PID=\$(pgrep -f -- "--user-data-dir=.*$PROFILE\$" | head -1)
 if [ -n "\$PID" ]; then
   exec osascript -e "tell application \\"System Events\\" to set frontmost of (first process whose unix id is \$PID) to true"
 fi
-exec "$CLAUDE_BIN" --user-data-dir="\$HOME/Library/Application Support/$PROFILE"
+# open -n via LaunchServices: proper activation context (exec'ing the raw
+# binary from a foreign bundle leaves windows unable to become key/clickable)
+exec open -n -a "Claude" --args --user-data-dir="\$HOME/Library/Application Support/$PROFILE"
 LAUNCH
   chmod +x "$APP/Contents/MacOS/launcher"
   if [ -n "${ICNS:-}" ] && [ -f "$ICONS_DIR/$ICNS" ]; then
