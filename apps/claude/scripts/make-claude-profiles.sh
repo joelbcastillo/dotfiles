@@ -13,16 +13,18 @@ CLAUDE_BIN="/Applications/Claude.app/Contents/MacOS/Claude"
 CLAUDE_ICNS="/Applications/Claude.app/Contents/Resources/electron.icns"
 [ -x "$CLAUDE_BIN" ] || { echo "Claude Desktop not found at /Applications/Claude.app" >&2; exit 1; }
 
-# name | profile dir (under ~/Library/Application Support) | bundle id
+ICONS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../icons" && pwd)"
+
+# name | profile dir (under ~/Library/Application Support) | bundle id | custom icns (optional)
 PROFILES=(
-  "Claude JBCTech Main|Claude-JBCTech-Main|com.jbctech.claude.main"
-  "Claude JBCTech Code|Claude-JBCTech-Code|com.jbctech.claude.code"
-  "Claude Joshua Project|Claude-JoshuaProject|com.jbctech.claude.jp"
+  "Claude JBCTech Main|Claude-JBCTech-Main|com.jbctech.claude.main|claude-jbctech-main.icns"
+  "Claude JBCTech Code|Claude-JBCTech-Code|com.jbctech.claude.code|claude-jbctech-code.icns"
+  "Claude Joshua Project|Claude-JoshuaProject|com.jbctech.claude.jp|claude-joshuaproject.icns"
 )
 
 mkdir -p "$HOME/Applications"
 for entry in "${PROFILES[@]}"; do
-  IFS='|' read -r NAME PROFILE BID <<< "$entry"
+  IFS='|' read -r NAME PROFILE BID ICNS <<< "$entry"
   APP="$HOME/Applications/$NAME.app"
   mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
   cat > "$APP/Contents/Info.plist" <<PLIST
@@ -49,7 +51,11 @@ fi
 exec "$CLAUDE_BIN" --user-data-dir="\$HOME/Library/Application Support/$PROFILE"
 LAUNCH
   chmod +x "$APP/Contents/MacOS/launcher"
-  cp "$CLAUDE_ICNS" "$APP/Contents/Resources/icon.icns"
+  if [ -n "${ICNS:-}" ] && [ -f "$ICONS_DIR/$ICNS" ]; then
+    cp "$ICONS_DIR/$ICNS" "$APP/Contents/Resources/icon.icns"
+  else
+    cp "$CLAUDE_ICNS" "$APP/Contents/Resources/icon.icns"
+  fi
   codesign --force -s - "$APP" 2>/dev/null || true
   echo "created: $APP"
 done
