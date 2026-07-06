@@ -260,7 +260,7 @@ The repository includes several pre-configured profiles:
 3. **ai-tools** - AI and Claude-focused setup:
    - Claude CLI and Claude Code
    - Cursor Agent
-   - Claude tools integration
+   - Claude companion tools (dmux, happy, Paseo, ccs, ccr)
    - MCP server configuration
    - API key management (via 1Password)
 

@@ -329,7 +329,8 @@ main() {
     fi
 
     local item_name
-    item_name=$(echo "$config" | jq -r '.item // empty')
+    # Support both item (name) and item_id (ID) - prefer item_id if available
+    item_name=$(echo "$config" | jq -r 'if .item_id then .item_id else .item end // empty')
     local field_name
     field_name=$(echo "$config" | jq -r '.field // empty')
     local vault_name

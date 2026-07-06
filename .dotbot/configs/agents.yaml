@@ -1,0 +1,37 @@
+- shell:
+  -
+    command: |
+      echo "Setting up canonical cross-tool agent instructions..."
+      mkdir -p ~/.config/agents ~/.claude ~/.codex ~/.config/opencode
+    description: Create agent config directories
+
+- link:
+    ~/.config/agents/AGENTS.md:
+      path: apps/agents/AGENTS.md
+      relink: true
+      force: true
+    description: Link canonical agent instructions
+
+- shell:
+  -
+    command: |
+      # Each tool's global instruction file points at the canonical copy.
+      # Cursor has no global file-based rules: paste the canonical content
+      # into Cursor Settings -> Rules (User Rules) manually.
+      ln -sfn ~/.config/agents/AGENTS.md ~/.claude/CLAUDE.md
+      ln -sfn ~/.config/agents/AGENTS.md ~/.codex/AGENTS.md
+      ln -sfn ~/.config/agents/AGENTS.md ~/.config/opencode/AGENTS.md
+      echo "Tool symlinks created (Claude Code, Codex CLI, OpenCode)"
+    description: Symlink per-tool global instruction files to canonical
+
+- shell:
+  -
+    command: |
+      for f in ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.config/opencode/AGENTS.md; do
+        if [ "$(readlink "$f")" = "$HOME/.config/agents/AGENTS.md" ]; then
+          echo "ok: $f"
+        else
+          echo "WARNING: $f is not linked to canonical"
+        fi
+      done
+    description: Verify agent instruction symlinks

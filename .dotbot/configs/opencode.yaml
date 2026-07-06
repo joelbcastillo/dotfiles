@@ -1,0 +1,36 @@
+- shell:
+    - command: |
+        echo "Setting up opencode..."
+        mkdir -p ~/.config/opencode
+      description: Create opencode config directory
+
+- link:
+    ~/.config/opencode/opencode.jsonc:
+      path: apps/opencode/opencode.jsonc
+      relink: true
+      force: true
+    ~/.config/opencode/package.json:
+      path: apps/opencode/package.json
+      relink: true
+      force: true
+    ~/.config/opencode/package-lock.json:
+      path: apps/opencode/package-lock.json
+      relink: true
+      force: true
+
+- shell:
+    - command: |
+        if ! command -v opencode >/dev/null 2>&1; then
+          echo "Warning: opencode not found. Install with: npm install -g opencode-ai"
+        else
+          echo "opencode found at: $(command -v opencode)"
+        fi
+      description: Check opencode installation
+    - command: |
+        if command -v npm >/dev/null 2>&1; then
+          (cd ~/.config/opencode && npm install --silent --no-audit --no-fund)
+          echo "opencode plugins installed"
+        else
+          echo "Warning: npm not found, skipped @opencode-ai/plugin install"
+        fi
+      description: Install opencode plugin dependencies
