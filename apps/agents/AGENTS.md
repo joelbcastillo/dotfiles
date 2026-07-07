@@ -36,3 +36,26 @@ At the end of any session with a meaningful decision, status change, or new clie
 - Decisions → the note itself, plus a line wherever the relevant MOC or decisions note tracks them
 
 Then commit via Cairn's normal git flow. Never write secrets; restricted content (donor PII, personnel specifics, private financials) never enters the vault.
+
+<!-- Section below added 2026-07-07 from the Claude-history audit (memory-infra docs/audit/):
+     these were the instructions Joel retyped by hand session after session. -->
+
+## Accounts & Secrets
+- 1Password CLI has two business accounts: always pass `--account` explicitly — `jbctechsolutions` (default/JBC work) or `joshuaproject` (JP work). Never run bare `op` and hit "multiple accounts found".
+- Prefer `op run` / `op inject` with `op://` references. Never ask Joel to paste a raw secret into chat — create the 1Password item (dummy values) for him to fill, or generate + store the secret via the CLI yourself.
+- Browser auth flows: open in Microsoft Edge (work profiles live there), or copy the URL to the clipboard instead of `open`.
+
+## Verification before claiming
+- Never state "merged / deployed / pushed / sent / fixed" without command evidence from this session (`gh pr view`, deploy-run status, healthz, the sent-mail id).
+- Bash writes under SharePoint/OneDrive paths and `~/vaults/cairn` can silently land in a sandbox overlay: verify the file actually reached disk; if Write/Edit look virtual, fall back to `cat > file <<'EOF'` with sandbox disabled.
+- Before any bulk or destructive write (task DBs, datasets, mass file ops): show a sample of what will change plus the total count, and confirm scope first.
+
+## Working with Joel
+- Times in ET, always.
+- Anything drafted in Joel's name (email, Teams, reports, posts) → use the `joel-voice` skill.
+- Ask one question at a time. Don't re-litigate decisions marked settled.
+- Test data: dummy emails `@tester.jbc.dev`; `joel@jbc.dev` stays the real account.
+
+## Infra & tracking
+- Infra changes are codified in the infra repo (JBC → `jbctechsolutions/infrastructure`, JP → `jp-infrastructure`, Terraform/Terramate) — never ad-hoc portal changes or inline bicep.
+- JP work tracking: GitHub Issues (team boards live in MS Planner) — not Linear. Linear is JBC-internal only.
