@@ -1,23 +1,35 @@
 # Claudian (Obsidian) ↔ ccs instance switching.
-# Claudian's settings point CLAUDE_CONFIG_DIR at the stable symlink
-# ~/.ccs/claudian-active; this function swings the symlink between ccs
-# instances. Restart the Claudian session (or Obsidian) after switching.
+# Claude Code keychains OAuth tokens by the LITERAL CLAUDE_CONFIG_DIR string,
+# so a symlink indirection breaks auth. Instead this rewrites the env var in
+# the vault's .claudian/claudian-settings.json to the real instance path.
+# Restart Obsidian (or reload the Claudian plugin) after switching.
 claudian-switch() {
-  local target="$1"
+  local target="$1" vault="${2:-$HOME/vaults/cairn}"
   local base="$HOME/.ccs/instances"
+  local settings="$vault/.claudian/claudian-settings.json"
   case "$target" in
     main) target="jbctech-main" ;;
     code) target="jbctech-code" ;;
     jp)   target="jp" ;;
     ""|status)
-      echo "claudian-active -> $(readlink "$HOME/.ccs/claudian-active" 2>/dev/null || echo '(unset)')"
-      echo "usage: claudian-switch main|code|jp"
+      grep -o 'CLAUDE_CONFIG_DIR=[^"]*' "$settings" 2>/dev/null || echo "(no CLAUDE_CONFIG_DIR set in $settings)"
+      echo "usage: claudian-switch main|code|jp [vault-path]"
       return 0 ;;
   esac
-  if [[ ! -d "$base/$target" ]]; then
-    echo "claudian-switch: no ccs instance '$target' in $base" >&2
-    return 1
-  fi
-  ln -sfn "$base/$target" "$HOME/.ccs/claudian-active"
-  echo "claudian-active -> $target  (restart the Claudian session in Obsidian to take effect)"
+  [[ -d "$base/$target" ]] || { echo "no ccs instance '$target'" >&2; return 1; }
+  [[ -f "$settings" ]] || { echo "no Claudian settings at $settings" >&2; return 1; }
+  python3 - "$settings" "$base/$target" <<'PY'
+import json, sys, re
+p, inst = sys.argv[1], sys.argv[2]
+d = json.load(open(p))
+env = d.get('sharedEnvironmentVariables', '')
+line = f'CLAUDE_CONFIG_DIR={inst}'
+if 'CLAUDE_CONFIG_DIR=' in env:
+    env = re.sub(r'CLAUDE_CONFIG_DIR=[^\n]*', line, env)
+else:
+    env = (env + '\n' + line).strip()
+d['sharedEnvironmentVariables'] = env
+json.dump(d, open(p, 'w'), indent=2)
+PY
+  echo "Claudian ($vault) -> $target  — restart Obsidian (or reload the Claudian plugin) to take effect"
 }
