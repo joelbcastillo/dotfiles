@@ -23,6 +23,8 @@ Cursor Settings -> Rules (User Rules). Edit THIS file, not the symlinks.
 - Default: feature branches from `main`, PRs target `main`, merge + tag for release. Delete the feature branch after merge.
 - Exception: repos with a staging/production split (currently only `jp-adopt-platform`) keep `dev` → `main` (push to dev deploys staging, push to main deploys production). For these, feature branches cut from `dev`, PRs target `dev`.
 - Use conventional commit style (feat:, fix:, chore:, etc.).
+- Commit attribution: keep the assistant Co-Authored-By trailer by default, but OMIT it in client-deliverable repos — currently `jbctech-claude-marketplace` and everything in the `joshua-project` GitHub org. (Ruled 2026-07-07; extend the list as client repos appear.)
+- Nontrivial feature work defaults to the compound-engineering pipeline (ce-brainstorm → ce-plan → ce-work → ce-code-review). Small fixes, chores, and one-file changes stay lightweight — don't ceremonialize them.
 
 ## Tools & Environment
 - macOS, zsh, tmux, asdf for version management
