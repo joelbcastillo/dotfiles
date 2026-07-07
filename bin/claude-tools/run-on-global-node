@@ -2,12 +2,17 @@
 # npm-global Claude CLIs (ccs, claude, ccr) are installed under the
 # ~/.tool-versions node only. asdf shims refuse to run them from repos whose
 # .tool-versions pins a different node ("No version is set for command ccs"),
-# so exec them on the global node directly. No env is exported, so the repo's
-# own node pin still applies to everything the tool spawns.
+# so run them via the global node install directly. No env is exported, so the
+# repo's own node pin still applies to everything the tool spawns.
 tool="$(basename "$0")"
 ver="$(awk '$1 == "nodejs" {print $2}' "$HOME/.tool-versions" 2>/dev/null)"
 bin="$HOME/.asdf/installs/nodejs/$ver/bin"
 if [ -n "$ver" ] && [ -x "$bin/$tool" ]; then
-  exec "$bin/node" "$bin/$tool" "$@"
+  # node-shebang scripts (ccs, ccr) run on the global node; anything else —
+  # e.g. claude's Bun-compiled claude.exe — is a native binary: exec it as-is.
+  case "$(head -c 64 "$bin/$tool" 2>/dev/null)" in
+    '#!'*node*) exec "$bin/node" "$bin/$tool" "$@" ;;
+    *) exec "$bin/$tool" "$@" ;;
+  esac
 fi
 exec "$HOME/.asdf/shims/$tool" "$@"
