@@ -1,6 +1,11 @@
 # Claude Code companion tools: Happy, dmux, Paseo
 # Personal env vars (HAPPY_SERVER_URL, CORTEX_VPS) are in dotfiles-private
 
+# ccs/claude/ccr are npm globals under the ~/.tool-versions node; their asdf
+# shims fail in repos pinning a different node. bin/claude-tools wrappers run
+# them on the global node directly; the PATH prepend lives in zshrc (must come
+# after the final asdf shims prepend there to win resolution).
+
 # Claude Code CLI: prefer npm global (@anthropic-ai/claude-code), then Homebrew.
 # Use a function (not an alias) so dmux/sh -c can still resolve `claude` on PATH while
 # interactive shells get _secure_run + secrets. Remove any private `alias claude=...`

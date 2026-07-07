@@ -80,6 +80,10 @@ unsetopt nullglob
 # Modern asdf is a Go binary on PATH; no shim source. Just expose its shims dir.
 export PATH="$HOME/.asdf/shims:$PATH"
 
+# Claude npm CLIs (ccs/claude/ccr) run on the ~/.tool-versions node regardless
+# of repo pins — must stay ahead of asdf shims (see bin/claude-tools).
+export PATH="$DOTFILES/bin/claude-tools:$PATH"
+
 # --- Lazy load ---
 asdf() {
     unfunction asdf
