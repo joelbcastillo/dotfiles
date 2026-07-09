@@ -128,9 +128,50 @@ assert_success "run status" "status: exit 0 after patch applied (reverse-check d
 # idempotent: applying again does not error
 assert_success "run restore" "restore: idempotent when patch already applied"
 
+# --- relink_hooks wires the symlink ------------------------------------------
+link_target="$(readlink "$CLAUDE_HOME/hooks" 2>/dev/null || true)"
+if [ "$link_target" = "$DOTFILES_ROOT/apps/claude/hooks" ]; then
+  ok "restore: ~/.claude/hooks symlink points at the dotfiles hooks dir"
+else
+  bad "restore: hooks symlink" "readlink=$link_target"
+fi
+
+# --- P1: gcs version drift makes restore die loud ----------------------------
+cat > "$MOCK_LIST_JSON" <<EOF
+[
+ {"id":"alpha@git-mp","version":"1.2.3","scope":"user","enabled":true,"installPath":"$CLAUDE_HOME/plugins/cache/git-mp/alpha/1.2.3"},
+ {"id":"widget@gcs-mp","version":"2.5.0","scope":"user","enabled":true,"installPath":"$GCS_ROOT"}
+]
+EOF
+drift_out="$(run restore 2>&1 || true)"
+assert_contains "version drift" "$drift_out" "restore: gcs version drift dies with a clear message"
+# reset installed state to match the lock
+write_list <<EOF
+[
+ {"id":"alpha@git-mp","version":"1.2.3","scope":"user","enabled":true,"installPath":"$CLAUDE_HOME/plugins/cache/git-mp/alpha/1.2.3"},
+ {"id":"widget@gcs-mp","version":"2.0.0","scope":"user","enabled":true,"installPath":"$GCS_ROOT"}
+]
+EOF
+
 # --- U3: fail-loud when patch no longer applies ------------------------------
 printf 'totally different file\n' > "$GCS_ROOT/hooks/session-start"
 assert_failure "run restore" "restore: fails loud when a patch no longer applies"
+
+# --- P1: restore dies loud when a pinned marketplace isn't registered --------
+cat > "$MOCK_LIST_JSON" <<EOF
+[ {"id":"orphan@ghost-mp","version":"1.0.0","scope":"user","enabled":true,"installPath":"$CLAUDE_HOME/plugins/cache/ghost-mp/orphan/1.0.0"} ]
+EOF
+cat > "$CLAUDE_HOME/settings.json" <<EOF
+{ "enabledPlugins": { "orphan@ghost-mp": true } }
+EOF
+run gen-lock >/dev/null 2>&1
+orphan_out="$(run restore 2>&1 || true)"
+assert_contains "not registered" "$orphan_out" "restore: unregistered marketplace with no known_marketplaces entry dies loud"
+
+# --- P0: malformed lockfile fails loud (no silent success) -------------------
+printf 'THIS IS NOT JSON {{{\n' > "$DOTFILES_ROOT/apps/claude/plugins/plugins.lock.json"
+assert_failure "run restore" "restore: fails loud on a malformed lockfile (P0 regression guard)"
+assert_failure "run update"  "update: fails loud on a malformed lockfile"
 
 echo
 echo "claude-plugins: ${pass} passed, ${fail} failed"

@@ -155,4 +155,8 @@ fi
 cd - >/dev/null || exit 1
 rm -rf "$TEST_DIR"
 
-echo "All tests completed successfully!" 
+# Run standalone *.test.sh suites (hermetic; own their fixtures/cleanup).
+echo "Running claude-plugins tests..."
+bash "$(dirname "$0")/claude-plugins.test.sh"
+
+echo "All tests completed successfully!"
