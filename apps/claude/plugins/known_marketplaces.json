@@ -16,5 +16,17 @@
       "source": "github",
       "repo": "VoltAgent/awesome-claude-code-subagents"
     }
+  },
+  "compound-engineering-plugin": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/EveryInc/every-marketplace.git"
+    }
+  },
+  "compound-knowledge-plugin": {
+    "source": {
+      "source": "github",
+      "repo": "EveryInc/compound-knowledge-plugin"
+    }
   }
 }

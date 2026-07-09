@@ -13,6 +13,10 @@
       path: apps/claude/scripts
       relink: true
       force: true
+    ~/.claude/hooks:
+      path: apps/claude/hooks
+      relink: true
+      force: true
     ~/.claude/plugins/known_marketplaces.json:
       path: apps/claude/plugins/known_marketplaces.json
       relink: true

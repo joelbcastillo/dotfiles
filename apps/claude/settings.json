@@ -16,6 +16,15 @@
             "command": "echo '\n📦 Plugin Status:' && PLUGIN_COUNT=$(grep -c '.*@.*: true' ~/.claude/settings.json) && echo    ✓ $PLUGIN_COUNT plugins enabled (optimized for context) && echo '   💡 To enable more: edit ~/.claude/settings.json' && echo '   📄 Enable project-specific plugins: .claude/settings.local.json\n'"
           }
         ]
+      },
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/compound-first.sh"
+          }
+        ]
       }
     ],
     "SessionEnd": [

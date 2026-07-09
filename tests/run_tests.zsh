@@ -4,6 +4,10 @@
 set -e
 set -x
 
+# Absolute paths captured before any cd — the cleanup below deletes the cwd.
+SCRIPT_DIR="${0:A:h}"
+REPO_ROOT="${SCRIPT_DIR:h}"
+
 # Source the shell functions
 source "$(dirname "$0")/../shells/oh-my-zsh/custom/functions.zsh"
 
@@ -155,4 +159,10 @@ fi
 cd - >/dev/null || exit 1
 rm -rf "$TEST_DIR"
 
-echo "All tests completed successfully!" 
+# Run standalone *.test.sh suites (hermetic; own their fixtures/cleanup).
+# cwd was just deleted; return to a valid dir and use the absolute path.
+cd "$REPO_ROOT" || exit 1
+echo "Running claude-plugins tests..."
+bash "$SCRIPT_DIR/claude-plugins.test.sh"
+
+echo "All tests completed successfully!"

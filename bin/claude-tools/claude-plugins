@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# claude-plugins — entrypoint for the pinned, dotfiles-tracked plugin system.
+# On PATH via $DOTFILES/bin/claude-tools. Delegates to the implementation script.
+#   claude-plugins status | update | restore | gen-lock
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${HERE}/../../apps/claude/scripts/claude-plugins.sh" "$@"

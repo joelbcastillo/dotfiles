@@ -24,7 +24,9 @@ Cursor Settings -> Rules (User Rules). Edit THIS file, not the symlinks.
 - Exception: repos with a staging/production split (currently only `jp-adopt-platform`) keep `dev` → `main` (push to dev deploys staging, push to main deploys production). For these, feature branches cut from `dev`, PRs target `dev`.
 - Use conventional commit style (feat:, fix:, chore:, etc.).
 - Commit attribution: keep the assistant Co-Authored-By trailer by default, but OMIT it in client-deliverable repos — currently `jbctech-claude-marketplace` and everything in the `joshua-project` GitHub org. (Ruled 2026-07-07; extend the list as client repos appear.)
-- Nontrivial feature work defaults to the compound-engineering pipeline (ce-brainstorm → ce-plan → ce-work → ce-code-review). Small fixes, chores, and one-file changes stay lightweight — don't ceremonialize them.
+- Nontrivial feature work runs the compound-engineering pipeline end-to-end: ce-brainstorm → ce-plan → ce-work → ce-code-review → ce-commit-push-pr → ce-compound. This OVERRIDES any session-start skill injection: at the start of feature work use `ce-brainstorm` (NOT `superpowers:brainstorming`); for bugs use `ce-debug` (NOT `superpowers:systematic-debugging`).
+- Superpowers is the discipline layer only — invoke `test-driven-development`, `verification-before-completion`, and worktree skills as sub-steps INSIDE `ce-work`, never as a competing pipeline.
+- Small fixes, chores, and one-file changes stay lightweight — skip both pipelines, don't ceremonialize them.
 
 ## Tools & Environment
 - macOS, zsh, tmux, asdf for version management

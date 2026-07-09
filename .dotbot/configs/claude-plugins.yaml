@@ -1,0 +1,15 @@
+- shell:
+    - command: |
+        echo "Checking Claude Code plugin pins…"
+        SCRIPT="$HOME/.dotfiles/apps/claude/scripts/claude-plugins.sh"
+        if [ -x "$SCRIPT" ]; then
+          if ! "$SCRIPT" status; then
+            echo ""
+            echo "Plugin drift, missing pins, or unapplied patches detected."
+            echo "  Fresh machine?  claude-plugins restore   (install pinned + apply patches)"
+            echo "  Refresh pins?   claude-plugins update    (bump to latest, then commit)"
+          fi
+        else
+          echo "claude-plugins.sh not found or not executable — skipping."
+        fi
+      description: Report Claude Code plugin pin/patch drift (non-fatal; restore is manual)
