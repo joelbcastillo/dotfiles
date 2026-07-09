@@ -1,0 +1,16 @@
+diff --git a/hooks/session-start b/hooks/session-start
+--- a/hooks/session-start
++++ b/hooks/session-start
+@@ -3,6 +3,12 @@
+ 
+ set -euo pipefail
+ 
++# Compound-first setup (Joel): superpowers' session-start auto-injection is disabled.
++# The compound-engineering pipeline owns the workflow (see ~/.config/agents/AGENTS.md
++# and the compound-first SessionStart hook). Skills remain invocable via the Skill tool.
++# Re-enable upstream behavior by removing this patch (apps/claude/patches/superpowers/).
++exit 0
++
+ # Determine plugin root directory
+ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
