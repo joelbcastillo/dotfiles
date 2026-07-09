@@ -6,5 +6,6 @@ cursor-agent
 claude-code
 claude
 claude-tools
+claude-plugins
 opencode
 api-keys
