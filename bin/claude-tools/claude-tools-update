@@ -1,12 +1,9 @@
 #!/bin/sh
-# Update the npm-global Claude CLIs (claude, ccs, ccr) under the home-pinned asdf
-# node — the same node `run-on-global-node` resolves them from. Keeps them current
-# without touching any repo's local node pin. Run this whenever you want updates.
-#
-# claude:  @anthropic-ai/claude-code   (npm-global; the native binary auto-update
-#          is disabled under a package manager, so update it here)
-# ccs:     @kaitranntt/ccs
-# ccr:     @musistudio/claude-code-router
+# Update the Claude CLIs in one command.
+#   claude — native self-updating build in ~/.local/bin (installed via `claude install`)
+#   ccs    — @kaitranntt/ccs           (npm-global under the home-pinned asdf node)
+#   ccr    — @musistudio/claude-code-router (npm-global under the home-pinned asdf node)
+# The npm CLIs run on the home-pinned node so no repo's local node pin interferes.
 set -eu
 
 ver="$(awk '$1 == "nodejs" {print $2}' "$HOME/.tool-versions" 2>/dev/null || true)"
@@ -18,15 +15,22 @@ if [ -z "$ver" ] || [ ! -x "$bin/npm" ]; then
   exit 1
 fi
 
-pkgs='@anthropic-ai/claude-code @kaitranntt/ccs @musistudio/claude-code-router'
+echo "Updating ccs + ccr (npm, node $ver) ..."
+"$bin/npm" install -g @kaitranntt/ccs @musistudio/claude-code-router
 
-echo "Updating Claude CLIs under node $ver ..."
-# `npm install -g <pkg>` installs the latest version of each.
-# shellcheck disable=SC2086  # intentional word-splitting of the package list
-"$bin/npm" install -g $pkgs
+echo
+claude_bin="$HOME/.local/bin/claude"
+if [ -x "$claude_bin" ]; then
+  echo "Updating claude (native build) ..."
+  "$claude_bin" install stable
+else
+  echo "note: native claude not at $claude_bin — skipping." \
+       "If claude is an npm-global instead, add @anthropic-ai/claude-code above."
+fi
 
 echo
 echo "Now installed:"
 "$bin/npm" ls -g --depth=0 2>/dev/null \
-  | grep -E 'claude-code@|@kaitranntt/ccs@|claude-code-router@' \
+  | grep -E '@kaitranntt/ccs@|claude-code-router@' \
   | sed -E 's/^[^@a-z]*/  /'
+[ -x "$claude_bin" ] && printf '  claude   %s\n' "$("$claude_bin" --version 2>/dev/null | head -1)"
