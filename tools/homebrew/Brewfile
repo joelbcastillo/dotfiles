@@ -71,6 +71,7 @@ brew "zsh"
 brew "airbytehq/tap/abctl"
 brew "azure/functions/azure-functions-core-tools@4"
 brew "hashicorp/tap/terraform"
+brew "infracost"                     # Terraform cost estimates (JP CI + local diffs)
 brew "schpet/tap/linear"
 cask "1password"
 cask "1password-cli"

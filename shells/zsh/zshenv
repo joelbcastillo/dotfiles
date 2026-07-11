@@ -86,3 +86,16 @@ if command -v op >/dev/null 2>&1 && [ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then
     fi
     unset _gh_token_cache _gh_token_ttl
 fi
+
+# Infracost API key — lazy 1Password lookup on first use (JP account).
+# No shell-startup cost: the wrapper replaces itself after resolving the key.
+# Key lives at op://JP Infrastructure/Infracost API Key/credential (joshuaproject).
+if command -v op >/dev/null 2>&1; then
+    infracost() {
+        if [ -z "$INFRACOST_API_KEY" ]; then
+            export INFRACOST_API_KEY="$(op read --account joshuaproject.1password.com "op://JP Infrastructure/Infracost API Key/credential" 2>/dev/null)"
+        fi
+        unset -f infracost
+        command infracost "$@"
+    }
+fi
