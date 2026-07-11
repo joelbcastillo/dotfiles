@@ -1,0 +1,32 @@
+#!/bin/sh
+# Update the npm-global Claude CLIs (claude, ccs, ccr) under the home-pinned asdf
+# node — the same node `run-on-global-node` resolves them from. Keeps them current
+# without touching any repo's local node pin. Run this whenever you want updates.
+#
+# claude:  @anthropic-ai/claude-code   (npm-global; the native binary auto-update
+#          is disabled under a package manager, so update it here)
+# ccs:     @kaitranntt/ccs
+# ccr:     @musistudio/claude-code-router
+set -eu
+
+ver="$(awk '$1 == "nodejs" {print $2}' "$HOME/.tool-versions" 2>/dev/null || true)"
+bin="$HOME/.asdf/installs/nodejs/$ver/bin"
+
+if [ -z "$ver" ] || [ ! -x "$bin/npm" ]; then
+  echo "error: home-pinned node '${ver:-<none>}' isn't installed at $bin" >&2
+  echo "       run: asdf install nodejs ${ver:-<version>}" >&2
+  exit 1
+fi
+
+pkgs='@anthropic-ai/claude-code @kaitranntt/ccs @musistudio/claude-code-router'
+
+echo "Updating Claude CLIs under node $ver ..."
+# `npm install -g <pkg>` installs the latest version of each.
+# shellcheck disable=SC2086  # intentional word-splitting of the package list
+"$bin/npm" install -g $pkgs
+
+echo
+echo "Now installed:"
+"$bin/npm" ls -g --depth=0 2>/dev/null \
+  | grep -E 'claude-code@|@kaitranntt/ccs@|claude-code-router@' \
+  | sed -E 's/^[^@a-z]*/  /'

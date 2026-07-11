@@ -15,4 +15,14 @@ if [ -n "$ver" ] && [ -x "$bin/$tool" ]; then
     *) exec "$bin/$tool" "$@" ;;
   esac
 fi
-exec "$HOME/.asdf/shims/$tool" "$@"
+# Not under the pinned asdf node — e.g. claude now ships as a standalone binary
+# (Homebrew or the native ~/.local/bin installer), or the pinned global node isn't
+# installed. Resolve the real binary via a PATH lookup minus this wrapper's own dir
+# (avoids recursion). Install-method-agnostic: finds brew, native, or npm installs.
+self_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
+alt="$(PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$self_dir" | paste -sd: -)" command -v "$tool" 2>/dev/null)"
+if [ -n "$alt" ]; then
+  exec "$alt" "$@"
+fi
+echo "$0: cannot locate '$tool' (not under node ${ver:-<none>}, or on PATH)" >&2
+exit 127
