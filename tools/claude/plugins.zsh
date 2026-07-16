@@ -1,1 +1,1 @@
-/Users/joel.castillo.cq/.dotfiles-private/tools/claude/plugins.zsh
+../../../.dotfiles-private/tools/claude/plugins.zsh
