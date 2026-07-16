@@ -1,71 +1,95 @@
 #!/usr/bin/env bash
-# Aggregate ccusage's active 5-hour block across every ccs instance into a
-# single tmux status-bar segment, via a cache file so the slow scan never runs
-# in the render path.
+# Render the overall Claude 5-hour usage segment for the tmux bar from the
+# account-global rate_limits data that statusline.sh taps on every refresh (see
+# latest.json). No ccusage, no CLAUDE_CONFIG_DIR, no transcript scan — the
+# official number comes straight from Claude Code's statusline stdin.
 #
-#   ccs-usage.sh update   slow (~6s): scan all instances, write the cache atomically.
-#                         Driven by com.jbctech.ccs-usage (launchd, every 60s).
-#   ccs-usage.sh          instant: print the cached segment (nothing if missing/stale).
-#                         Called by the tmux-powerkit `external` plugin.
-#
-# ccs runs each Claude instance with an isolated CLAUDE_CONFIG_DIR under
-# ~/.ccs/instances/<name>/; ccusage reads a comma-separated CLAUDE_CONFIG_DIR to
-# aggregate across them.
+#   ccs-usage.sh update   read latest.json, compute burn vs the prior sample, and
+#                         write the formatted segment. Driven by com.jbctech.ccs-usage
+#                         (launchd, every 60s) — a single writer, so burn is race-free.
+#   ccs-usage.sh          print the cached segment (nothing if missing/stale).
+#                         Called by the tmux-powerkit external plugin.
 set -euo pipefail
 
-# launchd hands us a minimal PATH; make homebrew ccusage and python3 resolvable.
+# launchd hands us a minimal PATH; make python3 resolvable.
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:$PATH"
 
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ccs-usage"
-CACHE_FILE="$CACHE_DIR/segment.txt"
-INSTANCES_ROOT="$HOME/.ccs/instances"
-CCUSAGE="${CCUSAGE_BIN:-ccusage}"
-STALE_AFTER=180   # seconds; blank the segment if the writer has stopped
+SEGMENT_FILE="$CACHE_DIR/segment.txt"
+STALE_AFTER=180   # seconds; blank the segment if no session has reported recently
 
 read_segment() {
-  [ -f "$CACHE_FILE" ] || exit 0
+  [ -f "$SEGMENT_FILE" ] || exit 0
   local mtime now
-  mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null) || exit 0
+  mtime=$(stat -f %m "$SEGMENT_FILE" 2>/dev/null) || exit 0
   now=$(date +%s)
   [ $(( now - mtime )) -le "$STALE_AFTER" ] || exit 0
-  cat "$CACHE_FILE"
+  cat "$SEGMENT_FILE"
 }
 
 update() {
   mkdir -p "$CACHE_DIR"
-
-  local dirs=""
-  for d in "$INSTANCES_ROOT"/*/; do
-    [ -d "$d/projects" ] && dirs+="$d,"
-  done
-  dirs=${dirs%,}
-  [ -n "$dirs" ] || exit 0
-
-  local json
-  json=$(CLAUDE_CONFIG_DIR="$dirs" "$CCUSAGE" blocks --active --json --token-limit max 2>/dev/null) || exit 0
-
   local seg
-  seg=$(printf '%s' "$json" | python3 -c '
-import json, sys
+  # shellcheck disable=SC2016
+  seg=$(CACHE_DIR="$CACHE_DIR" STALE_AFTER="$STALE_AFTER" python3 -c '
+import json, os, sys, time
+
+now = int(time.time())
+stale = int(os.environ["STALE_AFTER"])
+cache = os.environ["CACHE_DIR"]
+
 try:
-    d = json.load(sys.stdin)
+    d = json.load(open(os.path.join(cache, "latest.json")))
 except Exception:
     sys.exit(0)
-b = (d.get("blocks") or [None])[0]
-if not b:
+if now - int(d.get("ts", 0)) > stale:
+    sys.exit(0)                          # no active session recently
+used = d.get("used")
+if used is None:
     sys.exit(0)
-tok = b.get("totalTokens") or 0
-lim = (b.get("tokenLimitStatus") or {}).get("limit") or 0
-pct = round(tok / lim * 100) if lim else 0
-rem = (b.get("projection") or {}).get("remainingMinutes") or 0
-h, m = divmod(int(rem), 60)
-reset = f"{h}h{m:02d}m" if h else f"{m}m"
-cph = (b.get("burnRate") or {}).get("costPerHour") or 0
-print(f"{pct}% · {reset} · ${round(cph)}/h")
+
+# reset countdown from resets_at (epoch)
+reset = ""
+ra = d.get("resets_at")
+if ra:
+    rem = int(ra) - now
+    if rem > 0:
+        h, m = divmod(rem // 60, 60)
+        reset = f"{h}h{m:02d}m" if h else f"{m}m"
+
+# burn as %/hr vs the previous single-writer sample (anchor); single writer, no race
+burn = ""
+anchor_path = os.path.join(cache, "anchor.json")
+try:
+    prev = json.load(open(anchor_path))
+except Exception:
+    prev = None
+
+if (prev is None
+        or now - int(prev.get("ts", 0)) > 300         # refresh window
+        or used < prev.get("used", used)):            # block reset (usage dropped)
+    try:
+        tmp = anchor_path + f".{os.getpid()}.tmp"
+        open(tmp, "w").write(json.dumps({"used": used, "ts": now}))
+        os.replace(tmp, anchor_path)
+    except Exception:
+        pass
+elif now - int(prev.get("ts", 0)) >= 120:             # enough spread to be meaningful
+    dt_h = (now - int(prev["ts"])) / 3600.0
+    rate = (used - prev.get("used", used)) / dt_h if dt_h > 0 else 0
+    if rate >= 0.5:
+        burn = f"~{round(rate)}%/h"
+
+parts = [f"{round(used)}%"]
+if reset:
+    parts.append(reset)
+if burn:
+    parts.append(burn)
+print(" · ".join(parts))
 ') || exit 0
 
   [ -n "$seg" ] || exit 0
-  printf '%s' "$seg" > "$CACHE_FILE.tmp" && mv "$CACHE_FILE.tmp" "$CACHE_FILE"
+  printf '%s' "$seg" > "$SEGMENT_FILE.tmp" && mv "$SEGMENT_FILE.tmp" "$SEGMENT_FILE"
 }
 
 case "${1:-read}" in
