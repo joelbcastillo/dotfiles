@@ -33,8 +33,10 @@ if pct is not None:
 
 print(seg)
 
-# --- tap the account-global 5-hour usage into the shared cache for the tmux bar ---
-fh = (d.get("rate_limits") or {}).get("five_hour") or {}
+# --- tap the account-global rate limits (5-hour + weekly) into the shared cache ---
+rl = d.get("rate_limits") or {}
+fh = rl.get("five_hour") or {}
+wk = rl.get("seven_day") or {}
 used = fh.get("used_percentage")
 if used is None:
     sys.exit(0)                       # null before first API call / just after /compact
@@ -43,7 +45,10 @@ cache_dir = os.path.join(
     os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "ccs-usage")
 try:
     os.makedirs(cache_dir, exist_ok=True)
-    payload = json.dumps({"used": used, "resets_at": fh.get("resets_at"), "ts": int(time.time())})
+    payload = json.dumps({
+        "used": used, "resets_at": fh.get("resets_at"),
+        "wk_used": wk.get("used_percentage"), "wk_resets_at": wk.get("resets_at"),
+        "ts": int(time.time())})
     tmp = os.path.join(cache_dir, f".latest.{os.getpid()}.tmp")
     with open(tmp, "w") as f:
         f.write(payload)
