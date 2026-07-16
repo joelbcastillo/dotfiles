@@ -80,11 +80,24 @@ elif now - int(prev.get("ts", 0)) >= 120:             # enough spread to be mean
     if rate >= 0.5:
         burn = f"~{round(rate)}%/h"
 
-parts = [f"{round(used)}%"]
+parts = [f"5h {round(used)}%"]
 if reset:
     parts.append(reset)
 if burn:
     parts.append(burn)
+
+# weekly (seven-day) window — usage % + reset countdown in days/hours
+wk_used = d.get("wk_used")
+if wk_used is not None:
+    wk = [f"wk {round(wk_used)}%"]
+    wra = d.get("wk_resets_at")
+    if wra:
+        rem = int(wra) - now
+        if rem > 0:
+            days, hrs = rem // 86400, (rem % 86400) // 3600
+            wk.append(f"{days}d" if days else f"{hrs}h")
+    parts.extend(wk)
+
 print(" · ".join(parts))
 ') || exit 0
 
