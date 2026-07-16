@@ -9,7 +9,8 @@
         # Set up Go environment
         go install golang.org/x/tools/cmd/godoc@latest
         go install github.com/go-delve/delve/cmd/dlv@latest
-        go install github.com/cosmtrek/air@latest
+        # air moved from github.com/cosmtrek/air — old path fails module resolution
+        go install github.com/air-verse/air@latest
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
         go install github.com/ramya-rao-a/go-outline@latest
         go install github.com/nsf/gocode@latest
