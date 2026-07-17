@@ -67,8 +67,16 @@ if command -v op >/dev/null 2>&1 && [ -z "$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then
         export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat "$_gh_token_cache")"
         export GITHUB_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
         export GH_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN"
-    elif [ -z "$OP_SERVICE_ACCOUNT_TOKEN" ] && op account list >/dev/null 2>&1; then
-        # Fetch from 1Password and cache.
+    elif [[ -o interactive ]] && [ -z "$OP_SERVICE_ACCOUNT_TOKEN" ] && op account list >/dev/null 2>&1; then
+        # Fetch from 1Password and cache. INTERACTIVE SHELLS ONLY.
+        # Non-interactive shells (launchd cron, Claude Code's spawned bash, ssh
+        # commands) skip this branch entirely: with no GUI to answer the biometric
+        # prompt, `op account list`/`op read` stall on the 5s timeout, and because
+        # nothing caches the result each of the many shells a headless run spawns
+        # pays that 5s again — which is what hung the 7am/9pm pipeline. Non-interactive
+        # shells still get a token from the fresh-cache branch above when one exists,
+        # and otherwise proceed tokenless (the GitHub PAT is only needed for MCP
+        # servers, which the pipeline doesn't invoke).
         # Skipped when running under a service-account token (headless mode):
         # SA tokens are scoped to a single account and cannot resolve
         # cross-account vault refs, which causes `op read` to hang.
