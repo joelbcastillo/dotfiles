@@ -27,7 +27,7 @@ print_message "$BLUE" "🍺 Upgrading formulae..."
 brew upgrade --formula
 
 print_message "$BLUE" "📦 Upgrading casks..."
-OUTDATED_CASKS=$(brew outdated --cask --quiet 2>/dev/null || true)
+OUTDATED_CASKS=$(brew outdated --cask --quiet)
 
 if [ -z "$OUTDATED_CASKS" ]; then
     print_message "$GREEN" "✅ No outdated casks"
