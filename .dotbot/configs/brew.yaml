@@ -47,9 +47,9 @@
   - 
     command: brew update
     description: Update Homebrew
-  - 
-    command: brew upgrade
-    description: Upgrade Homebrew packages
+  -
+    command: ~/.dotfiles/scripts/brew-upgrade-safe.sh
+    description: Upgrade Homebrew packages (with warnings for failed casks)
   - 
     command: brew cleanup
     description: Clean up Homebrew
