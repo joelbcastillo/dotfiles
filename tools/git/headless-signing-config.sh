@@ -50,12 +50,41 @@ SSH_KEYGEN="$(command -v ssh-keygen || true)"
 # Use ~ in the config (git expands it). PUB_FILE may be /Users/joel/...
 # or ~/... depending on env; normalize to a tilde path for portability
 # across home dirs.
-PUB_TILDE="${PUB_FILE/#$HOME/~}"
+# The ~ must be escaped: unescaped it tilde-expands to the invoking shell's
+# $HOME instead of staying literal, writing that home into the config.
+PUB_TILDE="${PUB_FILE/#$HOME/\~}"
 
-# Idempotency: if file already has the right values, skip.
+# allowed_signers sits in a different place per host — ~/.ssh on the laptop,
+# ~/.config/git on this box — so the public gitconfig cannot name one path that
+# works on both. Point at whichever exists, or leave it alone and let the
+# public default stand when neither does.
+SIGNERS_TILDE=""
+for candidate in "$HOME/.config/git/allowed_signers" "$HOME/.ssh/allowed_signers"; do
+  if [[ -s "$candidate" ]]; then
+    SIGNERS_TILDE="${candidate/#$HOME/\~}"
+    break
+  fi
+done
+
+gpg_ssh_section="[gpg \"ssh\"]
+    program = $SSH_KEYGEN"
+[[ -n "$SIGNERS_TILDE" ]] && gpg_ssh_section+="
+    allowedSignersFile = $SIGNERS_TILDE"
+
+# Idempotency: skip only when every effective value already matches. Read with
+# `git config --get` rather than grep — a section header present without its
+# value (a bare [tag], or gpgsign = false) would otherwise read as configured
+# and leave signing off. The empty-string comparison doubles as the check that
+# no stale allowedSignersFile override lingers when we found no signers file;
+# this include loads last, so a stale override would beat the shared gitconfig.
+cfg_get() { git config --file "$LOCAL_CFG" --get "$1" 2>/dev/null || true; }
+
 if [[ -f "$LOCAL_CFG" ]] \
-   && grep -q "signingkey = $PUB_TILDE" "$LOCAL_CFG" \
-   && grep -q "program = $SSH_KEYGEN"  "$LOCAL_CFG"; then
+   && [[ "$(cfg_get user.signingkey)" == "$PUB_TILDE"  ]] \
+   && [[ "$(cfg_get gpg.ssh.program)" == "$SSH_KEYGEN" ]] \
+   && [[ "$(cfg_get commit.gpgsign)"  == "true"        ]] \
+   && [[ "$(cfg_get tag.gpgsign)"     == "true"        ]] \
+   && [[ "$(cfg_get gpg.ssh.allowedSignersFile)" == "$SIGNERS_TILDE" ]]; then
   log "already configured: $LOCAL_CFG points at $PUB_TILDE + ssh-keygen"
   exit 0
 fi
@@ -70,9 +99,10 @@ cat > "$tmp" <<EOF
 # (headless dotbot profile). Edit the script, not this file.
 [user]
     signingkey = $PUB_TILDE
-[gpg "ssh"]
-    program = $SSH_KEYGEN
+$gpg_ssh_section
 [commit]
+    gpgsign = true
+[tag]
     gpgsign = true
 EOF
 chmod 600 "$tmp"
@@ -81,5 +111,6 @@ trap - EXIT
 
 log "wrote $LOCAL_CFG"
 log "  signingkey = $PUB_TILDE"
+[[ -n "$SIGNERS_TILDE" ]] && log "  gpg.ssh.allowedSignersFile = $SIGNERS_TILDE"
 log "  gpg.ssh.program = $SSH_KEYGEN"
 log "next: register the public key on GitHub as a signing key (see script header)"
