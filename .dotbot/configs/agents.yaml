@@ -10,7 +10,6 @@
       path: apps/agents/AGENTS.md
       relink: true
       force: true
-    description: Link canonical agent instructions
 
 - shell:
   -

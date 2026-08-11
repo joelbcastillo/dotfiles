@@ -16,7 +16,6 @@
       path: tools/claude/config.json.template
       relink: true
       force: true
-    description: Link Claude configuration template
 
 - shell:
   -
