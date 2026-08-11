@@ -71,12 +71,20 @@ gpg_ssh_section="[gpg \"ssh\"]
 [[ -n "$SIGNERS_TILDE" ]] && gpg_ssh_section+="
     allowedSignersFile = $SIGNERS_TILDE"
 
-# Idempotency: if file already has the right values, skip.
+# Idempotency: skip only when every effective value already matches. Read with
+# `git config --get` rather than grep — a section header present without its
+# value (a bare [tag], or gpgsign = false) would otherwise read as configured
+# and leave signing off. The empty-string comparison doubles as the check that
+# no stale allowedSignersFile override lingers when we found no signers file;
+# this include loads last, so a stale override would beat the shared gitconfig.
+cfg_get() { git config --file "$LOCAL_CFG" --get "$1" 2>/dev/null || true; }
+
 if [[ -f "$LOCAL_CFG" ]] \
-   && grep -q "signingkey = $PUB_TILDE" "$LOCAL_CFG" \
-   && grep -q "program = $SSH_KEYGEN"  "$LOCAL_CFG" \
-   && grep -q "^\[tag\]" "$LOCAL_CFG" \
-   && { [[ -z "$SIGNERS_TILDE" ]] || grep -q "allowedSignersFile = $SIGNERS_TILDE" "$LOCAL_CFG"; }; then
+   && [[ "$(cfg_get user.signingkey)" == "$PUB_TILDE"  ]] \
+   && [[ "$(cfg_get gpg.ssh.program)" == "$SSH_KEYGEN" ]] \
+   && [[ "$(cfg_get commit.gpgsign)"  == "true"        ]] \
+   && [[ "$(cfg_get tag.gpgsign)"     == "true"        ]] \
+   && [[ "$(cfg_get gpg.ssh.allowedSignersFile)" == "$SIGNERS_TILDE" ]]; then
   log "already configured: $LOCAL_CFG points at $PUB_TILDE + ssh-keygen"
   exit 0
 fi
