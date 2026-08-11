@@ -45,8 +45,6 @@ _mcp_load_secrets() {
         project-focus|all-tools)
             # Load Notion
             export NOTION_API_KEY="${NOTION_API_KEY:-}"
-            # Load Linear
-            export LINEAR_API_KEY="${LINEAR_API_KEY:-}"
             ;;
         notion-only)
             # Load Notion
@@ -156,7 +154,6 @@ mcp_status() {
     echo ""
 
     [ -n "${NOTION_API_KEY:-}" ] && echo "✓ NOTION_API_KEY is set" || echo "✗ NOTION_API_KEY not set"
-    [ -n "${LINEAR_API_KEY:-}" ] && echo "✓ LINEAR_API_KEY is set" || echo "✗ LINEAR_API_KEY not set"
     [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] && echo "✓ GOOGLE_APPLICATION_CREDENTIALS is set" || echo "✗ GOOGLE_APPLICATION_CREDENTIALS not set"
 
     echo ""
@@ -180,7 +177,7 @@ USAGE:
 PROFILES:
   notion-only     Notion only (lightweight)
   docs-focus      Notion + Google Drive
-  project-focus   Notion + Linear
+  project-focus   Notion (project management)
   all-tools       All available tools
 
 EXAMPLES:
@@ -324,7 +321,7 @@ USAGE:
 PROFILES:
   notion-only     Notion only (lightweight)
   docs-focus      Notion + Google Drive
-  project-focus   Notion + Linear
+  project-focus   Notion (project management)
   all-tools       All available tools
 
 CONDUCTOR:

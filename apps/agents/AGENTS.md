@@ -62,4 +62,4 @@ Then commit via Cairn's normal git flow. Never write secrets; restricted content
 
 ## Infra & tracking
 - Infra changes are codified in the infra repo (JBC → `jbctechsolutions/infrastructure`, JP → `jp-infrastructure`, Terraform/Terramate) — never ad-hoc portal changes or inline bicep.
-- Work tracking: GitHub Issues + Cairn for everything (JP team boards live in MS Planner). Linear is closed — ruled 2026-07-11 (team of 1); don't create Linear issues.
+- Work tracking: GitHub Issues + Cairn for everything (JP team boards live in MS Planner). Linear is removed — ruled 2026-07-11 (team of 1); do not create Linear issues or use Linear MCP/plugins.

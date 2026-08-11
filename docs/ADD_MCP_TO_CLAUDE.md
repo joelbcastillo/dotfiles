@@ -15,10 +15,9 @@ This will:
 1. ✅ Link the MCP config template to Claude Desktop
 2. ✅ Resolve all 1Password secrets
 3. ✅ Expand the USERNAME placeholder
-4. ✅ Set up all 4 MCP servers:
+4. ✅ Set up MCP servers:
    - NotionMCP
    - GoogleDriveMCP
-   - LinearMCP
    - OutlookMCP
 
 ## Manual Setup (If Needed)
@@ -67,7 +66,7 @@ grep "1password://" ~/Library/Application\ Support/Claude/claude_desktop_config.
 
 # Check MCP servers are listed
 cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq '.mcpServers | keys'
-# Should show: ["GoogleDriveMCP", "LinearMCP", "NotionMCP", "OutlookMCP"]
+# Should show: ["GoogleDriveMCP", "NotionMCP", "OutlookMCP", ...]
 ```
 
 ### Step 5: Restart Claude Desktop
@@ -84,7 +83,6 @@ After restarting Claude Desktop:
 2. Start a new conversation
 3. Try asking:
    - "Can you check my Notion databases?"
-   - "Search my Linear issues"
    - "List my Google Drive files"
    - "Check my Outlook emails"
 

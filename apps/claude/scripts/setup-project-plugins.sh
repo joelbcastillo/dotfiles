@@ -32,7 +32,7 @@ show_menu() {
     echo "     Tokens: ~10,600"
     echo ""
     echo "  4) Business/Project Management"
-    echo "     Plugins: Notion, linear, github, outlook-mcp"
+    echo "     Plugins: Notion, github, outlook-mcp"
     echo "     Tokens: ~10,400"
     echo ""
     echo "  5) Communication/Collaboration"
@@ -96,7 +96,6 @@ EOF
 {
   "enabledPlugins": {
     "Notion@claude-plugins-official": true,
-    "linear@claude-plugins-official": true,
     "github@claude-plugins-official": true,
     "outlook-mcp@local": true
   }
@@ -155,12 +154,11 @@ create_custom_config() {
     echo "  1) github"
     echo "  2) context7"
     echo "  3) Notion"
-    echo "  4) linear"
-    echo "  5) stripe"
-    echo "  6) slack"
-    echo "  7) pr-review-toolkit"
-    echo "  8) cursor-builder"
-    echo "  9) outlook-mcp"
+    echo "  4) stripe"
+    echo "  5) slack"
+    echo "  6) pr-review-toolkit"
+    echo "  7) cursor-builder"
+    echo "  8) outlook-mcp"
     echo ""
     echo "Enter plugin numbers separated by spaces (e.g., '1 2 3'):"
     read -r selections
@@ -180,12 +178,11 @@ create_custom_config() {
             1) echo -n '    "github@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
             2) echo -n '    "context7@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
             3) echo -n '    "Notion@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
-            4) echo -n '    "linear@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
-            5) echo -n '    "stripe@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
-            6) echo -n '    "slack@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
-            7) echo -n '    "pr-review-toolkit@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
-            8) echo -n '    "cursor-builder@jbc-tech-solutions-marketplace": true' >> "$CONFIG_FILE" ;;
-            9) echo -n '    "outlook-mcp@local": true' >> "$CONFIG_FILE" ;;
+            4) echo -n '    "stripe@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
+            5) echo -n '    "slack@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
+            6) echo -n '    "pr-review-toolkit@claude-plugins-official": true' >> "$CONFIG_FILE" ;;
+            7) echo -n '    "cursor-builder@jbc-tech-solutions-marketplace": true' >> "$CONFIG_FILE" ;;
+            8) echo -n '    "outlook-mcp@local": true' >> "$CONFIG_FILE" ;;
             *) ;;  # unknown index: skip silently (input was already validated above)
         esac
     done
