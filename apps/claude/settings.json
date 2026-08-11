@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '\n📦 Plugin Status:' && PLUGIN_COUNT=$(grep -c '.*@.*: true' ~/.claude/settings.json) && echo    ✓ $PLUGIN_COUNT plugins enabled (optimized for context) && echo '   💡 To enable more: edit ~/.claude/settings.json' && echo '   📄 Enable project-specific plugins: .claude/settings.local.json\n'"
+            "command": "PLUGIN_COUNT=$(grep -c '@.*: true' \"$HOME/.claude/settings.json\" 2>/dev/null || true); printf '\\n📦 Plugin Status:\\n   ✓ %s plugins enabled (optimized for context)\\n   💡 To enable more: edit ~/.claude/settings.json\\n   📄 Enable project-specific plugins: .claude/settings.local.json\\n' \"${PLUGIN_COUNT:-0}\""
           }
         ]
       },
@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/compound-first.sh"
+            "command": "[ -x \"$HOME/.claude/hooks/compound-first.sh\" ] && \"$HOME/.claude/hooks/compound-first.sh\" || true"
           }
         ]
       }
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/cairn-writeback-reminder.sh",
+            "command": "[ -x \"$HOME/.claude/hooks/cairn-writeback-reminder.sh\" ] && \"$HOME/.claude/hooks/cairn-writeback-reminder.sh\" || true",
             "timeout": 10
           }
         ]
