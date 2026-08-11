@@ -26,19 +26,23 @@ else
     colima start --cpu 4 --memory 8 --disk 60 --vm-type=vz --mount-type=virtiofs
 fi
 
-# Ensure Docker socket symlink is correct
-if [ -L /var/run/docker.sock ]; then
-    CURRENT_LINK=$(readlink /var/run/docker.sock)
-    EXPECTED_LINK="$HOME/.colima/default/docker.sock"
+# Ensure Docker socket symlink is correct.
+# This is best-effort on purpose: /var/run is cleared on every boot, so the
+# symlink never survives a reboot, and recreating it needs sudo — which an
+# unattended run (dotbot over SSH, no TTY) doesn't have. Docker itself works
+# through the `colima` context without it, so a missing symlink must not fail
+# the install. It only matters for tools that hardcode /var/run/docker.sock.
+COLIMA_SOCK="$HOME/.colima/default/docker.sock"
 
-    if [ "$CURRENT_LINK" != "$EXPECTED_LINK" ]; then
-        echo "Updating Docker socket symlink to point to Colima..."
-        sudo rm /var/run/docker.sock
-        sudo ln -s "$HOME/.colima/default/docker.sock" /var/run/docker.sock
-    fi
+if [ "$(readlink /var/run/docker.sock 2>/dev/null)" = "$COLIMA_SOCK" ]; then
+    echo "✓ Docker socket symlink already correct"
+elif sudo -n true 2>/dev/null; then
+    echo "Linking /var/run/docker.sock -> $COLIMA_SOCK"
+    sudo ln -sfn "$COLIMA_SOCK" /var/run/docker.sock
 else
-    echo "Creating Docker socket symlink..."
-    sudo ln -s "$HOME/.colima/default/docker.sock" /var/run/docker.sock
+    echo "⚠️  Skipping /var/run/docker.sock symlink — needs sudo, none available."
+    echo "   Docker works via the 'colima' context regardless. To create it:"
+    echo "     sudo ln -sfn \"$COLIMA_SOCK\" /var/run/docker.sock"
 fi
 
 # Set Docker context to Colima
