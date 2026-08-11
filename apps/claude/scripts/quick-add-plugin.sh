@@ -16,12 +16,11 @@ show_available_plugins() {
     echo "  1) github         - GitHub API, PR/issue management"
     echo "  2) context7       - Documentation lookup"
     echo "  3) Notion         - Notion workspace integration"
-    echo "  4) linear         - Linear issue tracking"
-    echo "  5) stripe         - Stripe payment integration"
-    echo "  6) slack          - Slack messaging"
-    echo "  7) pr-review      - Code review workflows"
-    echo "  8) cursor-builder - Custom agent workflows"
-    echo "  9) outlook        - Outlook email/calendar"
+    echo "  4) stripe         - Stripe payment integration"
+    echo "  5) slack          - Slack messaging"
+    echo "  6) pr-review      - Code review workflows"
+    echo "  7) cursor-builder - Custom agent workflows"
+    echo "  8) outlook        - Outlook email/calendar"
     echo ""
 }
 
@@ -30,12 +29,11 @@ get_plugin_full_name() {
         1|github) echo "github@claude-plugins-official" ;;
         2|context7) echo "context7@claude-plugins-official" ;;
         3|notion|Notion) echo "Notion@claude-plugins-official" ;;
-        4|linear) echo "linear@claude-plugins-official" ;;
-        5|stripe) echo "stripe@claude-plugins-official" ;;
-        6|slack) echo "slack@claude-plugins-official" ;;
-        7|pr-review|pr-review-toolkit) echo "pr-review-toolkit@claude-plugins-official" ;;
-        8|cursor-builder) echo "cursor-builder@jbc-tech-solutions-marketplace" ;;
-        9|outlook|outlook-mcp) echo "outlook-mcp@local" ;;
+        4|stripe) echo "stripe@claude-plugins-official" ;;
+        5|slack) echo "slack@claude-plugins-official" ;;
+        6|pr-review|pr-review-toolkit) echo "pr-review-toolkit@claude-plugins-official" ;;
+        7|cursor-builder) echo "cursor-builder@jbc-tech-solutions-marketplace" ;;
+        8|outlook|outlook-mcp) echo "outlook-mcp@local" ;;
         *) echo "" ;;
     esac
 }

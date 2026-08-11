@@ -30,28 +30,7 @@ All MCP servers require authentication credentials. These are stored securely in
 
 ---
 
-### 2. Linear API Key
-
-**Purpose**: Access Linear issue tracking and project management
-
-**How to Get It**:
-
-1. Open Linear and go to **Settings** (gear icon)
-2. Navigate to **API** section
-3. Click **"Create API Key"**
-4. Give it a name (e.g., "Claude MCP")
-5. Copy the generated API key
-
-**Setup in 1Password**:
-- Create item: **"Linear API Key"**
-- Vault: **"API Keys"**
-- Field: **"credential"** (paste the API key)
-
-**Reference**: [Linear API Documentation](https://linear.app/docs/api)
-
----
-
-### 3. Google Drive OAuth Credentials
+### 2. Google Drive OAuth Credentials
 
 **Purpose**: Access and manage Google Drive files
 
@@ -80,7 +59,7 @@ All MCP servers require authentication credentials. These are stored securely in
 
 ---
 
-### 4. Outlook OAuth Credentials
+### 3. Outlook OAuth Credentials
 
 **Status**: **NOT REQUIRED** for `syedazharmbnr1/claude-outlook-mcp`
 
@@ -207,12 +186,6 @@ If your Outlook MCP version doesn't require credentials:
 1. Remove the `OUTLOOK_CLIENT_ID` and `OUTLOOK_CLIENT_SECRET` environment variables from the MCP config
 2. Or leave them empty - the MCP server may use macOS authentication instead
 
-### Linear API Key Issues
-
-- Ensure the API key has proper permissions
-- Check that the key hasn't expired
-- Verify you're using the correct workspace
-
 ### Notion Integration Issues
 
 - Ensure the integration has access to the workspaces you want to use
@@ -236,7 +209,6 @@ If your Outlook MCP version doesn't require credentials:
 | Service | Item Name in 1Password | Where to Get It |
 |---------|----------------------|-----------------|
 | Notion | Notion API Key | notion.so/my-integrations |
-| Linear | Linear API Key | Linear Settings > API |
 | Google Drive | Google Drive OAuth Credentials | Google Cloud Console |
 | Outlook | Outlook OAuth Client ID/Secret | Azure Portal (if required) |
 

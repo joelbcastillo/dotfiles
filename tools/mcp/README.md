@@ -28,11 +28,6 @@ This directory contains MCP server configuration templates for various AI-powere
 - **Purpose**: Access and manage Google Drive files
 - **Credentials**: Google Drive OAuth credentials (via 1Password)
 
-### LinearMCP
-- **Package**: `mcp-remote` (connects to Linear's official MCP endpoint)
-- **Purpose**: Access Linear issue tracking and project management
-- **Credentials**: Linear API key (via 1Password)
-
 ### OutlookMCP
 - **Package**: `claude-outlook-mcp` (GitHub: syedazharmbnr1/claude-outlook-mcp)
 - **Purpose**: Access Microsoft Outlook on macOS via AppleScript

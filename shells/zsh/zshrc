@@ -111,3 +111,6 @@ z() {
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# 1Password service account token (headless profile)
+[[ -f ~/.config/op/token.sh ]] && source ~/.config/op/token.sh

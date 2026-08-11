@@ -18,8 +18,8 @@ The MCP profile manager adds a global function to your dotfiles that:
 |---------|-------|----------|
 | `notion-only` | Notion | Lightweight knowledge access |
 | `docs-focus` | Notion + Google Drive | Documentation work, research |
-| `project-focus` | Notion + Linear | Project management, issues |
-| `all-tools` | Notion + Google Drive + Linear | Full power mode |
+| `project-focus` | Notion | Project management |
+| `all-tools` | Notion + Google Drive + Outlook + Claude Swarm | Full power mode |
 
 Each profile corresponds to a template file (`.mcp.*.json`) that you copy into your projects.
 
@@ -167,7 +167,6 @@ If this file exists, it will be automatically sourced when switching profiles. A
 ```bash
 # Example: Load API keys from 1Password
 # export NOTION_API_KEY=$(op read "op://Private/Notion Integration/api_key")
-# export LINEAR_API_KEY=$(op read "op://Private/Linear API Key/credential")
 # export GOOGLE_APPLICATION_CREDENTIALS=$(op read "op://Private/Google Drive Service Account/credentials_json")
 ```
 
@@ -177,7 +176,6 @@ If you don't use the centralized file, you can set environment variables directl
 
 ```bash
 export NOTION_API_KEY="your_api_key"
-export LINEAR_API_KEY="your_api_key"
 export GOOGLE_APPLICATION_CREDENTIALS="your_json_content"
 ```
 
@@ -246,7 +244,6 @@ cat > ~/.dotfiles/shells/oh-my-zsh/custom/secure_profiles/mcp-secrets <<'EOF'
 # Uncomment and customize as needed:
 
 # export NOTION_API_KEY=$(op read "op://Private/Notion Integration/api_key")
-# export LINEAR_API_KEY=$(op read "op://Private/Linear API Key/credential")
 # export GOOGLE_APPLICATION_CREDENTIALS=$(op read "op://Private/Google Drive Service Account/credentials_json")
 EOF
 ```

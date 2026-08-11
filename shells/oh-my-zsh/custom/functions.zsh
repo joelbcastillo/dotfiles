@@ -973,7 +973,7 @@ function mcp-init() {
         echo "Available profiles: mcp-switch <profile>"
         echo "  - notion-only    (Notion only)"
         echo "  - docs-focus     (Notion + Google Drive)"
-        echo "  - project-focus  (Notion + Linear)"
+        echo "  - project-focus  (Notion)"
         echo "  - all-tools      (All MCP servers)"
     fi
 }

@@ -27,7 +27,7 @@ Sets up a specific profile for the current workspace. Copies all available profi
 **Profiles:**
 - `notion-only` - Notion only (lightweight)
 - `docs-focus` - Notion + Google Drive
-- `project-focus` - Notion + Linear
+- `project-focus` - Notion
 - `all-tools` - All available tools
 
 ### List Available Profiles

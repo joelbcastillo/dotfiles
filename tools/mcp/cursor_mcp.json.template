@@ -20,10 +20,6 @@
         "GOOGLE_DRIVE_OAUTH_CREDENTIALS": "~/.config/google-drive-mcp/gcp-oauth.keys.json"
       }
     },
-    "linear": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.linear.app/mcp"]
-    },
     "outlook": {
       "command": "/Users/USERNAME/.bun/bin/bun",
       "args": ["run", "/Users/USERNAME/.repos/github.com/syedazharmbnr1/claude-outlook-mcp/index.ts"]

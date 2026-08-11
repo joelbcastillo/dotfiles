@@ -60,15 +60,7 @@ Provides access to Google Drive files and folders.
 - **Configuration**: Requires OAuth credentials file at `~/.config/google-drive-mcp/gcp-oauth.keys.json`
 - **Usage**: Read, search, and manage Google Drive files
 
-### 3. Linear MCP
-Provides access to Linear issue tracking and project management.
-
-- **Package**: `mcp-remote` (connects to Linear's official MCP endpoint)
-- **Installation**: Via `npx` (automatic)
-- **Authentication**: Browser-based OAuth via `mcp-remote`
-- **Usage**: Access Linear issues, projects, teams, and create/update issues
-
-### 4. Outlook MCP
+### 3. Outlook MCP
 Provides access to Microsoft Outlook on macOS.
 
 - **Package**: `claude-outlook-mcp` (GitHub: syedazharmbnr1/claude-outlook-mcp)
@@ -80,7 +72,7 @@ Provides access to Microsoft Outlook on macOS.
   - Requires Microsoft Outlook for Mac to be installed and configured
   - Requires Accessibility permissions for Terminal
 
-### 5. Claude Swarm MCP
+### 4. Claude Swarm MCP
 Provides orchestration capabilities for parallel Claude workers.
 
 - **Package**: `@just-every/claude-swarm-mcp`
@@ -94,9 +86,9 @@ This dotfiles setup includes multiple MCP profiles for different use cases:
 
 | Profile | File | Servers Included |
 |---------|------|------------------|
-| All Tools | `.mcp.all-tools.json` | Notion, Google Drive, Linear, Outlook, Claude Swarm |
+| All Tools | `.mcp.all-tools.json` | Notion, Google Drive, Outlook, Claude Swarm |
 | Docs Focus | `.mcp.docs-focus.json` | Notion, Google Drive |
-| Project Focus | `.mcp.project-focus.json` | Notion, Linear |
+| Project Focus | `.mcp.project-focus.json` | Notion |
 | Notion Only | `.mcp.notion-only.json` | Notion |
 
 ### Using Profiles
@@ -172,8 +164,7 @@ op://je45orsqeqmplaeemrshp3kiea/namjmkrvi7y3rlv6glujnol54i/credential
 ### Setting Up Secrets
 
 1. **Notion API Key**: Get from [Notion Integrations](https://www.notion.so/my-integrations)
-2. **Linear**: Uses browser OAuth via `mcp-remote` (no API key needed in config)
-3. **Google Drive**: Uses browser OAuth (requires OAuth credentials file)
+2. **Google Drive**: Uses browser OAuth (requires OAuth credentials file)
 
 For detailed instructions, see **[MCP API Keys Setup Guide](mcp-api-keys.md)**.
 
