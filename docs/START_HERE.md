@@ -19,7 +19,7 @@ The MCP profile manager adds a global function to your dotfiles that:
 | `notion-only` | Notion | Lightweight knowledge access |
 | `docs-focus` | Notion + Google Drive | Documentation work, research |
 | `project-focus` | Notion | Project management |
-| `all-tools` | Notion + Google Drive | Full power mode |
+| `all-tools` | Notion + Google Drive + Outlook + Claude Swarm | Full power mode |
 
 Each profile corresponds to a template file (`.mcp.*.json`) that you copy into your projects.
 
