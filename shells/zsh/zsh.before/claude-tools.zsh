@@ -6,7 +6,8 @@
 # them on the global node directly; the PATH prepend lives in zshrc (must come
 # after the final asdf shims prepend there to win resolution).
 
-# Claude Code CLI: prefer npm global (@anthropic-ai/claude-code), then Homebrew.
+# Claude Code CLI: prefer the native build (~/.local/bin/claude, self-updating via
+# `claude install`), then npm global (@anthropic-ai/claude-code), then Homebrew.
 # Use a function (not an alias) so dmux/sh -c can still resolve `claude` on PATH while
 # interactive shells get _secure_run + secrets. Remove any private `alias claude=...`
 # that points at Homebrew so this definition is used.
