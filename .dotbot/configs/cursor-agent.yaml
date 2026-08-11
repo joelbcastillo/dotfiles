@@ -30,7 +30,6 @@
       path: tools/cursor-agent/config.json.template
       relink: true
       force: true
-    description: Link cursor-agent configuration template
 
 - shell:
   - 

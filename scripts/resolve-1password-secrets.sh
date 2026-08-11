@@ -34,10 +34,13 @@ resolve_secrets() {
                 local username_value
                 local credential_value
 
-                username_value=$("$FETCH_SCRIPT" "google_drive_username" 2>/dev/null)
-                credential_value=$("$FETCH_SCRIPT" "google_drive_credential" 2>/dev/null)
+                # `|| x=""` is required: under `set -e` a failing command
+                # substitution aborts the script, so the warn-and-continue
+                # branches below would never run.
+                username_value=$("$FETCH_SCRIPT" "google_drive_username" 2>/dev/null) || username_value=""
+                credential_value=$("$FETCH_SCRIPT" "google_drive_credential" 2>/dev/null) || credential_value=""
 
-                if [ $? -eq 0 ] && [ -n "$username_value" ] && [ -n "$credential_value" ]; then
+                if [ -n "$username_value" ] && [ -n "$credential_value" ]; then
                     # Construct JSON object with username and credential
                     # Use jq for proper JSON construction if available, otherwise use sed
                     if command -v jq >/dev/null 2>&1; then
@@ -57,9 +60,11 @@ resolve_secrets() {
                 fi
             else
                 # Fetch the secret from 1Password
-                secret_value=$("$FETCH_SCRIPT" "$secret_name" 2>/dev/null)
+                # See note above: `|| secret_value=""` keeps `set -e` from
+                # aborting here so the warning branch can run.
+                secret_value=$("$FETCH_SCRIPT" "$secret_name" 2>/dev/null) || secret_value=""
 
-                if [ $? -eq 0 ] && [ -n "$secret_value" ]; then
+                if [ -n "$secret_value" ]; then
                     # Escape the value for JSON
                     secret_escaped=$(echo "$secret_value" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
                     # Replace the reference with the actual value
