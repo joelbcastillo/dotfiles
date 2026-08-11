@@ -56,7 +56,7 @@ get_target_dir() {
         docker) echo "tools/docker" ;;
         kubernetes) echo "tools/kubernetes" ;;
         shells/secure_profiles) echo "shells/oh-my-zsh/custom/secure_profiles" ;;
-        # Private dotbot profiles (personal/carequant/…, ssh-*, claude-tools-private)
+        # Private dotbot profiles (personal/jbctechsolutions/…, ssh-*, claude-tools-private)
         # → public .dotbot/configs/ so `./install config <name>` works.
         # Relative targets keep these portable across $HOME paths.
         dotbot) echo ".dotbot/configs" ;;

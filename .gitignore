@@ -67,7 +67,6 @@ tools/git/*
 !tools/git/lazygit.yaml
 # Per-identity gitconfigs are symlinks into ~/.dotfiles-private/git/; tracked
 # with relative targets so the symlink itself documents the wiring.
-!tools/git/gitconfig.carequant
 !tools/git/gitconfig.personal
 
 # Zsh before directory - ignore everything except allowed files
