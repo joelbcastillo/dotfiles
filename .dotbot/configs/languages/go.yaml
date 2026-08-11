@@ -19,7 +19,10 @@
         go install github.com/golang/protobuf/protoc-gen-go@latest
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
         go install github.com/mitchellh/gox@latest
-        go install github.com/goreleaser/goreleaser@latest
+        # goreleaser v2 needs the /v2 module path — the unsuffixed path's
+        # @latest is stuck on v1.26.2, which pins an x/tools that no longer
+        # compiles on current Go
+        go install github.com/goreleaser/goreleaser/v2@latest
       description: Set up Go with asdf and development tools
 
 - link:
