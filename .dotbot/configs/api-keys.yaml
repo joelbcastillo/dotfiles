@@ -16,7 +16,11 @@
       path: tools/1password/secret-paths.json
       relink: true
       force: true
-    description: Link 1Password secrets configuration
+      # Only secret-paths.json.template is committed; the real file is
+      # materialized per machine (like tools/1password/accounts.json, which
+      # comes from .dotfiles-private). Link it when it's there, skip when it
+      # isn't, rather than failing the whole install.
+      if: '[ -e tools/1password/secret-paths.json ]'
 
 - shell:
   - 
