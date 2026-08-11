@@ -36,11 +36,10 @@ COLIMA_SOCK="$HOME/.colima/default/docker.sock"
 
 if [ "$(readlink /var/run/docker.sock 2>/dev/null)" = "$COLIMA_SOCK" ]; then
     echo "✓ Docker socket symlink already correct"
-elif sudo -n true 2>/dev/null; then
-    echo "Linking /var/run/docker.sock -> $COLIMA_SOCK"
-    sudo ln -sfn "$COLIMA_SOCK" /var/run/docker.sock
+elif sudo -n ln -sfn "$COLIMA_SOCK" /var/run/docker.sock 2>/dev/null; then
+    echo "✓ Linked /var/run/docker.sock -> $COLIMA_SOCK"
 else
-    echo "⚠️  Skipping /var/run/docker.sock symlink — needs sudo, none available."
+    echo "⚠️  Skipping /var/run/docker.sock symlink — sudo unavailable or the link failed."
     echo "   Docker works via the 'colima' context regardless. To create it:"
     echo "     sudo ln -sfn \"$COLIMA_SOCK\" /var/run/docker.sock"
 fi
