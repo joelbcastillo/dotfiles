@@ -232,6 +232,98 @@ The full profile includes workspace automation tools:
 - **Hammerspoon**: macOS automation for window management, keyboard shortcuts, and workspace switching
 - **dmux**: Workspace management with worktree isolation and auto-resume sessions
 
+### Parallel agents: desk and phone
+
+Each dmux task gets its own git worktree, branch, and tmux pane. There are two
+ways to look at that grid, and they are deliberately different.
+
+Check the setup first:
+
+```bash
+dmux-doctor          # tmux/node/git versions, dmux, agent CLIs, tailnet
+dmux-doctor -q       # failures and summary only; exits non-zero on failure
+```
+
+#### Desk mode — cmux → dmux TUI → panes
+
+Drive everything from the dashboard. This is the only place you should be
+creating, merging, or closing panes.
+
+```bash
+cd ~/path/to/project
+dmux                 # opens the TUI; create/merge/close tasks from here
+```
+
+dmux names its session `dmux-<project>-<hash>`, so several projects can run in
+parallel without colliding.
+
+#### Phone mode — grouped session, one zoomed pane
+
+Over Tailscale from a phone terminal client, attach to a **grouped** session
+rather than the desk's session:
+
+```bash
+ssh <your-mac>.<tailnet>.ts.net
+dmux-phone <project>          # e.g. dmux-phone jbctechsolutions
+dmux-phone                    # or, from inside the project directory
+dmux-phone --list             # what's running right now
+```
+
+`dmux-phone` creates `<project>-phone` grouped with the dmux session
+(`tmux new-session -t …`). Grouped sessions share the window list but keep their
+own current window and geometry, so the phone gets a real second client that
+doesn't resize your desk panes. It zooms the active pane so one agent stream
+fills the screen, and it's idempotent — re-run it as much as you like.
+
+To look at a different agent without navigating the TUI on a 6-inch screen:
+
+```bash
+dmux-focus --list             # pane ids, windows, commands, titles
+dmux-focus %42                # select that pane and zoom it
+```
+
+`dmux-focus` also works over `send-keys`, so you can retarget the phone from
+anywhere:
+
+```bash
+tmux send-keys -t <project>-phone 'dmux-focus %42' Enter
+```
+
+**Don't drive the dmux dashboard from mobile.** Creating, merging, and closing
+worktrees from a phone is where mistakes happen, and the dashboard assumes a
+desk-sized viewport. Read agent output and answer prompts on the phone; do
+lifecycle operations at the desk.
+
+#### Two things worth knowing
+
+- **Zoom is window state, not client state.** If the phone and the desk are
+  looking at the *same* window, zooming on one zooms the other. `dmux-phone`
+  avoids this by moving a newly created phone session to a window the desk
+  isn't on; if only one window exists it tells you so. Use `dmux-focus` to move
+  to a different window.
+- **The cmux iOS app is not this.** It mirrors the Mac's terminal grid with no
+  independent resize. Use it to *watch*; use `dmux-phone` over SSH when you want
+  a client with its own geometry.
+
+#### Notifications and keys
+
+Agent idle notifications depend on `allow-passthrough all` in
+[`tools/tmux/tmux.conf`](tools/tmux/tmux.conf) — it lets agent OSC escape
+sequences reach cmux's notification rings instead of being swallowed by tmux.
+It must stay `all` rather than `on`: `on` only forwards while a pane is visible,
+and agent panes are usually offscreen exactly when they finish.
+
+dmux's AI-assisted merge and slug naming read `OPENROUTER_API_KEY` from the
+environment. Never commit the key — source it like the other secrets in this
+repo (see [docs/secrets.md](docs/secrets.md) and
+[docs/mcp-api-keys.md](docs/mcp-api-keys.md)), e.g. via 1Password:
+
+```bash
+export OPENROUTER_API_KEY="$(op read 'op://Private/OpenRouter/credential' --account jbctechsolutions)"
+```
+
+Everything here is tailnet-only. Nothing is exposed to the public internet.
+
 ## 🔧 Customization
 
 ### Available Profiles
