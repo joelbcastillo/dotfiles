@@ -8,3 +8,10 @@ elif [[ -x "/opt/homebrew/bin/brew" ]]; then
 elif [[ -x "/usr/local/bin/brew" ]]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
+
+# Reassert the asdf shims / bin/claude-tools ordering. This is a login shell, so
+# /etc/zprofile just ran path_helper (reorders PATH) and the brew shellenv above
+# prepends Homebrew — both would otherwise leave /opt/homebrew/bin/node ahead of
+# the shim and silently ignore the tool-versions pin. Defined in zshenv, which
+# runs first in this same shell.
+(( $+functions[_pin_toolchain_path] )) && _pin_toolchain_path

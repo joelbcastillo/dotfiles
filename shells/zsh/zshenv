@@ -51,6 +51,39 @@ if [ -n "${HOMEBREW_PREFIX:-}" ] && [ -d "$HOMEBREW_PREFIX/share/zsh/functions" 
     (( ${fpath[(I)$HOMEBREW_PREFIX/share/zsh/functions]} )) || fpath+=("$HOMEBREW_PREFIX/share/zsh/functions")
 fi
 
+# --- asdf 0.16+ ---
+# Modern asdf is a Go binary on PATH; no shim source. Just expose its shims dir.
+#
+# Must be set here rather than in zshrc: zshrc runs for interactive shells only,
+# so `ssh mac 'node --version'`, cron, git hooks, and build scripts would all
+# fall through to Homebrew's node and silently ignore the repo pin. And it must
+# come AFTER the Homebrew block above, because `brew shellenv` *prepends* — set
+# earlier, /opt/homebrew/bin/node would still win over the shim.
+#
+# Drop any inherited copies before prepending. A "skip if already present"
+# guard is not enough here: a nested shell inherits PATH with these entries
+# present but sitting *behind* Homebrew, and since `brew shellenv` prepends
+# again in every shell, each nesting level pushes Homebrew further ahead. Only
+# removing and re-prepending actually pins the position. That also makes this
+# idempotent — no duplicate entries however many times it runs.
+#
+# bin/claude-tools goes in front of the shims: the Claude npm CLIs (ccs/claude/
+# ccr) must run on the ~/.tool-versions node regardless of repo pins.
+#
+# Defined as a function because zshenv is not the last word on PATH for login
+# shells: /etc/zprofile runs path_helper (which reorders), and our own zprofile
+# re-runs `brew shellenv` (which prepends) — both after this file. zprofile
+# calls this again afterwards to reassert the order. Same shell process, so the
+# function is still in scope there.
+_pin_toolchain_path() {
+    local shims="${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
+    path=("${(@)path:#$shims}")
+    path=("${(@)path:#$DOTFILES/bin/claude-tools}")
+    path=("$DOTFILES/bin/claude-tools" "$shims" $path)
+    export PATH
+}
+_pin_toolchain_path
+
 # Set umask for group-writable files (for group-based Homebrew)
 # This doesn't hurt for user-local installations
 umask 0002

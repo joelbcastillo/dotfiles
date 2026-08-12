@@ -77,12 +77,12 @@ done
 unsetopt nullglob
 
 # --- asdf 0.16+ ---
-# Modern asdf is a Go binary on PATH; no shim source. Just expose its shims dir.
-export PATH="$HOME/.asdf/shims:$PATH"
-
-# Claude npm CLIs (ccs/claude/ccr) run on the ~/.tool-versions node regardless
-# of repo pins — must stay ahead of asdf shims (see bin/claude-tools).
-export PATH="$DOTFILES/bin/claude-tools:$PATH"
+# The shims / bin/claude-tools PATH entries are set in shells/zsh/zshenv so that
+# non-interactive shells get the pinned toolchain too. Reassert here because the
+# zsh.before/*.zsh loop above runs after zshenv, and path.zsh prepends
+# /opt/homebrew/{bin,sbin} — which would otherwise put Homebrew's node ahead of
+# the shim in exactly the interactive shells you notice it least.
+(( $+functions[_pin_toolchain_path] )) && _pin_toolchain_path
 
 # --- Lazy load ---
 asdf() {
