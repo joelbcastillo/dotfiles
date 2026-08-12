@@ -27,6 +27,14 @@ This document describes the purpose of each script in the `scripts/` directory.
 - **`fetch-1password-secrets.sh`** - Fetches secrets from 1Password
 - **`resolve-1password-secrets.sh`** - Resolves 1Password secrets in configuration files
 
+## Parallel Agents (dmux)
+
+- **`dmux-phone`** - Attaches a phone client to a project's dmux session via a grouped tmux session, so it gets independent geometry, then zooms the active pane
+- **`dmux-focus`** - Selects a pane and zooms it; used to retarget the phone via `tmux send-keys` without navigating the dmux TUI
+- **`dmux-doctor`** - Preflight for the parallel-agent workflow (tmux/node/git versions, dmux, agent CLIs, tailnet reachability); exits non-zero on failure
+
+See the [desk and phone workflow](../README.md#parallel-agents-desk-and-phone) in the README.
+
 ## Backup & Testing
 
 - **`backup.sh`** - General backup script for dotfiles

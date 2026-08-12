@@ -1,0 +1,251 @@
+#!/bin/bash
+
+# dmux-doctor — verify the parallel-agent workflow can actually run.
+#
+# Checks the toolchain dmux needs, at least one agent CLI for it to drive, and
+# that the tailnet the phone attaches over is up. Exits non-zero if any required
+# check fails, so it is usable as a gate in scripts.
+#
+# Usage:
+#   dmux-doctor          # run all checks
+#   dmux-doctor -q       # only print failures and the summary
+
+set -uo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+QUIET=0
+case "${1:-}" in
+    -q|--quiet) QUIET=1 ;;
+    -h|--help)
+        awk 'NR>2 && /^#/ { sub(/^# ?/, ""); print; next } NR>2 { exit }' "$0"
+        exit 0
+        ;;
+    *) ;;
+esac
+
+FAILURES=0
+WARNINGS=0
+
+pass() {
+    [ "$QUIET" -eq 1 ] && return 0
+    echo -e "  ${GREEN}PASS${NC}  $1"
+}
+
+fail() {
+    echo -e "  ${RED}FAIL${NC}  $1"
+    [ -n "${2:-}" ] && echo -e "        ${YELLOW}↳${NC} $2"
+    FAILURES=$((FAILURES + 1))
+}
+
+warn() {
+    echo -e "  ${YELLOW}WARN${NC}  $1"
+    [ -n "${2:-}" ] && echo -e "        ${YELLOW}↳${NC} $2"
+    WARNINGS=$((WARNINGS + 1))
+}
+
+section() {
+    [ "$QUIET" -eq 1 ] && return 0
+    echo ""
+    echo -e "${BLUE}$1${NC}"
+}
+
+# Compare dotted versions without relying on sort -V (absent on some macOS
+# setups). Returns 0 if $1 >= $2.
+version_ge() {
+    local have="$1" want="$2" i h w
+    local -a have_parts want_parts
+    IFS='.' read -r -a have_parts <<< "$have"
+    IFS='.' read -r -a want_parts <<< "$want"
+    for i in 0 1 2; do
+        h="${have_parts[i]:-0}"
+        w="${want_parts[i]:-0}"
+        # Strip non-numeric suffixes, e.g. tmux "3.7b" -> "3.7"
+        h="${h//[!0-9]/}"
+        w="${w//[!0-9]/}"
+        h="${h:-0}"
+        w="${w:-0}"
+        if [ "$h" -gt "$w" ]; then return 0; fi
+        if [ "$h" -lt "$w" ]; then return 1; fi
+    done
+    return 0
+}
+
+check_version() {
+    local name="$1" min="$2" have="$3" hint="${4:-}"
+    if [ -z "$have" ]; then
+        fail "$name not found" "$hint"
+        return
+    fi
+    if version_ge "$have" "$min"; then
+        pass "$name $have (>= $min)"
+    else
+        fail "$name $have is older than required $min" "$hint"
+    fi
+}
+
+echo -e "${BLUE}dmux parallel-agent workflow — preflight${NC}"
+
+# ── Core toolchain ──────────────────────────────────────────────────
+section "Core toolchain"
+
+TMUX_VER=""
+command -v tmux >/dev/null 2>&1 && TMUX_VER="$(tmux -V 2>/dev/null | awk '{print $2}')"
+check_version "tmux" "3.0" "$TMUX_VER" "brew install tmux"
+
+NODE_VER=""
+command -v node >/dev/null 2>&1 && NODE_VER="$(node --version 2>/dev/null | sed 's/^v//')"
+check_version "node" "18.0.0" "$NODE_VER" "asdf install nodejs latest  (dmux requires node >= 18)"
+
+GIT_VER=""
+command -v git >/dev/null 2>&1 && GIT_VER="$(git --version 2>/dev/null | awk '{print $3}')"
+check_version "git" "2.20.0" "$GIT_VER" "brew install git  (worktree support needs >= 2.20)"
+
+# ── dmux ────────────────────────────────────────────────────────────
+section "dmux"
+
+# `command -v` alone is unreliable here: the shell aliases dmux through a
+# wrapper, so resolve the real executable the way a non-interactive shell would.
+DMUX_BIN=""
+if [ -x "$(npm root -g 2>/dev/null)/dmux/dmux" ]; then
+    DMUX_BIN="$(npm root -g 2>/dev/null)/dmux/dmux"
+elif command -v dmux >/dev/null 2>&1; then
+    DMUX_BIN="$(command -v dmux)"
+fi
+
+if [ -n "$DMUX_BIN" ]; then
+    # Read the version from package.json rather than running `dmux --version`:
+    # dmux is a TUI and bails with "open terminal failed: not a terminal" when
+    # invoked without a tty, which is exactly how a doctor script runs it.
+    DMUX_PKG="$(dirname "$DMUX_BIN")/package.json"
+    DMUX_VER=""
+    if [ -f "$DMUX_PKG" ]; then
+        DMUX_VER="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DMUX_PKG" | head -1)"
+    fi
+    if [ -n "$DMUX_VER" ] && ! version_ge "$DMUX_VER" "5.0.0"; then
+        warn "dmux $DMUX_VER is older than 5.x" "Grouped-session workflow is developed against 5.x: npm install -g dmux@latest"
+    else
+        pass "dmux ${DMUX_VER:-installed} ($DMUX_BIN)"
+    fi
+else
+    fail "dmux not on PATH" "npm install -g dmux  (or: ./install config claude-tools)"
+fi
+
+# ── Agent CLIs ──────────────────────────────────────────────────────
+section "Agent CLIs (dmux needs at least one)"
+
+# The registry dmux actually ships (dist/utils/agentLaunch.js).
+AGENTS="claude opencode codex grok cline gemini qwen amp pi cursor copilot crush"
+FOUND_AGENTS=""
+
+for agent in $AGENTS; do
+    if command -v "$agent" >/dev/null 2>&1; then
+        FOUND_AGENTS="$FOUND_AGENTS $agent"
+    fi
+done
+
+# claude is commonly a shell function or a native build outside PATH lookup.
+if [ -z "${FOUND_AGENTS// /}" ] && [ -x "$HOME/.local/bin/claude" ]; then
+    FOUND_AGENTS=" claude"
+fi
+
+if [ -n "${FOUND_AGENTS// /}" ]; then
+    pass "found:${FOUND_AGENTS}"
+else
+    fail "no agent CLI found" "Install at least one of: $AGENTS"
+fi
+
+# ── Tailnet ─────────────────────────────────────────────────────────
+section "Tailnet (phone attaches over this)"
+
+TAILSCALE_BIN=""
+for candidate in \
+    /Applications/Tailscale.app/Contents/MacOS/Tailscale \
+    /opt/homebrew/bin/tailscale \
+    /usr/local/bin/tailscale; do
+    [ -x "$candidate" ] && { TAILSCALE_BIN="$candidate"; break; }
+done
+[ -z "$TAILSCALE_BIN" ] && command -v tailscale >/dev/null 2>&1 && TAILSCALE_BIN="$(command -v tailscale)"
+
+if [ -z "$TAILSCALE_BIN" ]; then
+    fail "tailscale CLI not found" "Install the Tailscale app, or: brew install tailscale"
+else
+    pass "tailscale CLI ($TAILSCALE_BIN)"
+
+    # Is the daemon up? Ask the backend rather than pattern-matching process
+    # names: depending on install method this is `tailscaled` (Linux, Homebrew),
+    # the `Tailscale` app process, or a macOS system network extension
+    # (io.tailscale.ipn.macsys.network-extension) — with no tailscaled at all.
+    # A successful status query proves the daemon is running and talking to us,
+    # which is the thing we actually care about.
+    TS_STATUS="$("$TAILSCALE_BIN" status --json 2>/dev/null || true)"
+    if [ -z "$TS_STATUS" ]; then
+        # Only now is process detection useful — to make the hint specific.
+        if pgrep -qx tailscaled 2>/dev/null || pgrep -qx Tailscale 2>/dev/null ||
+            pgrep -qf 'tailscale.*network-extension' 2>/dev/null; then
+            fail "tailscale daemon is running but not answering" "Try: tailscale status   (you may need to log in again)"
+        else
+            fail "tailscale daemon is not running" "Start the Tailscale app, or: sudo tailscaled install-system-daemon"
+        fi
+    else
+        pass "tailscale daemon is running and responding"
+        BACKEND="$(printf '%s' "$TS_STATUS" | sed -n 's/.*"BackendState"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+        case "$BACKEND" in
+            Running)
+                pass "tailnet backend Running"
+                SELF_IP="$("$TAILSCALE_BIN" ip -4 2>/dev/null | head -1)"
+                [ -n "$SELF_IP" ] && pass "this host on tailnet at $SELF_IP"
+                # Reachability: at least one other peer online to attach from.
+                PEERS_ONLINE="$(printf '%s' "$TS_STATUS" | grep -o '"Online"[[:space:]]*:[[:space:]]*true' | wc -l | tr -d ' ')"
+                if [ "${PEERS_ONLINE:-0}" -gt 1 ]; then
+                    pass "$PEERS_ONLINE tailnet nodes online (phone can attach)"
+                else
+                    warn "no other tailnet nodes online" "Expected if the phone is asleep. Wake it and re-run to confirm."
+                fi
+                ;;
+            NeedsLogin)
+                fail "tailscale needs login" "Run: tailscale up"
+                ;;
+            Stopped)
+                fail "tailscale is stopped" "Run: tailscale up"
+                ;;
+            *)
+                fail "tailnet backend state: ${BACKEND:-unknown}" "Run: tailscale status"
+                ;;
+        esac
+    fi
+fi
+
+# ── Workflow config ─────────────────────────────────────────────────
+section "Workflow config"
+
+if [ "$(tmux show-options -gv allow-passthrough 2>/dev/null)" = "all" ]; then
+    pass "tmux allow-passthrough = all (cmux notifications will fire offscreen)"
+else
+    # Not fatal: tmux may not be running, so the option is unset rather than wrong.
+    warn "tmux allow-passthrough is not 'all'" "Agent notifications are dropped while a pane is offscreen. Check tools/tmux/tmux.conf is linked, then reload: tmux source-file ~/.tmux.conf"
+fi
+
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+    pass "OPENROUTER_API_KEY is set (dmux AI merge / naming available)"
+else
+    warn "OPENROUTER_API_KEY not set" "Optional — only dmux's AI-assisted merge and slug naming need it. See docs/secrets.md."
+fi
+
+# ── Summary ─────────────────────────────────────────────────────────
+echo ""
+if [ "$FAILURES" -eq 0 ]; then
+    if [ "$WARNINGS" -eq 0 ]; then
+        echo -e "${GREEN}All checks passed.${NC}"
+    else
+        echo -e "${GREEN}All required checks passed${NC} (${YELLOW}${WARNINGS} warning(s)${NC})."
+    fi
+    exit 0
+else
+    echo -e "${RED}${FAILURES} check(s) failed${NC}${WARNINGS:+, ${YELLOW}${WARNINGS} warning(s)${NC}}."
+    exit 1
+fi

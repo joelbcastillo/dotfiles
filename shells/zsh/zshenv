@@ -22,6 +22,18 @@ export DOTFILES="$HOME/.dotfiles"
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# Dotfiles scripts (dmux-phone, dmux-focus, dmux-doctor, scpop, sshop, ...).
+# Set here rather than only in zsh.before/path.zsh for the same reason as the
+# 1Password wrapper above: zshrc / zsh.before run for interactive shells only,
+# so `ssh mac 'dmux-focus %42'` — the form an iOS Shortcut or a send-keys
+# one-liner uses — would otherwise get "command not found".
+# Guarded so re-sourcing (or a login shell that reads this twice) cannot stack
+# duplicate PATH entries; nothing here sets `typeset -U path`.
+case ":$PATH:" in
+    *":$DOTFILES/scripts:"*) ;;
+    *) export PATH="$DOTFILES/scripts:$PATH" ;;
+esac
+
 # Add Homebrew to PATH - detect location automatically
 if [ -x "$HOME/.homebrew/bin/brew" ]; then
     # User-local Homebrew - also load user-local configuration

@@ -1,5 +1,6 @@
-# Add dotfiles scripts to PATH
-export PATH="$DOTFILES/scripts:$PATH"
+# Dotfiles scripts are added to PATH in shells/zsh/zshenv instead, so that
+# non-interactive shells (ssh one-liners) get them too. Prepending again here
+# would just create a duplicate entry.
 
 # Add custom scripts to PATH
 export PATH="$PATH:$HOME/.oh-my-zsh/custom/scripts"

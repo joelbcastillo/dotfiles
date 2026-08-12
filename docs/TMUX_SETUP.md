@@ -147,6 +147,17 @@ C-a s  # Opens session picker
 
 ## Workflows
 
+### Parallel agents (dmux) — desk and phone
+
+The dmux parallel-agent workflow builds on this config: `allow-passthrough all`
+carries agent notifications out to cmux, and `aggressive-resize on` plus
+grouped sessions keep a phone client from resizing the desk panes.
+
+Helper scripts: `dmux-phone`, `dmux-focus`, `dmux-doctor` (in `scripts/`, on
+PATH). See the
+[Parallel agents: desk and phone](../README.md#parallel-agents-desk-and-phone)
+section of the README for the full two-mode workflow and exact commands.
+
 ### Single Project Session
 ```bash
 # Create named session

@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# dmux-focus — point a phone client at a different pane and zoom it.
+#
+# Driving the dmux dashboard from a 6-inch screen is miserable, so instead of
+# navigating the TUI you retarget from anywhere:
+#
+#   tmux send-keys -t <phone-session> 'dmux-focus %42' Enter
+#
+# or just run it in the phone's shell. Selects the pane, then zooms it so one
+# agent stream fills the screen.
+#
+# Usage:
+#   dmux-focus <pane-target>        # e.g. %42, mysession:1.2, +, -
+#   dmux-focus <pane-target> -s <session>   # act on a specific session's client
+#   dmux-focus --list [session]     # list panes with their targets and commands
+#
+# Idempotent: an already-focused, already-zoomed pane stays that way.
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+die() {
+    echo -e "${RED}Error:${NC} $1" >&2
+    exit 1
+}
+
+command -v tmux >/dev/null 2>&1 || die "tmux is not installed."
+
+SESSION=""
+TARGET=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --list|-l)
+            LIST_SESSION="${2:-}"
+            printf "${BLUE}%-7s %-34s %-10s %s${NC}\n" "pane" "window" "command" "title"
+            # `-a` (all sessions) ignores `-t`, so pick one form or the other:
+            # `-s -t <session>` lists every pane in a single session.
+            if [ -n "$LIST_SESSION" ]; then
+                tmux list-panes -s -t "$LIST_SESSION" \
+                    -F '#{pane_id}|#{session_name}:#{window_index}|#{pane_current_command}|#{pane_title}' 2>/dev/null
+            else
+                tmux list-panes -a \
+                    -F '#{pane_id}|#{session_name}:#{window_index}|#{pane_current_command}|#{pane_title}' 2>/dev/null
+            fi |
+                # Grouped sessions share windows, so every pane would otherwise
+                # appear twice — once under the dmux session, once under the
+                # phone session. Drop the phone view; the pane ids are identical.
+                grep -v '|[^|]*-phone:' |
+                awk -F'|' '{ printf "%-7s %-34s %-10s %s\n", $1, $2, $3, $4 }'
+            exit 0
+            ;;
+        --session|-s)
+            SESSION="${2:-}"
+            [ -n "$SESSION" ] || die "--session needs a session name."
+            shift 2
+            ;;
+        --help|-h)
+            awk 'NR>2 && /^#/ { sub(/^# ?/, ""); print; next } NR>2 { exit }' "$0"
+            exit 0
+            ;;
+        -*)
+            die "Unknown option: $1"
+            ;;
+        *)
+            [ -z "$TARGET" ] || die "Expected a single pane target, got '$TARGET' and '$1'."
+            TARGET="$1"
+            shift
+            ;;
+    esac
+done
+
+[ -n "$TARGET" ] || die "No pane target given.
+Usage: dmux-focus <pane-target>     (run 'dmux-focus --list' to see targets)"
+
+# Resolve the target to a concrete pane id so the messages below are unambiguous
+# and so a bad target fails here rather than half-applying.
+PANE_ID="$(tmux display-message -p -t "$TARGET" '#{pane_id}' 2>/dev/null || true)"
+[ -n "$PANE_ID" ] || die "No such pane: $TARGET
+Run 'dmux-focus --list' to see valid targets."
+
+# Un-zoom whatever is currently zoomed in that window first. Without this,
+# select-pane into a zoomed window can leave the wrong pane filling the screen.
+WINDOW="$(tmux display-message -p -t "$PANE_ID" '#{session_name}:#{window_index}')"
+if [ "$(tmux display-message -p -t "$WINDOW" '#{window_zoomed_flag}')" = "1" ]; then
+    tmux resize-pane -Z -t "$WINDOW"
+fi
+
+tmux select-pane -t "$PANE_ID"
+
+# Make the target window current, so a client watching this session actually
+# lands on it rather than staying on whatever it was showing.
+tmux select-window -t "$WINDOW"
+
+# If a specific session was named (the phone), move that session's current
+# window too — grouped sessions track current-window independently.
+if [ -n "$SESSION" ]; then
+    tmux has-session -t "=$SESSION" 2>/dev/null || die "No such session: $SESSION"
+    tmux select-window -t "${SESSION}:$(tmux display-message -p -t "$PANE_ID" '#{window_index}')" 2>/dev/null || true
+fi
+
+# Now zoom. Guarded so re-running does not toggle back out.
+if [ "$(tmux display-message -p -t "$PANE_ID" '#{window_zoomed_flag}')" != "1" ]; then
+    tmux resize-pane -Z -t "$PANE_ID"
+fi
+
+CMD="$(tmux display-message -p -t "$PANE_ID" '#{pane_current_command}')"
+TITLE="$(tmux display-message -p -t "$PANE_ID" '#{pane_title}')"
+echo -e "${GREEN}Focused${NC} $PANE_ID ${BLUE}($WINDOW)${NC} — ${CMD}${TITLE:+ · $TITLE}"

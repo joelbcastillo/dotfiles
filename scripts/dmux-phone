@@ -1,0 +1,247 @@
+#!/bin/bash
+
+# dmux-phone — attach a phone client to a dmux project's tmux session.
+#
+# The phone gets a GROUPED session (tmux new-session -t <dmux-session>), which
+# shares the window list with the desk session but keeps its own current window
+# and its own geometry. Combined with `aggressive-resize on` in tmux.conf, that
+# means the phone and the desk (cmux) do not resize each other as long as they
+# are looking at different windows.
+#
+# The active pane is zoomed on attach so a single agent stream fills the 6-inch
+# screen instead of a 4-way split nobody can read.
+#
+# Usage:
+#   dmux-phone <project>      # attach to that project's dmux session
+#   dmux-phone                # attach to the current directory's project
+#   dmux-phone --list         # list dmux sessions this can attach to
+#
+# Idempotent: re-running reuses the existing phone session rather than stacking
+# new ones, and re-zooming an already-zoomed pane is a no-op.
+
+set -euo pipefail
+
+# Colors (matching the other scripts in this directory)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+die() {
+    echo -e "${RED}Error:${NC} $1" >&2
+    exit 1
+}
+
+GLOBAL_DMUX_CONFIG="$HOME/.dmux/dmux.config.json"
+
+# Reproduce dmux's session naming exactly.
+#
+# Source of truth: dmux dist/index.js, buildSessionNameForRoot():
+#   `dmux-` + basename(projectRoot) + `-` + md5(projectRoot)[0:8],
+#   then /[^a-zA-Z0-9_-]+/g replaced with `-`.
+#
+# Note the sanitize step runs on "<basename>-<hash>", NOT on the `dmux-` prefix,
+# and it collapses runs of bad characters into a SINGLE dash. A leading dot
+# therefore becomes a dash: ~/.dotfiles -> dmux--dotfiles-<hash>.
+dmux_session_name() {
+    local root="$1" base hash ident
+    base="$(basename "$root")"
+    hash="$(printf '%s' "$root" | md5 -q 2>/dev/null || printf '%s' "$root" | md5sum | cut -d' ' -f1)"
+    ident="${base}-${hash:0:8}"
+    # shellcheck disable=SC2001  # character-class substitution needs sed, not ${//}
+    ident="$(printf '%s' "$ident" | sed -E 's/[^a-zA-Z0-9_-]+/-/g')"
+    printf 'dmux-%s' "$ident"
+}
+
+# Resolve a project name straight to a LIVE dmux session.
+#
+# This is the primary path, deliberately ahead of any config lookup: attaching
+# requires the session to already exist, and matching the running session needs
+# no knowledge of the project root at all. dmux's sidebarProjects registry is
+# only written for projects opened via the sidebar, so it is routinely stale —
+# it cannot be the source of truth here.
+#
+# Matches `dmux-<sanitized-basename>-<8 hex>`, ignoring `*-phone` sessions so a
+# previous phone attach never shadows the real one.
+resolve_session_by_name() {
+    local project="$1" sanitized match=""
+    sanitized="$(printf '%s' "$project" | sed -E 's/[^a-zA-Z0-9_-]+/-/g')"
+
+    while IFS= read -r sess; do
+        case "$sess" in
+            *-phone) continue ;;
+            *) ;;
+        esac
+        # Strip the dmux- prefix and the -<hash> suffix, then compare.
+        if printf '%s' "$sess" | grep -qE "^dmux-${sanitized}-[0-9a-f]{8}$"; then
+            match="$sess"
+            break
+        fi
+    done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)
+
+    printf '%s' "$match"
+}
+
+# Fallback: resolve a project name to a root directory, then compute the session
+# name from it. Covers sessions that are not running yet (so we can print a
+# useful "start it on the desk first" message naming the right directory).
+#
+# 1. an explicit path, if the user passed one
+# 2. dmux's sidebarProjects registry (best-effort; often incomplete)
+resolve_project_root() {
+    local project="$1" root=""
+
+    if [ -d "$project" ]; then
+        root="$(cd "$project" && pwd)"
+        printf '%s' "$root"
+        return
+    fi
+
+    if [ -f "$GLOBAL_DMUX_CONFIG" ] && command -v node >/dev/null 2>&1; then
+        root="$(node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const [cfgPath, want] = process.argv.slice(1);
+            let cfg;
+            try { cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8")); } catch { process.exit(0); }
+            const projects = Array.isArray(cfg.sidebarProjects) ? [...cfg.sidebarProjects] : [];
+            if (cfg.projectName && cfg.projectRoot) projects.push({projectName: cfg.projectName, projectRoot: cfg.projectRoot});
+            const hit = projects.find(p => p && p.projectName === want)
+                     || projects.find(p => p && p.projectRoot && path.basename(p.projectRoot) === want);
+            if (hit) process.stdout.write(hit.projectRoot);
+        ' "$GLOBAL_DMUX_CONFIG" "$project" 2>/dev/null || true)"
+    fi
+
+    printf '%s' "$root"
+}
+
+# Walk up from a directory to the nearest .dmux/ project root.
+find_project_root_from_cwd() {
+    local dir
+    dir="$(pwd)"
+    while [ "$dir" != "/" ]; do
+        if [ -f "$dir/.dmux/dmux.config.json" ]; then
+            printf '%s' "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
+list_sessions() {
+    local found=0
+    echo -e "${BLUE}dmux sessions currently running:${NC}"
+    while IFS= read -r sess; do
+        case "$sess" in
+            dmux-*)
+                case "$sess" in
+                    *-phone) echo -e "  ${YELLOW}$sess${NC} (phone client)" ;;
+                    *)       echo -e "  ${GREEN}$sess${NC}" ;;
+                esac
+                found=1
+                ;;
+            *) ;;  # non-dmux sessions are not our business
+        esac
+    done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)
+    [ "$found" -eq 1 ] || echo "  (none)"
+}
+
+command -v tmux >/dev/null 2>&1 || die "tmux is not installed."
+
+case "${1:-}" in
+    --list|-l)
+        list_sessions
+        exit 0
+        ;;
+    --help|-h)
+        awk 'NR>2 && /^#/ { sub(/^# ?/, ""); print; next } NR>2 { exit }' "$0"
+        exit 0
+        ;;
+    *) ;;  # anything else is a project name, handled below
+esac
+
+PROJECT="${1:-}"
+SESSION=""
+LABEL=""
+
+if [ -n "$PROJECT" ]; then
+    # Live session first — works regardless of registry staleness.
+    SESSION="$(resolve_session_by_name "$PROJECT")"
+    LABEL="$PROJECT"
+
+    if [ -z "$SESSION" ]; then
+        PROJECT_ROOT="$(resolve_project_root "$PROJECT")"
+        if [ -n "$PROJECT_ROOT" ]; then
+            SESSION="$(dmux_session_name "$PROJECT_ROOT")"
+            LABEL="$(basename "$PROJECT_ROOT")"
+            tmux has-session -t "=$SESSION" 2>/dev/null || die "No running dmux session for '$LABEL' (expected: $SESSION).
+Start it on the desk first:  cd $PROJECT_ROOT && dmux"
+        else
+            die "Could not find a running dmux session for '$PROJECT'.
+Start it on the desk first, or pass the project path directly.
+Run 'dmux-phone --list' to see what is running."
+        fi
+    fi
+else
+    PROJECT_ROOT="$(find_project_root_from_cwd)" \
+        || die "Not inside a dmux project (no .dmux/dmux.config.json found above $(pwd)).
+Pass a project name: dmux-phone <project>"
+    SESSION="$(dmux_session_name "$PROJECT_ROOT")"
+    LABEL="$(basename "$PROJECT_ROOT")"
+    tmux has-session -t "=$SESSION" 2>/dev/null || die "No running dmux session for '$LABEL' (expected: $SESSION).
+Start it on the desk first:  cd $PROJECT_ROOT && dmux"
+fi
+
+PHONE_SESSION="$(printf '%s' "$LABEL" | sed -E 's/[^a-zA-Z0-9_-]+/-/g')-phone"
+
+# Create the grouped session only if absent. `-t` groups it with the dmux
+# session: shared windows, independent current-window and geometry.
+if tmux has-session -t "=$PHONE_SESSION" 2>/dev/null; then
+    # Reattach: leave the phone on whatever window it was last using. Moving it
+    # would be surprising mid-session, and a dropped Tailscale connection
+    # reconnecting should land exactly where it left off. (tmux's
+    # destroy-unattached defaults to off, so the session survives the drop.)
+    echo -e "${BLUE}Reusing phone session${NC} $PHONE_SESSION"
+else
+    echo -e "${GREEN}Creating phone session${NC} $PHONE_SESSION ${BLUE}(grouped with $SESSION)${NC}"
+    # -d so creation never implicitly attaches; we attach explicitly below.
+    tmux new-session -d -t "$SESSION" -s "$PHONE_SESSION"
+
+    # Grouped sessions share the WINDOW LIST but track current-window
+    # independently. Zoom, however, is window state — verified: zooming from the
+    # phone while both sessions view the same window zooms the desk too. Put the
+    # phone on a window the desk is not currently viewing so the two stay
+    # genuinely independent. Only done at creation, never on reattach.
+    # NOTE: the trailing colon matters. `-t <session>` is parsed as a pane
+    # target and resolves to nothing; `-t <session>:` means "current window of
+    # that session". Without it these come back empty and the check silently
+    # never fires.
+    DESK_WINDOW="$(tmux display-message -p -t "=$SESSION:" '#{window_index}' 2>/dev/null || echo '')"
+    PHONE_WINDOW="$(tmux display-message -p -t "=$PHONE_SESSION:" '#{window_index}' 2>/dev/null || echo '')"
+    if [ -n "$DESK_WINDOW" ] && [ "$DESK_WINDOW" = "$PHONE_WINDOW" ]; then
+        OTHER_WINDOW="$(tmux list-windows -t "=$SESSION" -F '#{window_index}' 2>/dev/null |
+            grep -vx "$DESK_WINDOW" | head -1)"
+        if [ -n "$OTHER_WINDOW" ]; then
+            tmux select-window -t "${PHONE_SESSION}:${OTHER_WINDOW}" 2>/dev/null || true
+            echo -e "${BLUE}Moved phone to window $OTHER_WINDOW${NC} (desk is on $DESK_WINDOW; keeps zoom independent)"
+        else
+            echo -e "${YELLOW}Note:${NC} only one window exists, so desk and phone share it —"
+            echo -e "      zooming here also zooms the desk. Use ${BLUE}dmux-focus${NC} to move to another window."
+        fi
+    fi
+fi
+
+# Zoom the active pane so one agent stream fills the screen. Zooming an
+# already-zoomed pane would toggle it back off, so only zoom when not already zoomed.
+if [ "$(tmux display-message -p -t "=$PHONE_SESSION:" '#{window_zoomed_flag}' 2>/dev/null || echo 0)" != "1" ]; then
+    tmux resize-pane -Z -t "=$PHONE_SESSION:" 2>/dev/null || true
+fi
+
+# If we are already inside tmux, switch the current client instead of nesting.
+if [ -n "${TMUX:-}" ]; then
+    exec tmux switch-client -t "=$PHONE_SESSION"
+else
+    exec tmux attach-session -t "=$PHONE_SESSION"
+fi
