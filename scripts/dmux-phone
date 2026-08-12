@@ -221,14 +221,23 @@ else
     DESK_WINDOW="$(tmux display-message -p -t "=$SESSION:" '#{window_index}' 2>/dev/null || echo '')"
     PHONE_WINDOW="$(tmux display-message -p -t "=$PHONE_SESSION:" '#{window_index}' 2>/dev/null || echo '')"
     if [ -n "$DESK_WINDOW" ] && [ "$DESK_WINDOW" = "$PHONE_WINDOW" ]; then
-        OTHER_WINDOW="$(tmux list-windows -t "=$SESSION" -F '#{window_index}' 2>/dev/null |
+        # dmux keeps every VISIBLE pane in a single window and creates extra
+        # windows only to park hidden panes — hiding a pane calls
+        # breakPaneToWindow(paneId, "dmux-hidden-<id>"). So "any other window"
+        # is usually a parking spot holding one hidden pane, and sending the
+        # phone there would show it a pane you deliberately hid. Skip those.
+        OTHER_WINDOW="$(tmux list-windows -t "=$SESSION" -F '#{window_index} #{window_name}' 2>/dev/null |
+            grep -v ' dmux-hidden-' |
+            awk '{print $1}' |
             grep -vx "$DESK_WINDOW" | head -1)"
         if [ -n "$OTHER_WINDOW" ]; then
             tmux select-window -t "${PHONE_SESSION}:${OTHER_WINDOW}" 2>/dev/null || true
             echo -e "${BLUE}Moved phone to window $OTHER_WINDOW${NC} (desk is on $DESK_WINDOW; keeps zoom independent)"
         else
-            echo -e "${YELLOW}Note:${NC} only one window exists, so desk and phone share it —"
-            echo -e "      zooming here also zooms the desk. Use ${BLUE}dmux-focus${NC} to move to another window."
+            # The normal case for dmux: one window holding every visible pane.
+            echo -e "${YELLOW}Note:${NC} this session has one working window, so desk and phone share it —"
+            echo -e "      zooming here also zooms the desk. Harmless while you are away from"
+            echo -e "      the desk; use ${BLUE}dmux-focus${NC} to pick which pane fills the screen."
         fi
     fi
 fi
