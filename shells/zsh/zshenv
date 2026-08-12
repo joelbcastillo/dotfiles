@@ -76,9 +76,10 @@ fi
 # calls this again afterwards to reassert the order. Same shell process, so the
 # function is still in scope there.
 _pin_toolchain_path() {
-    path=("${(@)path:#$HOME/.asdf/shims}")
+    local shims="${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
+    path=("${(@)path:#$shims}")
     path=("${(@)path:#$DOTFILES/bin/claude-tools}")
-    path=("$DOTFILES/bin/claude-tools" "$HOME/.asdf/shims" $path)
+    path=("$DOTFILES/bin/claude-tools" "$shims" $path)
     export PATH
 }
 _pin_toolchain_path
