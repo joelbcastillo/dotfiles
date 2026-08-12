@@ -26,6 +26,19 @@ assert_missing()  { if printf '%s' "$2" | grep -q -- "$1"; then bad "$3" "expect
 # resolves it so fixtures sit on a real path, matching production (~/.claude/...).
 T="$(cd "$(mktemp -d)" && pwd -P)"
 trap 'rm -rf "$T"' EXIT
+
+# The fixture makes commits, which otherwise inherit the user's global
+# commit.gpgsign. On a machine with signing configured, a signer that cannot
+# authorize non-interactively (1Password with no GUI to answer, a locked vault,
+# the headless mac) fails those commits and takes five unrelated assertions with
+# it — the failure surfaces as "patch applied to install root", which points
+# nowhere near the real cause. Signing is irrelevant to anything under test.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=commit.gpgsign
+export GIT_CONFIG_VALUE_0=false
+export GIT_CONFIG_KEY_1=tag.gpgsign
+export GIT_CONFIG_VALUE_1=false
+
 export DOTFILES_ROOT="$T/dotfiles"
 export CLAUDE_HOME="$T/claude-home"
 export CLAUDE_BIN="$T/bin/claude"

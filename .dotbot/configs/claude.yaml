@@ -17,14 +17,19 @@
       path: apps/claude/hooks
       relink: true
       force: true
-    ~/.claude/plugins/known_marketplaces.json:
-      path: apps/claude/plugins/known_marketplaces.json
-      relink: true
-      force: true
     ~/.claude/plugins/local/outlook-mcp:
       path: apps/claude/plugins/local/outlook-mcp
       relink: true
       force: true
+
+- shell:
+    - command: |
+        # Not a link: Claude Code writes installLocation/lastUpdated into this
+        # file, so symlinking it into the repo dirtied the tree on every plugin
+        # refresh. Seeds/merges from the tracked template instead, and migrates
+        # the old symlink if one is still in place.
+        bash "$HOME/.dotfiles/apps/claude/scripts/seed-known-marketplaces.sh"
+      description: Seed known_marketplaces.json from the tracked template
 
 - shell:
     - command: |

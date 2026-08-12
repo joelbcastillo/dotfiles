@@ -8,6 +8,17 @@ set -x
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h}"
 
+# The gitinit test commits, which otherwise inherits the user's global
+# commit.gpgsign. With `set -e`, a signer that cannot authorize
+# non-interactively (1Password with no GUI to answer, a locked vault, the
+# headless mac) aborts the entire run at that commit — every later test is
+# skipped silently. CI never hit this because CI has no signing configured.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=commit.gpgsign
+export GIT_CONFIG_VALUE_0=false
+export GIT_CONFIG_KEY_1=tag.gpgsign
+export GIT_CONFIG_VALUE_1=false
+
 # Source the shell functions
 source "$(dirname "$0")/../shells/oh-my-zsh/custom/functions.zsh"
 
