@@ -50,7 +50,6 @@ The VS Code settings are located in `apps/vscode/settings.json`. These settings 
 The VS Code extensions are listed in `apps/vscode/extensions`. They are organized into the following categories:
 
 ### Essential Extensions
-- GitHub Copilot
 - GitLens
 - IntelliCode
 - Error Lens
