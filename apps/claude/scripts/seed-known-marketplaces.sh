@@ -30,20 +30,36 @@ command -v python3 >/dev/null 2>&1 || die "python3 is required but was not found
 
 mkdir -p "$(dirname "$LIVE")"
 
+# Every write goes through here. The temp file is a sibling of the target, so
+# the rename is same-filesystem and therefore atomic — an interrupted run
+# leaves the original intact rather than a truncated file. That matters because
+# the merge below skips invalid JSON, so a half-written file would persist
+# across runs instead of self-healing.
+write_atomic() {
+    local dest="$1" tmp
+    tmp="$(mktemp "${dest}.XXXXXX")" || die "cannot create a temp file next to $dest"
+    cat > "$tmp" || { rm -f "$tmp"; die "failed writing $tmp"; }
+    chmod 644 "$tmp"
+    mv -f "$tmp" "$dest" || { rm -f "$tmp"; die "failed replacing $dest"; }
+}
+
 # Migration: older installs symlinked this into the repo. Replace the link with
-# a real file so Claude Code's writes stop landing in git. Resolve through the
-# link first so the current content survives the switch.
+# a real file so Claude Code's writes stop landing in git.
+#
+# The target must be exactly the legacy tracked path — matching loosely would
+# also accept known_marketplaces-backup.json or a stray file, and this script
+# then rewrites whatever it points at. Compared by suffix rather than against
+# DOTFILES_ROOT so a link into another checkout or worktree still migrates.
 if [ -L "$LIVE" ]; then
     target="$(readlink "$LIVE")"
     case "$target" in
-        *"/apps/claude/plugins/known_marketplaces"*)
+        */apps/claude/plugins/known_marketplaces.json)
             log "migrating: $LIVE was a symlink into the repo"
             if [ -e "$LIVE" ]; then
-                tmp="$(mktemp)"
-                cat "$LIVE" > "$tmp"
-                rm -f "$LIVE"
-                mv "$tmp" "$LIVE"
-                chmod 644 "$LIVE"
+                # Read through the link, then rename over it — never unlink
+                # first, or a failure here would lose the content outright.
+                content="$(cat "$LIVE")" || die "cannot read $LIVE via its symlink"
+                printf '%s\n' "$content" | write_atomic "$LIVE"
                 log "  kept existing content as a real file"
             else
                 rm -f "$LIVE"
@@ -55,15 +71,20 @@ if [ -L "$LIVE" ]; then
 fi
 
 if [ ! -f "$LIVE" ]; then
-    cp "$TEMPLATE" "$LIVE"
-    chmod 644 "$LIVE"
+    write_atomic "$LIVE" < "$TEMPLATE"
     log "seeded $LIVE from the template"
     exit 0
 fi
 
 # Merge: add only the keys the live file lacks. Existing entries keep their
 # runtime fields untouched, so this can never clobber Claude Code's state.
-added="$(python3 - "$TEMPLATE" "$LIVE" <<'PY'
+#
+# The merged document goes to stdout and is written by write_atomic, so the
+# read-modify-write never truncates the live file. This still is not locked
+# against a Claude Code write landing between the read and the rename; that
+# window is small and this only runs during a dotbot pass, so the tradeoff is
+# a lost marketplace *addition* at worst, never a corrupted file.
+merged="$(python3 - "$TEMPLATE" "$LIVE" <<'PY'
 import json, sys
 
 template_path, live_path = sys.argv[1], sys.argv[2]
@@ -75,25 +96,29 @@ try:
         live = json.load(fh)
 except (json.JSONDecodeError, ValueError):
     # A corrupt live file is Claude Code's to repair; do not overwrite it.
-    print("SKIP", end="")
+    print("SKIP")
     raise SystemExit(0)
 
 if not isinstance(live, dict):
-    print("SKIP", end="")
+    print("SKIP")
     raise SystemExit(0)
 
 missing = [k for k in template if k not in live]
 for key in missing:
     live[key] = template[key]
 
+# First line is the status, remainder is the document (empty when unchanged).
+print(",".join(missing))
 if missing:
-    with open(live_path, "w") as fh:
-        json.dump(live, fh, indent=2)
-        fh.write("\n")
-
-print(",".join(missing), end="")
+    json.dump(live, sys.stdout, indent=2)
+    sys.stdout.write("\n")
 PY
 )" || die "failed to merge template into $LIVE"
+
+added="$(printf '%s' "$merged" | head -1)"
+if [ -n "$added" ] && [ "$added" != "SKIP" ]; then
+    printf '%s' "$merged" | tail -n +2 | write_atomic "$LIVE"
+fi
 
 case "$added" in
     SKIP) log "live file is not valid JSON; leaving it alone for Claude Code to repair" ;;
