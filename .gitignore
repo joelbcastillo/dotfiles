@@ -54,6 +54,12 @@ tools/1password/secret-paths.json
 .claude/dmux/
 .claude/hooks/
 
+# Claude Code writes installLocation (an absolute per-machine path) and
+# lastUpdated into known_marketplaces.json, so the live file must never be
+# tracked again. The definitions live in known_marketplaces.template.json and
+# apps/claude/scripts/seed-known-marketplaces.sh reconciles the two.
+apps/claude/plugins/known_marketplaces.json
+
 # Backup location files
 .backup_location
 

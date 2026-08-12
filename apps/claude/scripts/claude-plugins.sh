@@ -39,7 +39,7 @@ die()  { printf '%b\n' "${C_RED}✗${C_NC} $*" >&2; exit 1; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_ROOT="${DOTFILES_ROOT:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
 LOCKFILE="${DOTFILES_ROOT}/apps/claude/plugins/plugins.lock.json"
-KNOWN_MARKETPLACES="${DOTFILES_ROOT}/apps/claude/plugins/known_marketplaces.json"
+KNOWN_MARKETPLACES="${DOTFILES_ROOT}/apps/claude/plugins/known_marketplaces.template.json"
 PATCHES_DIR="${DOTFILES_ROOT}/apps/claude/patches"
 HOOKS_SRC="${DOTFILES_ROOT}/apps/claude/hooks"
 CLAUDE_HOME="${CLAUDE_HOME:-${HOME}/.claude}"
@@ -93,11 +93,11 @@ marketplace_sha() {
 }
 
 # Ensure a marketplace is registered before we try to install from it; add it from
-# the tracked known_marketplaces.json when missing (fresh-machine path).
+# the tracked known_marketplaces.template.json when missing (fresh-machine path).
 ensure_marketplace() {
   local name="$1"
   [ -d "${MARKETPLACES_DIR}/${name}" ] && return 0
-  [ -f "$KNOWN_MARKETPLACES" ] || die "marketplace '${name}' is not registered and no known_marketplaces.json exists to add it from"
+  [ -f "$KNOWN_MARKETPLACES" ] || die "marketplace '${name}' is not registered and no known_marketplaces.template.json exists to add it from"
   local src
   src="$(python3 -c '
 import json, sys
@@ -105,8 +105,8 @@ m = json.load(open(sys.argv[1])).get(sys.argv[2], {}).get("source", {})
 if m.get("source") == "github": print(m.get("repo", ""))
 elif m.get("source") == "git": print(m.get("url", ""))
 ' "$KNOWN_MARKETPLACES" "$name")" \
-    || die "cannot parse known_marketplaces.json"
-  [ -n "$src" ] || die "marketplace '${name}' is pinned in the lockfile but has no entry in known_marketplaces.json — add it there first"
+    || die "cannot parse known_marketplaces.template.json"
+  [ -n "$src" ] || die "marketplace '${name}' is pinned in the lockfile but has no entry in known_marketplaces.template.json — add it there first"
   info "  registering marketplace ${name} (${src})"
   "$(claude_bin)" plugin marketplace add "$src" >/dev/null 2>&1 \
     || die "failed to register marketplace ${name} from ${src}"
