@@ -1,0 +1,637 @@
+#!/usr/bin/env python3
+"""fleet - one screen for 50+ Claude sessions and the PRs they produced.
+
+Two halves, two sources:
+  WHERE YOU WERE  sessions from `cmux sessions list` + ~/.cmuxterm/workstream.jsonl  (instant, local)
+  SHIPPABLE       open PRs from `gh`, CI + mergeable state                           (cached, ~4s cold)
+"""
+
+import argparse
+import base64
+import concurrent.futures
+import glob
+import json
+import os
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+FEED = os.path.join(HOME, ".cmuxterm", "workstream.jsonl")
+CACHE_DIR = os.path.join(HOME, ".cache", "fleet")
+CACHE = os.path.join(CACHE_DIR, "prs.json")
+INTENT_CACHE = os.path.join(CACHE_DIR, "intents.json")
+CACHE_TTL = 600
+FEED_TAIL = int(os.environ.get("FLEET_FEED_TAIL", 25_000_000))
+
+C = {
+    "dim": "\033[2m", "red": "\033[31m", "grn": "\033[32m", "yel": "\033[33m",
+    "blu": "\033[34m", "cyn": "\033[36m", "bold": "\033[1m", "off": "\033[0m",
+}
+if not sys.stdout.isatty() or os.environ.get("NO_COLOR"):
+    C = {k: "" for k in C}
+
+
+def c(key, text):
+    return f"{C[key]}{text}{C['off']}"
+
+
+def run(cmd, timeout=90):
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return p.stdout if p.returncode == 0 else ""
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return ""
+
+
+def parse_ts(ts):
+    try:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def ago(ts):
+    d = parse_ts(ts)
+    if not d:
+        return "  --"
+    s = (datetime.now(timezone.utc) - d).total_seconds()
+    if s < 60:
+        return f"{int(s)}s"
+    if s < 3600:
+        return f"{int(s // 60)}m"
+    if s < 86400:
+        return f"{int(s // 3600)}h"
+    return f"{int(s // 86400)}d"
+
+
+def short_repo(path):
+    """/Users/x/.repos/github.com/org/repo/.dmux/worktrees/foo -> repo:foo"""
+    p = path.replace(HOME, "~")
+    for marker in ("/.repos/github.com/", "/.repos/"):
+        if marker in p:
+            p = p.split(marker, 1)[1]
+            break
+    else:
+        return p.rsplit("/", 1)[-1] or p
+    wt = ""
+    for marker in ("/.dmux/worktrees/", "/.dmux-worktrees/", "/worktrees/"):
+        if marker in p:
+            p, wt = p.split(marker, 1)
+            break
+    parts = [x for x in p.split("/") if x]
+    repo = parts[-1] if parts else p
+    return f"{repo}:{wt}" if wt else repo
+
+
+# ---------------------------------------------------------------- sessions
+
+def load_sessions():
+    out = run(["cmux", "sessions", "list", "--agent", "claude", "--json", "--all"], timeout=30)
+    if not out:
+        return []
+    try:
+        return json.loads(out).get("sessions", [])
+    except json.JSONDecodeError:
+        return []
+
+
+def load_feed():
+    """session_id -> {prompt, typed_at, last_at, last_kind}"""
+    info = {}
+    if not os.path.exists(FEED):
+        return info
+    size = os.path.getsize(FEED)
+    with open(FEED, "rb") as f:
+        if size > FEED_TAIL:
+            f.seek(size - FEED_TAIL)
+            f.readline()
+        for line in f:
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            parts = (r.get("workstreamId") or "").split(":")
+            if len(parts) < 3:
+                continue
+            try:
+                sid = base64.b64decode(parts[2] + "=" * (-len(parts[2]) % 4)).decode("utf8", "replace")
+            except Exception:
+                continue
+            ts = r.get("updatedAt") or r.get("createdAt") or ""
+            kind = r.get("kind", "")
+            e = info.setdefault(sid, {"prompt": "", "typed_at": "", "last_at": "", "last_kind": ""})
+            if ts >= e["last_at"]:
+                e["last_at"], e["last_kind"] = ts, kind
+            msg = (r.get("context") or {}).get("lastUserMessage")
+            if msg and ts >= e.get("_msg_at", ""):
+                e["prompt"], e["_msg_at"] = msg, ts
+            if kind == "userPrompt" and ts >= e["typed_at"]:
+                e["typed_at"] = ts
+    return info
+
+
+def transcript_path(session):
+    """Live transcripts live under <session_dir>/projects/<slug>/<session_id>.jsonl."""
+    sid = session.get("session_id") or ""
+    root = session.get("session_dir") or session.get("session_home") or os.path.join(HOME, ".claude")
+    hit = glob.glob(os.path.join(root, "projects", "*", f"{sid}.jsonl"))
+    return hit[0] if hit else None
+
+
+def read_intent(path):
+    """First substantive user message (what the session is for) + last known branch."""
+    intent, branch = "", ""
+    try:
+        with open(path, "r", errors="replace") as f:
+            for i, line in enumerate(f):
+                if i > 600 and intent:
+                    break
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                branch = r.get("gitBranch") or branch
+                if intent or r.get("type") != "user":
+                    continue
+                m = r.get("message") or {}
+                body = m.get("content")
+                if isinstance(body, list):
+                    body = next((b.get("text") for b in body
+                                 if isinstance(b, dict) and b.get("type") == "text"), None)
+                if isinstance(body, str) and body.strip() and not body.lstrip().startswith(
+                        ("<", "[SYSTEM", "Caveat:", "This session is being continued")):
+                    intent = " ".join(body.split())
+    except OSError:
+        pass
+    return intent, branch
+
+
+def load_intents(sessions):
+    try:
+        cache = json.load(open(INTENT_CACHE))
+    except Exception:
+        cache = {}
+
+    out, dirty = {}, False
+    for s in sessions:
+        sid = s.get("session_id") or ""
+        path = transcript_path(s)
+        if not path:
+            continue
+        try:
+            stamp = f"{os.path.getmtime(path):.0f}:{os.path.getsize(path)}"
+        except OSError:
+            continue
+        hit = cache.get(sid)
+        if hit and hit.get("stamp") == stamp:
+            out[sid] = hit
+            continue
+        intent, branch = read_intent(path)
+        out[sid] = {"intent": intent, "branch": branch, "stamp": stamp}
+        dirty = True
+
+    if dirty:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        try:
+            json.dump(out, open(INTENT_CACHE, "w"))
+        except OSError:
+            pass
+    return out
+
+
+def clean(text, width):
+    t = " ".join(str(text or "").split())
+    if t.startswith("Another Claude session sent a message"):
+        t = "(teammate message from another session)"
+    elif t.startswith("This session is being continued from a previous"):
+        t = "(resumed after context compaction)"
+    elif t.startswith("[SYSTEM NOTIFICATION"):
+        t = "(background task event)"
+    return t[: width - 1] + "…" if len(t) > width else t
+
+
+def build_rows(sessions, feed, intents):
+    rows = []
+    for s in sessions:
+        sid = s.get("session_id", "")
+        e = feed.get(sid) or {}
+        if not e:  # tolerate truncated / prefix-matched ids
+            for k, v in feed.items():
+                if k[:8] == sid[:8]:
+                    e = v
+                    break
+        meta = intents.get(sid) or {}
+        rows.append({
+            "repo": short_repo(s.get("cwd", "")),
+            "branch": meta.get("branch", ""),
+            "pid": s.get("pid"),
+            "life": s.get("agent_lifecycle", "?"),
+            "sid": sid,
+            # the session's opening ask beats its latest "Yes" / "go for it"
+            "label": meta.get("intent") or e.get("prompt", ""),
+            "when": e.get("typed_at") or e.get("last_at") or s.get("started_at", ""),
+            "last_kind": e.get("last_kind", ""),
+            "started": s.get("started_at", ""),
+        })
+    rows.sort(key=lambda r: r["when"], reverse=True)
+    return rows
+
+
+# --------------------------------------------------------------------- PRs
+
+def pr_rollup(pr):
+    checks = pr.get("statusCheckRollup") or []
+    if not checks:
+        return "none"
+    st = [x.get("conclusion") or x.get("state") or "" for x in checks]
+    if any(x in ("FAILURE", "ERROR", "TIMED_OUT", "CANCELLED") for x in st):
+        return "fail"
+    if any(x in ("PENDING", "IN_PROGRESS", "QUEUED", "") for x in st):
+        return "pending"
+    return "green"
+
+
+def fetch_prs(refresh=False):
+    if not refresh and os.path.exists(CACHE):
+        try:
+            blob = json.load(open(CACHE))
+            if time.time() - blob.get("at", 0) < CACHE_TTL:
+                return blob["prs"], blob["at"]
+        except Exception:
+            pass
+
+    found = run(["gh", "search", "prs", "--author", "@me", "--state", "open",
+                 "--limit", "300", "--json", "repository"], timeout=90)
+    repos = []
+    try:
+        for r in json.loads(found or "[]"):
+            name = (r.get("repository") or {}).get("nameWithOwner")
+            if name and name not in repos:
+                repos.append(name)
+    except json.JSONDecodeError:
+        pass
+    if not repos:
+        return [], time.time()
+
+    fields = "number,title,headRefName,mergeable,reviewDecision,isDraft,updatedAt,statusCheckRollup"
+
+    def one(repo):
+        out = run(["gh", "pr", "list", "--repo", repo, "--author", "@me", "--state", "open",
+                   "--limit", "50", "--json", fields], timeout=60)
+        try:
+            prs = json.loads(out or "[]")
+        except json.JSONDecodeError:
+            return []
+        for p in prs:
+            p["repo"] = repo
+            p["ci"] = pr_rollup(p)
+        return prs
+
+    prs = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        for batch in ex.map(one, repos):
+            prs.extend(batch)
+
+    # `gh pr list` returns mergeable=UNKNOWN — GitHub only computes it on demand.
+    # Resolve it for the PRs that could plausibly ship, or "shippable" is a lie.
+    def resolve(p):
+        out = run(["gh", "pr", "view", str(p["number"]), "--repo", p["repo"],
+                   "--json", "mergeable,mergeStateStatus"], timeout=45)
+        try:
+            got = json.loads(out or "{}")
+        except json.JSONDecodeError:
+            return p
+        p["mergeable"] = got.get("mergeable") or p.get("mergeable")
+        p["mergeStateStatus"] = got.get("mergeStateStatus") or ""
+        return p
+
+    candidates = [p for p in prs if p["ci"] in ("green", "none")
+                  and not p.get("isDraft")
+                  and p.get("reviewDecision") != "CHANGES_REQUESTED"]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(resolve, candidates))
+
+    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+    stamp = time.time()
+    try:
+        json.dump({"at": stamp, "prs": prs}, open(CACHE, "w"))
+    except OSError:
+        pass
+    return prs, stamp
+
+
+def shippable(p):
+    """Green CI is not enough — an old branch can be green and still unmergeable."""
+    return (p["ci"] in ("green", "none")
+            and not p.get("isDraft")
+            and p.get("mergeable") == "MERGEABLE"
+            and p.get("mergeStateStatus") not in ("DIRTY", "BLOCKED")
+            and p.get("reviewDecision") != "CHANGES_REQUESTED")
+
+
+# ------------------------------------------------------------------ render
+
+def render_sessions(rows, limit, show_all):
+    def loc(r):
+        """Returns (rendered, visible_width) — colour codes don't count toward padding."""
+        if r["branch"] and r["branch"] not in ("HEAD", "main", "master"):
+            br = r["branch"].split("/", 1)[-1]
+            br = br if len(br) <= 14 else "…" + br[-13:]  # the tail is what distinguishes siblings
+            repo = r["repo"][:17]
+            return f"{c('cyn', repo)} {c('dim', br)}", len(repo) + 1 + len(br)
+        repo = r["repo"][:31]
+        return c("cyn", repo), len(repo)
+
+    waiting =[r for r in rows if r["last_kind"] in ("question", "permissionRequest")]
+    if waiting:
+        print(c("bold", "\nWAITING ON YOU") + c("dim", f"  ({len(waiting)})"))
+        for r in waiting:
+            text, w = loc(r)
+            print(f"  {c('yel', ago(r['when']).rjust(4))}  {text}{' ' * max(1, 33 - w)}"
+                  f"{clean(r['label'], 52)}")
+
+    shown = rows if show_all else rows[:limit]
+    print(c("bold", "\nWHERE YOU WERE") + c("dim", f"  ({len(shown)} of {len(rows)} sessions)"))
+    for r in shown:
+        mark = {"running": c("grn", "●"), "needsInput": c("yel", "●")}.get(r["life"], c("dim", "○"))
+        text, w = loc(r)
+        print(f"  {mark} {ago(r['when']).rjust(4)}  {text}{' ' * max(1, 33 - w)}"
+              f"{clean(r['label'], 52)}")
+    if not show_all and len(rows) > limit:
+        print(c("dim", f"       … {len(rows) - limit} more  (fleet --all)"))
+
+
+def render_prs(prs, stamp, show_all):
+    ready = sorted([p for p in prs if shippable(p)], key=lambda p: p.get("updatedAt", ""), reverse=True)
+    stuck = [p for p in prs if not shippable(p)]
+
+    age = int(time.time() - stamp)
+    freshness = "just now" if age < 60 else f"{age // 60}m ago"
+    print(c("bold", "\nSHIPPABLE") + c("dim", f"  ({len(ready)} of {len(prs)} open PRs · checked {freshness})"))
+
+    by_repo = {}
+    for p in ready:
+        by_repo.setdefault(p["repo"], []).append(p)
+
+    budget = 10**6 if show_all else 12
+    printed = 0
+    for repo in sorted(by_repo, key=lambda r: -len(by_repo[r])):
+        if printed >= budget:
+            break
+        print(f"  {c('cyn', repo.split('/')[-1])}")
+        for p in by_repo[repo]:
+            if printed >= budget:
+                break
+            ci = c("grn", "green") if p["ci"] == "green" else c("dim", "no-ci")
+            print(f"    #{str(p['number']).ljust(5)} {ci}  {c('dim', ago(p.get('updatedAt')).rjust(3))}  "
+                  f"{p['title'][:56]}")
+            printed += 1
+    if not show_all and len(ready) > printed:
+        print(c("dim", f"       … {len(ready) - printed} more  (fleet --all)"))
+
+    if stuck:
+        fail = sum(1 for p in stuck if p["ci"] == "fail")
+        draft = sum(1 for p in stuck if p.get("isDraft"))
+        conflict = sum(1 for p in stuck if p.get("mergeable") == "CONFLICTING")
+        changes = sum(1 for p in stuck if p.get("reviewDecision") == "CHANGES_REQUESTED")
+        pending = sum(1 for p in stuck if p["ci"] == "pending")
+        blocked = sum(1 for p in stuck if p.get("mergeStateStatus") == "BLOCKED")
+        bits = [f"{n} {label}" for n, label in
+                ((fail, c("red", "failing")), (conflict, c("red", "conflicting")),
+                 (changes, "changes requested"), (blocked, "blocked by branch rules"),
+                 (pending, "CI pending"), (draft, "draft")) if n]
+        if bits:
+            print(c("dim", "\n  not ready: ") + c("dim", " · ").join(bits))
+
+
+# ------------------------------------------------------------------- serve
+
+PAGE = """<!doctype html><html><head><meta charset="utf-8">
+<title>fleet</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#111;--mut:#6b7280;--line:#e5e7eb;--grn:#15803d;--yel:#b45309;--card:#f9fafb}
+@media(prefers-color-scheme:dark){:root{--bg:#0b0d10;--fg:#e6e8eb;--mut:#8b949e;--line:#21262d;--grn:#3fb950;--yel:#d29922;--card:#11151a}}
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:var(--bg);color:var(--fg);
+ font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+h1{font-size:13px;margin:0 0 16px;letter-spacing:.14em;text-transform:uppercase}
+h1 span{color:var(--mut);letter-spacing:0;text-transform:none;font-weight:400}
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);
+ margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+@media(max-width:1100px){.cols{grid-template-columns:minmax(0,1fr)}}
+.cols>section{min-width:0}
+.row{display:flex;gap:10px;padding:4px 0;align-items:baseline;min-width:0}
+.row:hover{background:var(--card)}
+.age{color:var(--mut);width:34px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.loc{flex:none;width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br{color:var(--mut)}
+.lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)}
+.dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--line);margin-top:6px}
+.dot.running{background:var(--grn)}.dot.needsInput{background:var(--yel)}
+.wait{border-left:2px solid var(--yel);padding-left:10px;margin-bottom:20px}
+.num{color:var(--mut);width:48px;flex:none}
+.green{color:var(--grn)}
+.repo{margin:12px 0 4px;color:var(--mut)}
+.repo:first-child{margin-top:0}
+a{color:inherit;text-decoration:none}a:hover .lbl{text-decoration:underline}
+footer{margin-top:24px;color:var(--mut);font-size:11px}
+</style></head><body>
+<h1>Fleet <span id="sum"></span></h1>
+<div id="wait"></div>
+<div class="cols">
+  <section><h2>Where you were</h2><div id="sess"></div></section>
+  <section><h2>Shippable</h2><div id="prs"></div></section>
+</div>
+<footer id="foot"></footer>
+<script>
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function ago(ts){if(!ts)return"--";const s=(Date.now()-new Date(ts))/1000;
+ if(s<60)return Math.round(s)+"s";if(s<3600)return Math.round(s/60)+"m";
+ if(s<86400)return Math.round(s/3600)+"h";return Math.round(s/86400)+"d";}
+function tidy(t){t=(t||"").replace(/\\s+/g," ").trim();
+ if(t.startsWith("Another Claude session sent"))return"(teammate message)";
+ if(t.startsWith("This session is being continued"))return"(resumed after compaction)";
+ if(t.startsWith("[SYSTEM NOTIFICATION"))return"(background task event)";
+ return t||"\\u2014";}
+function srow(r){const br=r.branch&&!["HEAD","main","master"].includes(r.branch)
+ ?' <span class="br">'+esc(r.branch.split("/").slice(1).join("/")||r.branch)+'</span>':'';
+ return '<div class="row"><div class="dot '+esc(r.life)+'"></div>'+
+ '<div class="age">'+ago(r.when)+'</div>'+
+ '<div class="loc">'+esc(r.repo)+br+'</div>'+
+ '<div class="lbl">'+esc(tidy(r.label))+'</div></div>';}
+async function tick(){
+ let d;try{d=await (await fetch("/api")).json()}catch(e){return}
+ document.getElementById("sum").textContent=
+  d.sessions.length+" sessions \\u00b7 "+d.prs.length+" open PRs";
+ const w=d.sessions.filter(r=>["question","permissionRequest"].includes(r.last_kind));
+ document.getElementById("wait").innerHTML=w.length
+  ?'<div class="wait"><h2>Waiting on you</h2>'+w.map(srow).join("")+'</div>':"";
+ document.getElementById("sess").innerHTML=d.sessions.slice(0,22).map(srow).join("");
+ const ready=d.prs.filter(p=>p.shippable)
+   .sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||""));
+ if(d.pr_error){document.getElementById("prs").innerHTML=
+   '<div class="row"><div class="lbl">PR fetch failed: '+esc(d.pr_error)+'</div></div>';
+   document.getElementById("foot").textContent="sessions are live; PR half errored";return;}
+ if(!d.prs.length&&d.pr_loading){document.getElementById("prs").innerHTML=
+   '<div class="row"><div class="lbl">loading open PRs\\u2026 (~20s on a cold cache)</div></div>';
+   document.getElementById("foot").textContent="sessions are live \\u00b7 PRs still loading";
+   setTimeout(tick,3000);return;}
+ const by={};ready.forEach(p=>(by[p.repo]=by[p.repo]||[]).push(p));
+ document.getElementById("prs").innerHTML=Object.keys(by).sort((a,b)=>by[b].length-by[a].length)
+  .map(r=>'<div class="repo">'+esc(r.split("/").pop())+'</div>'+by[r].slice(0,14).map(p=>
+   '<a class="row" target="_blank" href="https://github.com/'+esc(p.repo)+'/pull/'+p.number+'">'+
+   '<div class="num">#'+p.number+'</div>'+
+   '<div class="age '+(p.ci==="green"?"green":"")+'">'+(p.ci==="green"?"\\u25cf":"\\u25cb")+'</div>'+
+   '<div class="age">'+ago(p.updatedAt)+'</div>'+
+   '<div class="lbl">'+esc(p.title)+'</div></a>').join("")).join("");
+ document.getElementById("foot").textContent=
+  "PRs checked "+ago(d.pr_checked_at*1000)+" ago \\u00b7 refreshes every 20s";
+}
+tick();setInterval(tick,20000);
+</script></body></html>"""
+
+
+def serve(port):
+    import socket
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    # The PR fetch takes ~20s cold. Never block the socket on it: bind first,
+    # refresh in the background, and let the page render sessions immediately.
+    state = {"prs": [], "at": 0.0, "loading": True, "error": ""}
+    lock = threading.Lock()
+
+    def refresh(force=False):
+        with lock:
+            if state["loading"] and not force:
+                return
+            state["loading"] = True
+        try:
+            prs, stamp = fetch_prs(force)
+            for p in prs:
+                p["shippable"] = shippable(p)
+            with lock:
+                state.update(prs=prs, at=stamp, error="")
+        except Exception as exc:                      # a failed fetch must not kill the page
+            with lock:
+                state["error"] = f"{type(exc).__name__}: {exc}"
+        finally:
+            with lock:
+                state["loading"] = False
+
+    def poller():
+        while True:
+            refresh(force=True)
+            time.sleep(CACHE_TTL)
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            if self.path.startswith("/api"):
+                sessions = load_sessions()
+                rows = build_rows(sessions, load_feed(), load_intents(sessions))
+                with lock:
+                    snapshot = dict(state)
+                body = json.dumps({"sessions": rows,
+                                   "prs": snapshot["prs"],
+                                   "pr_checked_at": snapshot["at"],
+                                   "pr_loading": snapshot["loading"],
+                                   "pr_error": snapshot["error"]})
+                ctype = "application/json"
+            else:
+                body = PAGE
+                ctype = "text/html; charset=utf-8"
+            raw = body.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(raw)
+
+    try:
+        httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    except OSError as exc:
+        if exc.errno in (48, 98):  # EADDRINUSE
+            print(f"port {port} is already in use — another `fleet --serve` is probably running.",
+                  file=sys.stderr)
+            print(f"  check:  lsof -nP -iTCP:{port} -sTCP:LISTEN", file=sys.stderr)
+            print(f"  or:     fleet --serve --port {port + 1}", file=sys.stderr)
+        else:
+            print(f"could not bind 127.0.0.1:{port} — {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    # Only now is the URL actually reachable.
+    print(f"fleet -> http://127.0.0.1:{port}   (ctrl-c to stop)", flush=True)
+    print("  sessions render immediately; PRs fill in once the first fetch lands (~20s)", flush=True)
+    threading.Thread(target=poller, daemon=True).start()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nstopped", flush=True)
+        httpd.server_close()
+
+
+def main():
+    ap = argparse.ArgumentParser(description="One screen for your Claude session fleet.")
+    ap.add_argument("--all", action="store_true", help="show every session and PR")
+    ap.add_argument("--refresh", action="store_true", help="bypass the PR cache")
+    ap.add_argument("--limit", type=int, default=12, help="sessions to show (default 12)")
+    ap.add_argument("--sessions", action="store_true", help="sessions only (instant, no network)")
+    ap.add_argument("--prs", action="store_true", help="PRs only")
+    ap.add_argument("--repo", help="filter both halves to repos matching this substring")
+    ap.add_argument("--json", action="store_true", help="machine-readable output")
+    ap.add_argument("--serve", action="store_true", help="serve a live auto-refreshing page")
+    ap.add_argument("--port", type=int, default=8777, help="port for --serve (default 8777)")
+    a = ap.parse_args()
+
+    if a.serve:
+        serve(a.port)
+        return
+
+    want_s = not a.prs
+    want_p = not a.sessions
+
+    rows = []
+    if want_s:
+        sessions = load_sessions()
+        rows = build_rows(sessions, load_feed(), load_intents(sessions))
+    prs, stamp = fetch_prs(a.refresh) if want_p else ([], time.time())
+
+    if a.repo:
+        needle = a.repo.lower()
+        rows = [r for r in rows if needle in r["repo"].lower()]
+        prs = [p for p in prs if needle in p["repo"].lower()]
+
+    if a.json:
+        json.dump({"sessions": rows, "prs": prs, "pr_checked_at": stamp}, sys.stdout, indent=2)
+        print()
+        return
+
+    live = sum(1 for r in rows if r["life"] in ("running", "needsInput"))
+    head = []
+    if want_s:
+        head.append(f"{len(rows)} sessions" + (f" ({live} live)" if live else ""))
+    if want_p:
+        head.append(f"{len(prs)} open PRs")
+    print(c("bold", "FLEET") + c("dim", "  ·  " + "  ·  ".join(head)))
+
+    if want_s:
+        render_sessions(rows, a.limit, a.all)
+    if want_p:
+        render_prs(prs, stamp, a.all)
+    print()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)
