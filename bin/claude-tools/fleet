@@ -38,11 +38,12 @@ def c(key, text):
 
 
 def run(cmd, timeout=90):
+    """stdout on success, None on failure. Never conflate 'failed' with 'empty'."""
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        return p.stdout if p.returncode == 0 else ""
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        return ""
+        return p.stdout if p.returncode == 0 else None
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None
 
 
 def parse_ts(ts):
@@ -89,11 +90,15 @@ def short_repo(path):
 
 def load_sessions():
     out = run(["cmux", "sessions", "list", "--agent", "claude", "--json", "--all"], timeout=30)
-    if not out:
+    if out is None:
+        # Don't render this as "0 sessions" — that reads as an empty fleet.
+        print(c("yel", "  ! `cmux sessions list` failed — is cmux installed and on PATH?"),
+              file=sys.stderr)
         return []
     try:
-        return json.loads(out).get("sessions", [])
+        return json.loads(out or "{}").get("sessions", [])
     except json.JSONDecodeError:
+        print(c("yel", "  ! could not parse `cmux sessions list` output"), file=sys.stderr)
         return []
 
 
@@ -138,6 +143,27 @@ def transcript_path(session):
     root = session.get("session_dir") or session.get("session_home") or os.path.join(HOME, ".claude")
     hit = glob.glob(os.path.join(root, "projects", "*", f"{sid}.jsonl"))
     return hit[0] if hit else None
+
+
+def last_branch(path, tail=400_000):
+    """Newest gitBranch in the transcript — a session can switch branches late,
+    long past the prefix we scan for the opening ask."""
+    branch = ""
+    try:
+        size = os.path.getsize(path)
+        with open(path, "rb") as f:
+            if size > tail:
+                f.seek(size - tail)
+                f.readline()
+            for line in f:
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                branch = r.get("gitBranch") or branch
+    except OSError:
+        pass
+    return branch
 
 
 def read_intent(path):
@@ -189,7 +215,7 @@ def load_intents(sessions):
             out[sid] = hit
             continue
         intent, branch = read_intent(path)
-        out[sid] = {"intent": intent, "branch": branch, "stamp": stamp}
+        out[sid] = {"intent": intent, "branch": last_branch(path) or branch, "stamp": stamp}
         dirty = True
 
     if dirty:
@@ -225,6 +251,7 @@ def build_rows(sessions, feed, intents):
         meta = intents.get(sid) or {}
         rows.append({
             "repo": short_repo(s.get("cwd", "")),
+            "cwd": s.get("cwd", ""),            # `claude --resume` needs the real path
             "branch": meta.get("branch", ""),
             "pid": s.get("pid"),
             "life": s.get("agent_lifecycle", "?"),
@@ -241,16 +268,23 @@ def build_rows(sessions, feed, intents):
 
 # --------------------------------------------------------------------- PRs
 
+# Allowlist, not a denylist: GitHub also returns ACTION_REQUIRED, STALE and
+# STARTUP_FAILURE, none of which mean "passed". An unrecognised value must
+# never fall through to green.
+CI_PASS = {"SUCCESS", "NEUTRAL", "SKIPPED"}
+CI_RUNNING = {"PENDING", "IN_PROGRESS", "QUEUED", "WAITING", "REQUESTED", ""}
+
+
 def pr_rollup(pr):
     checks = pr.get("statusCheckRollup") or []
     if not checks:
         return "none"
     st = [x.get("conclusion") or x.get("state") or "" for x in checks]
-    if any(x in ("FAILURE", "ERROR", "TIMED_OUT", "CANCELLED") for x in st):
-        return "fail"
-    if any(x in ("PENDING", "IN_PROGRESS", "QUEUED", "") for x in st):
+    if any(x in CI_RUNNING for x in st):
         return "pending"
-    return "green"
+    if all(x in CI_PASS for x in st):
+        return "green"
+    return "fail"
 
 
 def fetch_prs(refresh=False):
@@ -258,54 +292,77 @@ def fetch_prs(refresh=False):
         try:
             blob = json.load(open(CACHE))
             if time.time() - blob.get("at", 0) < CACHE_TTL:
-                return blob["prs"], blob["at"]
+                return blob["prs"], blob["at"], []
         except Exception:
             pass
 
+    SEARCH_LIMIT, REPO_LIMIT = 300, 100
+    warnings = []
+
     found = run(["gh", "search", "prs", "--author", "@me", "--state", "open",
-                 "--limit", "300", "--json", "repository"], timeout=90)
+                 "--limit", str(SEARCH_LIMIT), "--json", "repository"], timeout=90)
+    if found is None:
+        raise RuntimeError("`gh search prs` failed (not authenticated, offline, or rate-limited)")
     repos = []
     try:
-        for r in json.loads(found or "[]"):
-            name = (r.get("repository") or {}).get("nameWithOwner")
-            if name and name not in repos:
-                repos.append(name)
-    except json.JSONDecodeError:
-        pass
+        hits = json.loads(found or "[]")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"could not parse `gh search prs` output: {exc}") from exc
+    for r in hits:
+        name = (r.get("repository") or {}).get("nameWithOwner")
+        if name and name not in repos:
+            repos.append(name)
+    if len(hits) >= SEARCH_LIMIT:
+        warnings.append(f"repo discovery hit the {SEARCH_LIMIT}-result cap; some repos may be missing")
     if not repos:
-        return [], time.time()
+        return [], time.time(), warnings
 
     fields = "number,title,headRefName,mergeable,reviewDecision,isDraft,updatedAt,statusCheckRollup"
 
     def one(repo):
         out = run(["gh", "pr", "list", "--repo", repo, "--author", "@me", "--state", "open",
-                   "--limit", "50", "--json", fields], timeout=60)
+                   "--limit", str(REPO_LIMIT), "--json", fields], timeout=60)
+        if out is None:
+            return repo, None
         try:
             prs = json.loads(out or "[]")
         except json.JSONDecodeError:
-            return []
+            return repo, None
         for p in prs:
             p["repo"] = repo
             p["ci"] = pr_rollup(p)
-        return prs
+        return repo, prs
 
-    prs = []
+    prs, failed = [], []
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
-        for batch in ex.map(one, repos):
+        for repo, batch in ex.map(one, repos):
+            if batch is None:
+                failed.append(repo)
+                continue
+            if len(batch) >= REPO_LIMIT:
+                warnings.append(f"{repo} hit the {REPO_LIMIT}-PR cap; list is truncated")
             prs.extend(batch)
+
+    if failed:
+        warnings.append(f"could not read {len(failed)} repo(s): {', '.join(sorted(failed)[:4])}")
+    if failed and not prs:
+        raise RuntimeError("every repository fetch failed")
 
     # `gh pr list` returns mergeable=UNKNOWN — GitHub only computes it on demand.
     # Resolve it for the PRs that could plausibly ship, or "shippable" is a lie.
     def resolve(p):
         out = run(["gh", "pr", "view", str(p["number"]), "--repo", p["repo"],
                    "--json", "mergeable,mergeStateStatus"], timeout=45)
+        if out is None:
+            p["mergeable"], p["mergeStateStatus"] = "UNKNOWN", ""   # unresolved != ready
+            return
         try:
             got = json.loads(out or "{}")
         except json.JSONDecodeError:
-            return p
-        p["mergeable"] = got.get("mergeable") or p.get("mergeable")
+            p["mergeable"], p["mergeStateStatus"] = "UNKNOWN", ""
+            return
+        p["mergeable"] = got.get("mergeable") or "UNKNOWN"
         p["mergeStateStatus"] = got.get("mergeStateStatus") or ""
-        return p
 
     candidates = [p for p in prs if p["ci"] in ("green", "none")
                   and not p.get("isDraft")
@@ -313,13 +370,21 @@ def fetch_prs(refresh=False):
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         list(ex.map(resolve, candidates))
 
-    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
     stamp = time.time()
-    try:
-        json.dump({"at": stamp, "prs": prs}, open(CACHE, "w"))
-    except OSError:
-        pass
-    return prs, stamp
+    # Only cache a complete picture — a partial list must not shadow a good one for 10 minutes.
+    if not failed:
+        try:
+            os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+            json.dump({"at": stamp, "prs": prs}, open(CACHE, "w"))
+        except OSError:
+            pass
+    return prs, stamp, warnings
+
+
+# Only states that are genuinely ready to merge. BEHIND qualifies (it just needs
+# an update). UNKNOWN means GitHub hasn't decided; UNSTABLE means a non-passing
+# commit status; "" means our detail fetch failed. None of those are shippable.
+MERGE_READY = {"CLEAN", "HAS_HOOKS", "BEHIND"}
 
 
 def shippable(p):
@@ -327,7 +392,7 @@ def shippable(p):
     return (p["ci"] in ("green", "none")
             and not p.get("isDraft")
             and p.get("mergeable") == "MERGEABLE"
-            and p.get("mergeStateStatus") not in ("DIRTY", "BLOCKED")
+            and p.get("mergeStateStatus") in MERGE_READY
             and p.get("reviewDecision") != "CHANGES_REQUESTED")
 
 
@@ -494,8 +559,7 @@ tick();setInterval(tick,20000);
 </script></body></html>"""
 
 
-def serve(port):
-    import socket
+def serve(port, repo_filter=None):
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -510,11 +574,13 @@ def serve(port):
                 return
             state["loading"] = True
         try:
-            prs, stamp = fetch_prs(force)
+            prs, stamp, warns = fetch_prs(force)
+            if repo_filter:
+                prs = [p for p in prs if repo_filter in p["repo"].lower()]
             for p in prs:
                 p["shippable"] = shippable(p)
             with lock:
-                state.update(prs=prs, at=stamp, error="")
+                state.update(prs=prs, at=stamp, error="; ".join(warns))
         except Exception as exc:                      # a failed fetch must not kill the page
             with lock:
                 state["error"] = f"{type(exc).__name__}: {exc}"
@@ -537,6 +603,8 @@ def serve(port):
             if self.path.startswith("/api"):
                 sessions = load_sessions()
                 rows = build_rows(sessions, load_feed(), load_intents(sessions))
+                if repo_filter:
+                    rows = [r for r in rows if repo_filter in r["repo"].lower()]
                 with lock:
                     snapshot = dict(state)
                 body = json.dumps({"sessions": rows,
@@ -593,7 +661,7 @@ def main():
     a = ap.parse_args()
 
     if a.serve:
-        serve(a.port)
+        serve(a.port, a.repo.lower() if a.repo else None)
         return
 
     want_s = not a.prs
@@ -603,7 +671,16 @@ def main():
     if want_s:
         sessions = load_sessions()
         rows = build_rows(sessions, load_feed(), load_intents(sessions))
-    prs, stamp = fetch_prs(a.refresh) if want_p else ([], time.time())
+    prs, stamp, warns = [], time.time(), []
+    if want_p:
+        try:
+            prs, stamp, warns = fetch_prs(a.refresh)
+        except RuntimeError as exc:
+            print(c("red", f"PR fetch failed: {exc}"), file=sys.stderr)
+            if not want_s:
+                sys.exit(1)
+            print(c("dim", "  showing sessions only\n"), file=sys.stderr)
+            want_p = False
 
     if a.repo:
         needle = a.repo.lower()
@@ -627,6 +704,8 @@ def main():
         render_sessions(rows, a.limit, a.all)
     if want_p:
         render_prs(prs, stamp, a.all)
+    for w in warns:
+        print(c("yel", f"  ! {w}"))
     print()
 
 

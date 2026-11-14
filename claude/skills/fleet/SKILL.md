@@ -40,8 +40,11 @@ without a tunnel.
 - **WHERE YOU WERE** — sorted by when Joel last typed. The label is the session's **opening ask**
   pulled from its transcript, not its most recent message (which is usually "Yes" or "go for it").
   `●` green = running, `●` yellow = needsInput, `○` = idle.
-- **SHIPPABLE** — open PRs that are green (or have no CI), not draft, not conflicting, and not
-  awaiting requested changes. Newest first — what you just finished floats to the top.
+- **SHIPPABLE** — open PRs that are green (or have no CI), not draft, not awaiting requested
+  changes, and in a confirmed-ready merge state (`CLEAN`, `HAS_HOOKS`, or `BEHIND`). Grouped by
+  repo, busiest repo first, then newest-updated within each group — so a brand-new PR in a quiet
+  repo sits below a stack of older ones, and the default cuts off at 12 rows. Use `--all` for the
+  whole list or `--repo <substr>` to narrow to one project.
 
 ## Where the data comes from
 
@@ -60,5 +63,13 @@ transcript mtime+size, so a session's opening ask is parsed once).
 
 When Joel picks something out of the list:
 - To ship a PR → use the `ship` skill.
-- To resume a session → its resume command is `claude --resume <session_id>` from the session's
-  cwd; `fleet --json` exposes `sid` and the repo for each row.
+- To resume a session → `fleet --json` gives each row a `sid` and its full `cwd` (the `repo`
+  field is a shortened display label, and two worktrees of the same repo share it — always
+  resume from `cwd`, not `repo`):
+
+  ```bash
+  fleet --json --sessions | python3 -c "
+  import sys,json
+  for r in json.load(sys.stdin)['sessions'][:10]:
+      print(f\"cd {r['cwd']} && claude --resume {r['sid']}   # {r['label'][:50]}\")"
+  ```
